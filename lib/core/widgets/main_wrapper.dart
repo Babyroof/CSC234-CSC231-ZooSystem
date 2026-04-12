@@ -37,7 +37,6 @@ class _MainWrapperScreenState extends State<MainWrapperScreen> {
         children: _pages,
       ),
       bottomNavigationBar: Container(
-        margin: EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: const BorderRadius.only(
@@ -54,7 +53,7 @@ class _MainWrapperScreenState extends State<MainWrapperScreen> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
