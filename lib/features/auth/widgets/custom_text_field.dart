@@ -39,9 +39,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
       children: [
         Text(
           widget.label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          style: const TextStyle(
+            fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
+            fontSize: 14,
+            height: 22 / 14,
+            letterSpacing: 0,
+            color: AppColors.black,
           ),
         ),
         const SizedBox(height: 8),
@@ -53,20 +57,20 @@ class _CustomTextFieldState extends State<CustomTextField> {
           decoration: InputDecoration(
             hintText: widget.hintText,
             hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
+              color: AppColors.grey,
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(
-                color: AppColors.border,
+                color: AppColors.grey,
                 width: 0.5,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(
-                color: AppColors.border,
+                color: AppColors.grey,
                 width: 0.5,
               ),
             ),
@@ -88,7 +92,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
               },
               child: Icon(
                 _obscureText ? Icons.visibility_off : Icons.visibility,
-                color: AppColors.textSecondary,
+                color: AppColors.grey,
               ),
             )
                 : null,

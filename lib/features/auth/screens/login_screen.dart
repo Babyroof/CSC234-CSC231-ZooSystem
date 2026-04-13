@@ -78,8 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _navigateToSignUp() {
-    // TODO: Implement navigation to sign up screen
-    // Navigator.pushNamed(context, AppRoutes.signUp);
+    Navigator.pushNamed(context, '/register');
   }
 
   @override
@@ -96,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: MediaQuery.of(context).size.height * 0.35,
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  color: AppColors.greyLight,
+                  color: AppColors.background,
                   image: DecorationImage(
                     image: AssetImage('lib/core/images/background.png'),
                     fit: BoxFit.cover,
@@ -133,33 +132,34 @@ class _LoginScreenState extends State<LoginScreen> {
                                 image: AssetImage('lib/core/images/logo.png'),
                                 fit: BoxFit.cover,
                               ),
-                              color: AppColors.greyLight,
-                              border: Border.all(
-                                color: AppColors.border,
-                                width: 2,
-                              ),
+                            color: AppColors.background,
                             ),
                           ),
                           const SizedBox(height: 24),
                           // Welcome Text
                           Text(
                             'Welcome to',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              height: 1.0,
+                              letterSpacing: 0,
+                              color: AppColors.black,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           // Description
                           Text(
-                            'Lorem Ipsum is simply dummy text',
-                            style:
-                                Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
+                            'Zoopernova let’s get start',
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w400,
+                              fontSize: 14,
+                              height: 1.0,
+                              letterSpacing: 0,
+                              color: AppColors.grey,
+                            ),
                           ),
                           const SizedBox(height: 32),
                           // Login Form
@@ -189,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 // Sign In Button
                                 SizedBox(
                                   width: double.infinity,
-                                  height: 54,
+                                  height: 46,
                                   child: ElevatedButton(
                                     onPressed: _isLoading ? null : _handleLogin,
                                     style: ElevatedButton.styleFrom(
@@ -212,13 +212,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                           )
                                         : Text(
                                             'Sign In',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium
-                                                ?.copyWith(
-                                                  color: AppColors.white,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
+                                            style: const TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 16,
+                                              height: 22 / 16,
+                                              letterSpacing: 0,
+                                              color: AppColors.white,
+                                            ),
                                           ),
                                   ),
                                 ),
@@ -232,24 +233,27 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               Text(
                                 'Do not have an account? ',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 14,
+                                  height: 1.0,
+                                  letterSpacing: 0,
+                                  color: AppColors.grey,
+                                ),
                               ),
                               GestureDetector(
                                 onTap: _navigateToSignUp,
                                 child: Text(
                                   'Sign Up',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        color: AppColors.black,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    height: 1.0,
+                                    letterSpacing: 0,
+                                    color: AppColors.black,
+                                  ),
                                 ),
                               ),
                             ],
