@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:zoopernova_zoo_system/core/theme/app_theme.dart';
-import 'package:zoopernova_zoo_system/features/auth/screens/login_screen.dart';
+import 'core/routes/app_routes.dart';
+import 'core/theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,10 +12,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Zoopernova Zoo System',
-      theme: AppTheme.lightTheme(),
-      home: const LoginScreen(),
+      title: 'Zoo System App',
       debugShowCheckedModeBanner: false,
+      
+      theme: AppTheme.lightTheme, 
+      
+      initialRoute: AppRoute.main, 
+      routes: AppRoute.getRoutes(),
     );
   }
 }
