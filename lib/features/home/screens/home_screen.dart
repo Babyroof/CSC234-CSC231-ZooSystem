@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:zoopernova_zoo_system/core/widgets/zoo_bottom_nav.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
-   }
+    return Scaffold(
+      extendBody: true,
+      bottomNavigationBar: ZooBottomNav(currentIndex: 0),
+    );
+  }
 }
