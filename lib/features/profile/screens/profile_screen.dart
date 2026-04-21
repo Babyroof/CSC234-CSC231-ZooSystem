@@ -10,6 +10,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  late String _userName = 'Jeffy Diddy';
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,9 +68,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Jeffy Diddy',
-                        style: TextStyle(
+                      Text(
+                        _userName,
+                        style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 20,
                           fontWeight: FontWeight.w700,

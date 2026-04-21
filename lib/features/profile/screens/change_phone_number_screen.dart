@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zoopernova_zoo_system/core/widgets/zoo_bottom_nav.dart';
 
 class ChangePhoneNumberScreen extends StatefulWidget {
   final String currentPhoneNumber;
@@ -55,6 +56,8 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
           ),
         ),
       ),
+      extendBody: true,
+      bottomNavigationBar: ZooBottomNav(currentIndex: 3),
       body: SingleChildScrollView(
         child: SafeArea(
           child: Padding(
@@ -139,127 +142,41 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 480),
 
                 // Change Phone Number Button
-                Center(
-                  child: SizedBox(
-                    width: 180,
-                    height: 33,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              title: const Text(
-                                'Are You Sure?',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFE60000),
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              content: const Text(
-                                'If you click change your phone number will change to new phone number',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xFF333333),
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              actions: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    SizedBox(
-                                      width: 120,
-                                      height: 40,
-                                      child: OutlinedButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        style: OutlinedButton.styleFrom(
-                                          side: const BorderSide(
-                                            color: Colors.grey,
-                                            width: 1.5,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          'Cancel',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 120,
-                                      height: 40,
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          // TODO: Implement phone number change logic
-                                          Navigator.pop(context);
-                                          Navigator.pop(context);
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFFE60000),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          'Change',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.all(8),
-                        backgroundColor: const Color(0xFF7DDC7A),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // TODO: Implement phone number change logic
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        '/login',
+                        (route) => false,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(8),
+                      backgroundColor: const Color(0xFF7DDC7A),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Text(
-                        'Change Phone Number',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          height: 1.0,
-                          letterSpacing: 0,
-                          color: Colors.white,
-                        ),
+                    ),
+                    child: const Text(
+                      'Change Phone Number',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        height: 1.0,
+                        letterSpacing: 0,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 100),
               ],
             ),
           ),
