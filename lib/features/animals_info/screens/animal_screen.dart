@@ -104,7 +104,7 @@ class AnimalScreen extends StatelessWidget {
                         label: const Text(
                           'Book your tickets now!',
                           style: TextStyle(
-                            color: AppColors.white,
+                            color: AppColors.navIcon,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
