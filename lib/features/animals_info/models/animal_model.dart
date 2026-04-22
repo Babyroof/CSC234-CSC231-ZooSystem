@@ -3,7 +3,7 @@ class AnimalModel {
   final String animalName;
   final String animalDetail;
   final String animalPicture;
-  final String zoneId; // เป็น reference path เช่น /zone/UID
+  final dynamic zoneId; // เป็น reference path เช่น /zone/UID
 
   AnimalModel({
     required this.id,

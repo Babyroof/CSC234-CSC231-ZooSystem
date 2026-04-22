@@ -7,6 +7,11 @@ class AnimalInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+
+    if (args == null || args is! Map<String, dynamic>) {
+      return const Scaffold(body: Center(child: Text("No animal data found")));
+    }
     final animal =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
 
