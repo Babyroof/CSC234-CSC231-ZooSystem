@@ -97,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: const BoxDecoration(
                   color: AppColors.background,
                   image: DecorationImage(
-                    image: AssetImage('lib/core/images/background.png'),
+                    image: AssetImage('lib/assets/images/background.png'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -129,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               image: const DecorationImage(
-                                image: AssetImage('lib/core/images/logo.png'),
+                                image: AssetImage('lib/assets/images/logo.png'),
                                 fit: BoxFit.cover,
                               ),
                             color: AppColors.background,
