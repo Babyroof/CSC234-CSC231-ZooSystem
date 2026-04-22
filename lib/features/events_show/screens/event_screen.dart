@@ -35,7 +35,7 @@ class _EventScreenState extends State<EventScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      bottomNavigationBar: const ZooBottomNav(currentIndex: 2),
+      bottomNavigationBar: const ZooBottomNav(currentIndex: -1),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
