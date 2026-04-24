@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
+import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 import 'package:zoopernova_zoo_system/features/auth/widgets/custom_text_field.dart';
+import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -11,14 +13,19 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _firstnameController = TextEditingController();
+  final _lastnameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _usernameController = TextEditingController();
   final _phoneController = TextEditingController();
+
   bool _isLoading = false;
 
   @override
   void dispose() {
+    _firstnameController.dispose();
+    _lastnameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _usernameController.dispose();
@@ -26,11 +33,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  String? _validateFirstname(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your firstname';
+    }
+    return null;
+  }
+
+  String? _validateLastname(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your lastname';
+    }
+    return null;
+  }
+
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your email';
     }
-    if (!value.contains('@') || !value.contains('.')) {
+    //Use regex to handle when have .(dot) but not berfore the domain
+    final emailRegex = RegExp(
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+    );
+
+    if (!emailRegex.hasMatch(value)) {
       return 'Please enter a valid email';
     }
     return null;
@@ -50,6 +76,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (value == null || value.isEmpty) {
       return 'Please enter your username';
     }
+    if (value.contains('_') || value.contains('!')) {
+      return 'Username cannot contain special characters like _ or !';
+    }
     return null;
   }
 
@@ -57,39 +86,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (value == null || value.isEmpty) {
       return 'Please enter your phone number';
     }
+    if (value.length != 10) {
+      return 'Phone number must be 9 characters';
+    }
     return null;
   }
 
   Future<void> _handleSignUp() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
-    try {
-      // Simulate sign up delay
-      await Future.delayed(const Duration(milliseconds: 800));
+    final authService = AuthService();
+    final result = await authService.register(
+      firstname: _firstnameController.text.trim(),
+      lastname: _lastnameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      username: _usernameController.text.trim(),
+      phoneNumber: _phoneController.text.trim(),
+    );
 
-      if (mounted) {
+    if (mounted) {
+      setState(() => _isLoading = false);
+      if (result == "Success") {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Account created successfully')),
         );
-        // TODO: Navigate to home screen
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign up failed: ${e.toString()}')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        Navigator.pushReplacementNamed(context, AppRoute.login);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result ?? 'Signup failed')));
       }
     }
   }
@@ -118,9 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     fit: BoxFit.cover,
                   ),
                 ),
-                child: Container(
-                  color: Colors.black.withOpacity(0.1),
-                ),
+                child: Container(color: Colors.black.withOpacity(0.1)),
               ),
               // Bottom Content Section
               Expanded(
@@ -184,6 +210,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                //Firstname Field
+                                CustomTextField(
+                                  label: 'Firstname',
+                                  hintText: 'Enter Firstname',
+                                  controller: _firstnameController,
+                                  validator: _validateFirstname,
+                                ),
+                                const SizedBox(height: 20),
+                                //Lastname Field
+                                CustomTextField(
+                                  label: 'Lastname',
+                                  hintText: 'Enter lastname',
+                                  controller: _lastnameController,
+                                  validator: _validateLastname,
+                                ),
+                                const SizedBox(height: 20),
                                 // Email Field
                                 CustomTextField(
                                   label: 'Email',
@@ -224,7 +266,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   width: double.infinity,
                                   height: 46,
                                   child: ElevatedButton(
-                                    onPressed: _isLoading ? null : _handleSignUp,
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _handleSignUp,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.primary,
                                       shape: RoundedRectangleBorder(
@@ -239,7 +283,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                             child: CircularProgressIndicator(
                                               valueColor:
                                                   AlwaysStoppedAnimation<Color>(
-                                                      AppColors.white),
+                                                    AppColors.white,
+                                                  ),
                                               strokeWidth: 2,
                                             ),
                                           )

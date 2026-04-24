@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:zoopernova_zoo_system/core/widgets/zoo_bottom_nav.dart';
 import 'change_phone_number_screen.dart';
+import 'package:zoopernova_zoo_system/features/auth/models/auth_model.dart';
+import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
+import '../services/profile_service.dart';
+import 'change_name_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,14 +14,33 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late String _userName = 'Jeffy Diddy';
-  
+  UserModel? _currentUser;
+  bool _isLoading = true;
+    
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile();
+  }
+
+  Future<void> _fetchUserProfile() async {
+    final profileService = ProfileService();
+    final userData = await profileService.getUserProfile();
+
+    if(mounted) {
+      setState(() {
+        _currentUser = userData;
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
       bottomNavigationBar: ZooBottomNav(currentIndex: 3),
-      body: SingleChildScrollView(
+      body: _isLoading ? const Center(child: CircularProgressIndicator()) : SingleChildScrollView(
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
@@ -65,23 +88,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 // User Name with Edit Icon
                 Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _userName,
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          height: 1.0,
-                          letterSpacing: 0,
-                          color: Color(0xFF000000),
+                  child: GestureDetector(
+                    onTap: () async {
+                      if (_currentUser == null) return;
+                      
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChangeNameScreen(
+                            currentFirstname: _currentUser!.firstname,
+                            currentLastname: _currentUser!.lastname,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(Icons.mode_edit_outline_outlined, size: 17.5, color: Colors.grey[600]),
-                    ],
+                      );
+
+                      if (result == true) {
+                        setState(() {
+                          _isLoading = true; 
+                        });
+                        _fetchUserProfile(); 
+                        }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _currentUser != null ? '${_currentUser!.firstname} ${_currentUser!.lastname}' : 'Unknown User',
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            height: 1.0,
+                            letterSpacing: 0,
+                            color: Color(0xFF000000),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.mode_edit_outline_outlined, size: 17.5, color: Colors.grey[600]),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -115,8 +160,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
-                              'abcd@gmail.com',
+                            Text(
+                              _currentUser?.email ?? 'No email',
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 12,
@@ -127,11 +172,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                       ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Colors.grey[400],
-                      ),
+                      // Icon(
+                      //   Icons.arrow_forward_ios,
+                      //   size: 16,
+                      //   color: Colors.grey[400],
+                      // ),
                     ],
                   ),
                 ),
@@ -181,11 +226,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                       ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Colors.grey[400],
-                      ),
+                      // Icon(
+                      //   Icons.arrow_forward_ios,
+                      //   size: 16,
+                      //   color: Colors.grey[400],
+                      // ),
                     ],
                   ),
                 ),
@@ -223,8 +268,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
-                              '099 xxx xxxx',
+                            Text(
+                              _currentUser?.phoneNumber ?? 'No phone number',
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 12,
@@ -240,8 +285,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ChangePhoneNumberScreen(
-                                currentPhoneNumber: '099 xxx xxxx',
+                              builder: (context) => ChangePhoneNumberScreen(
+                                currentPhoneNumber: _currentUser?.phoneNumber ?? '',
                               ),
                             ),
                           );
@@ -258,7 +303,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      await AuthService().logout();
+                      if(mounted) {
+                        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.all(12),
                       backgroundColor: const Color(0xFFFFFFFF),
