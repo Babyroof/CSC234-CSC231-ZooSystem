@@ -8,6 +8,8 @@ import '../../animals_info/services/animal_service.dart';
 import '../../events_show/models/event_model.dart';
 import '../../events_show/services/event.service.dart';
 import '../widgets/menu_button.dart';
+import 'package:zoopernova_zoo_system/features/auth/models/auth_model.dart';
+import 'package:zoopernova_zoo_system/features/profile/services/profile_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,9 +21,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final EventService _eventService = EventService();
   final AnimalService _animalService = AnimalService();
+  final ProfileService _profileService = ProfileService();
 
   List<EventModel> _events = [];
   List<AnimalModel> _popularAnimals = [];
+  UserModel? _currentUser;
   bool _isLoading = true;
 
   @override
@@ -34,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final events = await _eventService.getEvents();
       final animals = await _animalService.getRandomPopularAnimals(4);
+      final userData = await _profileService.getUserProfile();
 
       print('Events loaded: ${events.length}'); // debug ดูก่อน
       print('Animals loaded: ${animals.length}'); // debug ดูก่อน
@@ -42,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _events = events;
           _popularAnimals = animals;
+          _currentUser = userData;
           _isLoading = false;
         });
       }
@@ -101,8 +107,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                               const SizedBox(height: 20),
-                              const Text(
-                                'Hi, Jeffy',
+                              Text(
+                                _currentUser != null
+                                    ? 'Hi, ${_currentUser!.firstname} ${_currentUser!.lastname}'
+                                    : 'Hi, ....',
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
