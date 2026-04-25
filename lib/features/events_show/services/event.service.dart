@@ -16,4 +16,18 @@ class EventService {
       return [];
     }
   }
+
+  //Random events
+  Future<List<EventModel>> getRandomEvents(int count) async {
+    try {
+      final snap = await _db.collection('event').get();
+      List<EventModel> list = snap.docs
+          .map((doc) => EventModel.fromMap(doc.id, doc.data()))
+          .toList();
+      list.shuffle(); 
+      return list.take(count).toList();
+    } catch (e) {
+      return [];
+    }
+  }
 }
