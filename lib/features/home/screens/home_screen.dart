@@ -1,9 +1,7 @@
-// home_screen.dart
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/widgets/zoo_bottom_nav.dart';
-import '../../animals_info/models/animal_model.dart';
 import '../../animals_info/services/animal_service.dart';
 import '../../events_show/models/event_model.dart';
 import '../../events_show/services/event.service.dart';
@@ -24,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ProfileService _profileService = ProfileService();
 
   List<EventModel> _events = [];
-  List<AnimalModel> _popularAnimals = [];
+  List<Map<String, dynamic>> _popularAnimals = [];
   UserModel? _currentUser;
   bool _isLoading = true;
 
@@ -39,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final events = await _eventService.getEvents();
       final animals = await _animalService.getRandomPopularAnimals(4);
       final userData = await _profileService.getUserProfile();
+      final animalData = await _animalService.getAnimalsWithZone();
 
       print('Events loaded: ${events.length}'); // debug ดูก่อน
       print('Animals loaded: ${animals.length}'); // debug ดูก่อน
@@ -46,10 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() {
           _events = events;
-          _popularAnimals = animals;
           _currentUser = userData;
           _isLoading = false;
         });
+
+        animalData.shuffle();
+        _popularAnimals = animalData.take(4).toList();
       }
     } catch (e) {
       print('Error loading data: $e');
@@ -98,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   const CircleAvatar(
                                     backgroundColor: AppColors.white,
                                     radius: 24,
+
                                     child: Icon(
                                       Icons.pets,
                                       color: AppColors.primary,
@@ -333,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Image.network(
-                                  animal.animalPicture,
+                                  animal['animalPicture'],
                                   width: 80,
                                   height: 80,
                                   fit: BoxFit.cover,
@@ -345,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      animal.animalName,
+                                      animal['animalName'],
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
@@ -353,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      animal.animalDetail,
+                                      animal['animalDetail'],
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey[400],
