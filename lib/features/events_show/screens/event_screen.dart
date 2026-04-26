@@ -3,7 +3,6 @@ import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 import 'package:zoopernova_zoo_system/core/widgets/zoo_bottom_nav.dart';
 import '../services/event.service.dart';
 import '../models/event_model.dart';
-import 'event_info_screen.dart';
 
 class EventScreen extends StatefulWidget {
   const EventScreen({super.key});
