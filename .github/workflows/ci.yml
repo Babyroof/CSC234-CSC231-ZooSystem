@@ -26,23 +26,19 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # Step 4: Generate code for freezed models and riverpod providers
-      - name: Run build runner (code generation)
-        run: flutter pub run build_runner build --delete-conflicting-outputs
-
-      # Step 5: Check that code is formatted correctly
+      # Step 4: Check that code is formatted correctly
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed .
 
-      # Step 6: Run static analysis — must return zero errors or warnings
+      # Step 5: Run static analysis — must return zero errors or warnings
       - name: Run flutter analyze
         run: flutter analyze
 
-      # Step 7: Run all tests and generate a coverage report
+      # Step 6: Run all tests and generate a coverage report
       - name: Run tests with coverage
         run: flutter test --coverage
 
-      # Step 8: Fail the pipeline if coverage is below 80%
+      # Step 7: Fail the pipeline if coverage is below 80%
       - name: Check coverage threshold (must be above 80%)
         run: |
           COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep "lines" | grep -o '[0-9.]*%' | head -1 | tr -d '%')
