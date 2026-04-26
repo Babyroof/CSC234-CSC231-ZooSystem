@@ -23,7 +23,7 @@ class SeedService {
   }
 
   Future<void> _seedZones() async {
-    final zones = [
+    final _ = [
       {'zoneName': 'Asia'},
       {'zoneName': 'Africa'},
       {'zoneName': 'Australia'},
@@ -36,8 +36,8 @@ class SeedService {
     final zoneSnap = await _db.collection('zone').get();
     final zoneMap = {
       for (var doc in zoneSnap.docs)
-        (doc.data() as Map<String, dynamic>)['zoneName'] as String:
-            doc.reference,
+        // (doc.data() as Map<String, dynamic>)['zoneName'] as String:
+        (doc.data())['zoneName'] as String: doc.reference,
     };
 
     final animals = [
