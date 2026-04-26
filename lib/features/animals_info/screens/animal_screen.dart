@@ -5,20 +5,23 @@ import '../../../core/constants/app_colors.dart';
 import '../services/animal_service.dart';
 
 class AnimalScreen extends StatefulWidget {
-  const AnimalScreen({super.key});
+  final AnimalService? service;
+
+  const AnimalScreen({super.key, this.service});
 
   @override
   State<AnimalScreen> createState() => _AnimalScreenState();
 }
 
 class _AnimalScreenState extends State<AnimalScreen> {
-  final _service = AnimalService();
+  late final AnimalService _service;
   List<Map<String, dynamic>> animals = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _service = widget.service ?? AnimalService();
     _loadAnimals();
   }
 
@@ -179,77 +182,82 @@ class _AnimalScreenState extends State<AnimalScreen> {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final animal = animals[index];
-                        return InkWell(
-                          onTap: () => Navigator.pushNamed(
-                            context,
-                            AppRoute.animalInfo,
-                            arguments: animal,
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                ),
-                              ],
+                        return Semantics(
+                          container: true,
+                          label: animal['animalName'] as String,
+                          button: true,
+                          excludeSemantics: true,
+                          child: InkWell(
+                            onTap: () => Navigator.pushNamed(
+                              context,
+                              AppRoute.animalInfo,
+                              arguments: animal,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      animal['animalPicture'],
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      // ✅ เพิ่ม errorBuilder กัน crash
-                                      errorBuilder: (_, __, ___) => Container(
-                                        color: Colors.grey[200],
-                                        child: const Icon(
-                                          Icons.pets,
-                                          color: Colors.grey,
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        animal['animalPicture'],
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          color: Colors.grey[200],
+                                          child: const Icon(
+                                            Icons.pets,
+                                            color: Colors.grey,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    0,
-                                    12,
-                                    0,
-                                    4,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        animal['animalName'],
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      0,
+                                      12,
+                                      0,
+                                      4,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          animal['animalName'],
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        animal['zoneName'],
-                                        style: TextStyle(
-                                          color: Colors.grey[500],
-                                          fontSize: 12,
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          animal['zoneName'],
+                                          style: TextStyle(
+                                            color: Colors.grey[500],
+                                            fontSize: 12,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );

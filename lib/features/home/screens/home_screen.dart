@@ -222,7 +222,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemBuilder: (context, index) {
                         final event = _events[index];
                         return InkWell(
-                          onTap: () {}, // Route Event info
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AppRoute.eventsInfo,
+                            arguments: event,
+                          ),
                           child: Container(
                             width: 160,
                             margin: const EdgeInsets.symmetric(

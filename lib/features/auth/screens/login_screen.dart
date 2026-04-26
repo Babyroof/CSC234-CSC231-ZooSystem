@@ -4,7 +4,9 @@ import 'package:zoopernova_zoo_system/features/auth/widgets/custom_text_field.da
 import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  final AuthService? authService;
+
+  const LoginScreen({Key? key, this.authService}) : super(key: key);
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -16,10 +18,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _backendError;
+  late final AuthService _authService;
 
   @override
   void initState() {
     super.initState();
+    _authService = widget.authService ?? AuthService();
     _emailController.addListener(_clearErrorOnType);
     _passwordController.addListener(_clearErrorOnType);
   }
@@ -81,8 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final authService = AuthService();
-      final result = await authService.login(
+      final result = await _authService.login(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
@@ -281,17 +284,23 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: AppColors.grey,
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: _navigateToSignUp,
-                                child: Text(
-                                  'Sign Up',
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                    height: 1.0,
-                                    letterSpacing: 0,
-                                    color: AppColors.black,
+                              Semantics(
+                                container: true,
+                                label: 'Sign Up',
+                                button: true,
+                                excludeSemantics: true,
+                                child: GestureDetector(
+                                  onTap: _navigateToSignUp,
+                                  child: Text(
+                                    'Sign Up',
+                                    style: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      height: 1.0,
+                                      letterSpacing: 0,
+                                      color: AppColors.black,
+                                    ),
                                   ),
                                 ),
                               ),

@@ -3,7 +3,10 @@ import '../models/animal_model.dart';
 import '../models/zone_model.dart';
 
 class AnimalService {
-  FirebaseFirestore get _db => FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  AnimalService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
 
   //Random Animals
   Future<List<AnimalModel>> getRandomPopularAnimals(int count) async {

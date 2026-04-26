@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/event_model.dart';
 
 class EventService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  EventService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
 
   // GET all events
   Future<List<EventModel>> getEvents() async {
