@@ -31,7 +31,7 @@ class EventInfoScreen extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // เนื้อหารายละเอียด
           SliverToBoxAdapter(
             child: Padding(
@@ -51,10 +51,7 @@ class EventInfoScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   const Text(
                     'Event Details',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Text(

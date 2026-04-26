@@ -5,10 +5,7 @@ import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 class ZooBottomNav extends StatelessWidget {
   final int currentIndex;
 
-  const ZooBottomNav({
-    super.key,
-    required this.currentIndex,
-  });
+  const ZooBottomNav({super.key, required this.currentIndex});
 
   void _handleTap(BuildContext context, int index) {
     if (index == currentIndex) return;
@@ -45,18 +42,34 @@ class ZooBottomNav extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           child: Row(
             children: [
-              _NavItem(index: 0, icon: Icons.home_filled,
-                  label: 'Home', currentIndex: currentIndex,
-                  onTap: (i) => _handleTap(context, i)),
-              _NavItem(index: 1, icon: Icons.map_outlined,
-                  label: 'Map', currentIndex: currentIndex,
-                  onTap: (i) => _handleTap(context, i)),
-              _NavItem(index: 2, icon: Icons.confirmation_num_outlined,
-                  label: 'Tickets', currentIndex: currentIndex,
-                  onTap: (i) => _handleTap(context, i)),
-              _NavItem(index: 3, icon: Icons.person_outline,
-                  label: 'Profile', currentIndex: currentIndex,
-                  onTap: (i) => _handleTap(context, i)),
+              _NavItem(
+                index: 0,
+                icon: Icons.home_filled,
+                label: 'Home',
+                currentIndex: currentIndex,
+                onTap: (i) => _handleTap(context, i),
+              ),
+              _NavItem(
+                index: 1,
+                icon: Icons.map_outlined,
+                label: 'Map',
+                currentIndex: currentIndex,
+                onTap: (i) => _handleTap(context, i),
+              ),
+              _NavItem(
+                index: 2,
+                icon: Icons.confirmation_num_outlined,
+                label: 'Tickets',
+                currentIndex: currentIndex,
+                onTap: (i) => _handleTap(context, i),
+              ),
+              _NavItem(
+                index: 3,
+                icon: Icons.person_outline,
+                label: 'Profile',
+                currentIndex: currentIndex,
+                onTap: (i) => _handleTap(context, i),
+              ),
             ],
           ),
         ),
@@ -121,8 +134,7 @@ class _NavItemState extends State<_NavItem> {
                 maxLines: 1,
                 style: TextStyle(
                   color: _isActive ? AppColors.navIcon : AppColors.navIcon,
-                  fontWeight:
-                      _isActive ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: _isActive ? FontWeight.w600 : FontWeight.w400,
                   fontSize: 12,
                   fontFamily: 'Inter',
                 ),

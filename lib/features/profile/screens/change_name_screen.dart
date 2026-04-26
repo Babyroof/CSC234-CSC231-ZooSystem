@@ -9,8 +9,8 @@ class ChangeNameScreen extends StatefulWidget {
   final String currentLastname;
 
   const ChangeNameScreen({
-    super.key, 
-    required this.currentFirstname, 
+    super.key,
+    required this.currentFirstname,
     required this.currentLastname,
   });
 
@@ -116,7 +116,7 @@ class _ChangeNameScreenState extends State<ChangeNameScreen> {
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
-                  height: 60, 
+                  height: 60,
                   child: TextField(
                     controller: _firstnameController,
                     decoration: InputDecoration(
@@ -222,7 +222,9 @@ class _ChangeNameScreenState extends State<ChangeNameScreen> {
                             if (newFirst.isEmpty || newLast.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Please enter both firstname and lastname'),
+                                  content: Text(
+                                    'Please enter both firstname and lastname',
+                                  ),
                                 ),
                               );
                               return;
@@ -243,9 +245,11 @@ class _ChangeNameScreenState extends State<ChangeNameScreen> {
                                     content: Text('Name updated successfully'),
                                   ),
                                 );
-                                Navigator.pop(context, true); 
+                                Navigator.pop(context, true);
                               } else {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result)));
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(SnackBar(content: Text(result)));
                               }
                             }
                           },
@@ -255,8 +259,15 @@ class _ChangeNameScreenState extends State<ChangeNameScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: _isLoading 
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
                         : const Text(
                             'Save Changes',
                             style: TextStyle(
@@ -267,7 +278,7 @@ class _ChangeNameScreenState extends State<ChangeNameScreen> {
                               letterSpacing: 0,
                               color: Colors.white,
                             ),
-                          )
+                          ),
                   ),
                 ),
                 const SizedBox(height: 100),
