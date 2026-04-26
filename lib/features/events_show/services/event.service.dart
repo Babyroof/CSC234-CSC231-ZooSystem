@@ -24,7 +24,7 @@ class EventService {
       List<EventModel> list = snap.docs
           .map((doc) => EventModel.fromMap(doc.id, doc.data()))
           .toList();
-      list.shuffle(); 
+      list.shuffle();
       return list.take(count).toList();
     } catch (e) {
       return [];

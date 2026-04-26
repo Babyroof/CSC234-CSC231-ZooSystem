@@ -1,27 +1,26 @@
 //อันนี้เอาไว้เพิ่มข้อมูลทีเดียวลง firebase จะลบก็ได้ไม่มีผล
 
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SeedService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   Future<void> seedAll() async {
-  print('🌱 Starting seed...');
-  
-  // Seed zones ก่อน แล้ว print ให้เห็นว่ามีกี่ zone
-  await _seedZones();
-  
-  // เช็คก่อนว่า zone มีจริง
-  final check = await _db.collection('zone').get();
-  print('✅ Zones in DB: ${check.docs.length}');
-  for (var doc in check.docs) {
-    print('Zone found: ${(doc.data())['zoneName']}');
+    print('🌱 Starting seed...');
+
+    // Seed zones ก่อน แล้ว print ให้เห็นว่ามีกี่ zone
+    await _seedZones();
+
+    // เช็คก่อนว่า zone มีจริง
+    final check = await _db.collection('zone').get();
+    print('✅ Zones in DB: ${check.docs.length}');
+    for (var doc in check.docs) {
+      print('Zone found: ${(doc.data())['zoneName']}');
+    }
+
+    await _seedAnimals();
+    print('✅ Seed completed!');
   }
-  
-  await _seedAnimals();
-  print('✅ Seed completed!');
-}
 
   Future<void> _seedZones() async {
     final zones = [

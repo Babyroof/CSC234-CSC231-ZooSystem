@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 import '../../../core/widgets/zoo_bottom_nav.dart';
 import '../../../core/constants/app_colors.dart';
-import '../services/animal_service.dart'; 
+import '../services/animal_service.dart';
 
-class AnimalScreen extends StatefulWidget { 
+class AnimalScreen extends StatefulWidget {
   const AnimalScreen({super.key});
 
   @override
@@ -46,7 +46,7 @@ class _AnimalScreenState extends State<AnimalScreen> {
       extendBody: true,
       bottomNavigationBar: const ZooBottomNav(currentIndex: -1),
       backgroundColor: AppColors.background,
-      body: isLoading 
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
               slivers: [
@@ -63,7 +63,9 @@ class _AnimalScreenState extends State<AnimalScreen> {
                       padding: EdgeInsets.zero,
                       alignment: Alignment.centerLeft,
                       icon: const Icon(
-                          Icons.arrow_back_ios, color: AppColors.black),
+                        Icons.arrow_back_ios,
+                        color: AppColors.black,
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
@@ -118,7 +120,9 @@ class _AnimalScreenState extends State<AnimalScreen> {
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: () => Navigator.pushNamed(
-                                  context, AppRoute.booking),
+                                context,
+                                AppRoute.booking,
+                              ),
                               icon: const Icon(
                                 Icons.confirmation_num_outlined,
                                 color: AppColors.navIcon,
@@ -174,7 +178,7 @@ class _AnimalScreenState extends State<AnimalScreen> {
                     ),
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        final animal = animals[index]; 
+                        final animal = animals[index];
                         return InkWell(
                           onTap: () => Navigator.pushNamed(
                             context,
@@ -204,18 +208,23 @@ class _AnimalScreenState extends State<AnimalScreen> {
                                       fit: BoxFit.cover,
                                       width: double.infinity,
                                       // ✅ เพิ่ม errorBuilder กัน crash
-                                      errorBuilder: (_, __, ___) =>
-                                          Container(
+                                      errorBuilder: (_, __, ___) => Container(
                                         color: Colors.grey[200],
-                                        child: const Icon(Icons.pets,
-                                            color: Colors.grey),
+                                        child: const Icon(
+                                          Icons.pets,
+                                          color: Colors.grey,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(0, 12, 0, 4),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    0,
+                                    12,
+                                    0,
+                                    4,
+                                  ),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,

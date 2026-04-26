@@ -20,16 +20,16 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-      _emailController.addListener(_clearErrorOnType);
+    _emailController.addListener(_clearErrorOnType);
     _passwordController.addListener(_clearErrorOnType);
   }
-  
+
   void _clearErrorOnType() {
     if (_backendError != null) {
       setState(() {
         _backendError = null;
       });
-      _formKey.currentState?.validate(); 
+      _formKey.currentState?.validate();
     }
   }
 
@@ -58,8 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   String? _validatePassword(String? value) {
-
-    if(_backendError != null) {
+    if (_backendError != null) {
       return _backendError;
     }
 
