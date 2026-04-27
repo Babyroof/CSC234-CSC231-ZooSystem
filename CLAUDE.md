@@ -70,7 +70,6 @@ lib/
 │   │   └── widgets/
 │
 └── main.dart           ← Firebase init, Crashlytics init, ProviderScope, theme applied
-```
 
 ---
 
