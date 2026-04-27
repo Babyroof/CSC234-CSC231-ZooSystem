@@ -1,0 +1,50 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Download the source code from the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Install Flutter SDK
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+
+      # Step 3: Install all packages from pubspec.yaml
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Step 4: Check that code is formatted correctly
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      # Step 5: Run static analysis — must return zero errors or warnings
+      - name: Run flutter analyze
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      # Step 6: Run all tests and generate a coverage report
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      # Step 7: Fail the pipeline if coverage is below 80%
+      - name: Check coverage threshold (must be above 80%)
+        run: |
+          COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep "lines" | grep -o '[0-9.]*%' | head -1 | tr -d '%')
+          echo "Coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "Coverage $COVERAGE% is below the required 80% — pipeline failed"
+            exit 1
+          fi
+          echo "Coverage $COVERAGE% passes the threshold"

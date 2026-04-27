@@ -4,23 +4,25 @@ import 'package:zoopernova_zoo_system/core/widgets/zoo_bottom_nav.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import '../services/event.service.dart';
 import '../models/event_model.dart';
-import 'event_info_screen.dart';
 
 class EventScreen extends StatefulWidget {
-  const EventScreen({super.key});
+  final EventService? eventService;
+
+  const EventScreen({super.key, this.eventService});
 
   @override
   State<EventScreen> createState() => _EventScreenState();
 }
 
 class _EventScreenState extends State<EventScreen> {
-  final EventService _eventService = EventService();
+  late final EventService _eventService;
   List<EventModel> events = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _eventService = widget.eventService ?? EventService();
     _loadEvents();
   }
 

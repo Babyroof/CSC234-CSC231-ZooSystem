@@ -56,45 +56,39 @@ class _CustomTextFieldState extends State<CustomTextField> {
           validator: widget.validator,
           decoration: InputDecoration(
             hintText: widget.hintText,
-            hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.grey,
+            hintStyle: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.grey),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: AppColors.grey,
-                width: 0.5,
-              ),
+              borderSide: const BorderSide(color: AppColors.grey, width: 0.5),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: AppColors.grey,
-                width: 0.5,
-              ),
+              borderSide: const BorderSide(color: AppColors.grey, width: 0.5),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 1,
-              ),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1),
             ),
             filled: true,
             fillColor: AppColors.white,
             suffixIcon: widget.isPassword
                 ? GestureDetector(
-              onTap: () {
-                setState(() {
-                  _obscureText = !_obscureText;
-                });
-              },
-              child: Icon(
-                _obscureText ? Icons.visibility_off : Icons.visibility,
-                color: AppColors.grey,
-              ),
-            )
+                    onTap: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                    child: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: AppColors.grey,
+                    ),
+                  )
                 : null,
           ),
         ),

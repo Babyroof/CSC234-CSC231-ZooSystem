@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/event_model.dart';
 
 class EventService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  EventService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
 
   // GET all events
   Future<List<EventModel>> getEvents() async {
@@ -24,7 +27,7 @@ class EventService {
       List<EventModel> list = snap.docs
           .map((doc) => EventModel.fromMap(doc.id, doc.data()))
           .toList();
-      list.shuffle(); 
+      list.shuffle();
       return list.take(count).toList();
     } catch (e) {
       return [];

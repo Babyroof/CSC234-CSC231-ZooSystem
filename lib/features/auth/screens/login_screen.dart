@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/features/auth/widgets/custom_text_field.dart';
+import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  final AuthService? authService;
+
+  const LoginScreen({Key? key, this.authService}) : super(key: key);
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -14,9 +17,30 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  String? _backendError;
+  late final AuthService _authService;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = widget.authService ?? AuthService();
+    _emailController.addListener(_clearErrorOnType);
+    _passwordController.addListener(_clearErrorOnType);
+  }
+
+  void _clearErrorOnType() {
+    if (_backendError != null) {
+      setState(() {
+        _backendError = null;
+      });
+      _formKey.currentState?.validate();
+    }
+  }
 
   @override
   void dispose() {
+    _emailController.removeListener(_clearErrorOnType);
+    _passwordController.removeListener(_clearErrorOnType);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -27,13 +51,21 @@ class _LoginScreenState extends State<LoginScreen> {
       return 'Please enter your email';
     }
     // Simple email validation
-    if (!value.contains('@') || !value.contains('.')) {
+    final emailRegex = RegExp(
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+    );
+
+    if (!emailRegex.hasMatch(value)) {
       return 'Please enter a valid email';
     }
     return null;
   }
 
   String? _validatePassword(String? value) {
+    if (_backendError != null) {
+      return _backendError;
+    }
+
     if (value == null || value.isEmpty) {
       return 'Please enter your password';
     }
@@ -53,20 +85,29 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Simulate login delay
-      await Future.delayed(const Duration(milliseconds: 800));
-
+      final result = await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful')),
-        );
-        // TODO: Navigate to home screen
+        if (result == "Success") {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Login successful')));
+          //Navigate to home page
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          setState(() {
+            _backendError = result ?? 'Email or Password is not correct';
+          });
+          _formKey.currentState!.validate();
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Login error')));
       }
     } finally {
       if (mounted) {
@@ -132,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 image: AssetImage('lib/assets/images/logo.png'),
                                 fit: BoxFit.cover,
                               ),
-                            color: AppColors.background,
+                              color: AppColors.background,
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -206,7 +247,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                             child: CircularProgressIndicator(
                                               valueColor:
                                                   AlwaysStoppedAnimation<Color>(
-                                                      AppColors.white),
+                                                    AppColors.white,
+                                                  ),
                                               strokeWidth: 2,
                                             ),
                                           )
@@ -242,17 +284,23 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: AppColors.grey,
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: _navigateToSignUp,
-                                child: Text(
-                                  'Sign Up',
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                    height: 1.0,
-                                    letterSpacing: 0,
-                                    color: AppColors.black,
+                              Semantics(
+                                container: true,
+                                label: 'Sign Up',
+                                button: true,
+                                excludeSemantics: true,
+                                child: GestureDetector(
+                                  onTap: _navigateToSignUp,
+                                  child: Text(
+                                    'Sign Up',
+                                    style: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      height: 1.0,
+                                      letterSpacing: 0,
+                                      color: AppColors.black,
+                                    ),
                                   ),
                                 ),
                               ),

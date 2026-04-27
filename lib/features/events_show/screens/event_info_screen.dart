@@ -249,3 +249,4 @@ class EventInfoScreen extends StatelessWidget {
     );
   }
 }
+

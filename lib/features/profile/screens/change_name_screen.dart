@@ -1,34 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:zoopernova_zoo_system/core/widgets/zoo_bottom_nav.dart';
 import 'package:zoopernova_zoo_system/features/profile/services/profile_service.dart';
-import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
 
 final _profileService = ProfileService();
-final _authService = AuthService();
-bool _isLoading = false;
 
-class ChangePhoneNumberScreen extends StatefulWidget {
-  final String currentPhoneNumber;
+class ChangeNameScreen extends StatefulWidget {
+  final String currentFirstname;
+  final String currentLastname;
 
-  const ChangePhoneNumberScreen({super.key, required this.currentPhoneNumber});
+  const ChangeNameScreen({
+    super.key,
+    required this.currentFirstname,
+    required this.currentLastname,
+  });
 
   @override
-  State<ChangePhoneNumberScreen> createState() =>
-      _ChangePhoneNumberScreenState();
+  State<ChangeNameScreen> createState() => _ChangeNameScreenState();
 }
 
-class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
-  late TextEditingController _phoneNumberController;
+class _ChangeNameScreenState extends State<ChangeNameScreen> {
+  late TextEditingController _firstnameController;
+  late TextEditingController _lastnameController;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _phoneNumberController = TextEditingController();
+    _firstnameController = TextEditingController();
+    _lastnameController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _phoneNumberController.dispose();
+    _firstnameController.dispose();
+    _lastnameController.dispose();
     super.dispose();
   }
 
@@ -48,7 +53,7 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
         ),
         centerTitle: true,
         title: const Text(
-          'Phone Number',
+          'Edit Name',
           style: TextStyle(
             fontFamily: 'Inter',
             fontSize: 18,
@@ -71,9 +76,9 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Current Phone Number Section
+                // Current Name Section
                 const Text(
-                  'Current Phone Number',
+                  'Current Name',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,
@@ -85,21 +90,21 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  widget.currentPhoneNumber,
+                  '${widget.currentFirstname} ${widget.currentLastname}',
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     height: 1.0,
                     letterSpacing: 0,
-                    color: Color(0xFF000000),
+                    color: Color(0xFF999999),
                   ),
                 ),
                 const SizedBox(height: 32),
 
-                // New Phone Number Section
+                // New Firstname Section
                 const Text(
-                  'New Phone Number',
+                  'New Firstname',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,
@@ -111,11 +116,11 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
-                  height: 100,
+                  height: 60,
                   child: TextField(
-                    controller: _phoneNumberController,
+                    controller: _firstnameController,
                     decoration: InputDecoration(
-                      hintText: '+66 000 000 0000',
+                      hintText: 'Enter your firstname',
                       hintStyle: const TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 14,
@@ -123,8 +128,8 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
                         color: Color(0xFFCCCCCC),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 8.0,
-                        vertical: 8.0,
+                        horizontal: 16.0,
+                        vertical: 16.0,
                       ),
                       filled: true,
                       fillColor: const Color(0xFFF5F5F5),
@@ -148,9 +153,62 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 480),
+                const SizedBox(height: 24),
 
-                // Change Phone Number Button
+                // New Lastname Section
+                const Text(
+                  'New Lastname',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    height: 1.0,
+                    letterSpacing: 0,
+                    color: Color(0xFF000000),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 60,
+                  child: TextField(
+                    controller: _lastnameController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter your lastname',
+                      hintStyle: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFFCCCCCC),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 16.0,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFF5F5F5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF10161F),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF000000),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 300),
+
+                // Change Name Button
                 SizedBox(
                   width: double.infinity,
                   height: 44,
@@ -158,13 +216,14 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
                     onPressed: _isLoading
                         ? null
                         : () async {
-                            final newPhone = _phoneNumberController.text.trim();
+                            final newFirst = _firstnameController.text.trim();
+                            final newLast = _lastnameController.text.trim();
 
-                            if (newPhone.isEmpty || newPhone.length != 10) {
+                            if (newFirst.isEmpty || newLast.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
-                                    'Please enter a valid phone number',
+                                    'Please enter both firstname and lastname',
                                   ),
                                 ),
                               );
@@ -174,7 +233,8 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
                             setState(() => _isLoading = true);
 
                             final result = await _profileService.updateProfile({
-                              'phoneNumber': newPhone,
+                              'firstname': newFirst,
+                              'lastname': newLast,
                             });
 
                             if (mounted) {
@@ -182,19 +242,10 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
                               if (result == "Success") {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text(
-                                      'Phone number updated successfully',
-                                    ),
+                                    content: Text('Name updated successfully'),
                                   ),
                                 );
-                                await _authService.logout();
-                                if (mounted) {
-                                  Navigator.pushNamedAndRemoveUntil(
-                                    context,
-                                    '/login',
-                                    (route) => false,
-                                  );
-                                }
+                                Navigator.pop(context, true);
                               } else {
                                 ScaffoldMessenger.of(
                                   context,
@@ -202,17 +253,32 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
                               }
                             }
                           },
-                    child: const Text(
-                      'Change Phone Number',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        height: 1.0,
-                        letterSpacing: 0,
-                        color: Colors.white,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromRGBO(125, 220, 122, 1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Save Changes',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              height: 1.0,
+                              letterSpacing: 0,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 100),
