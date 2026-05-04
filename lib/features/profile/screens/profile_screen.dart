@@ -233,6 +233,7 @@ class ProfileScreen extends ConsumerWidget {
                     onTap: () async {
                       final navigator = Navigator.of(context);
                       await AuthService().logout();
+                      ref.invalidate(profileNotifierProvider);
                       navigator.pushNamedAndRemoveUntil(
                         '/login',
                         (route) => false,
