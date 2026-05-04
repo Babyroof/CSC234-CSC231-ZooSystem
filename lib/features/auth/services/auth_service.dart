@@ -19,7 +19,9 @@ class AuthService {
     required String phoneNumber,
     required String username,
   }) async {
-    debugPrint('[AuthService] register: attempt — email=$email, username=$username');
+    debugPrint(
+      '[AuthService] register: attempt — email=$email, username=$username',
+    );
     try {
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -50,7 +52,9 @@ class AuthService {
         return "Cannot save data. Please check Firestore Rules.";
       }
     } on FirebaseAuthException catch (e) {
-      debugPrint('[AuthService] register: FirebaseAuthException — code=${e.code}, message=${e.message}');
+      debugPrint(
+        '[AuthService] register: FirebaseAuthException — code=${e.code}, message=${e.message}',
+      );
       if (e.code == 'weak-password') {
         return "Password must be at least 6 characters.";
       }
