@@ -85,5 +85,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'zoopernova-c3a89.firebasestorage.app',
     measurementId: 'G-XR9HE6R2DH',
   );
-
 }

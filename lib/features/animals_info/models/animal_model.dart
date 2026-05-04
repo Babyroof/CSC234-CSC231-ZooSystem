@@ -16,20 +16,20 @@ class AnimalModel {
   });
 
   factory AnimalModel.fromMap(String id, Map<String, dynamic> map) {
-  String zoneId = '';
-  final rawZone = map['zoneId'];
-  if (rawZone is DocumentReference) {
-    zoneId = rawZone.path; // จะได้ "zone/MeyQ7x9lJoyBO7Yx1iSy"
-  } else if (rawZone is String) {
-    zoneId = rawZone;
-  }
+    String zoneId = '';
+    final rawZone = map['zoneId'];
+    if (rawZone is DocumentReference) {
+      zoneId = rawZone.path; // จะได้ "zone/MeyQ7x9lJoyBO7Yx1iSy"
+    } else if (rawZone is String) {
+      zoneId = rawZone;
+    }
 
-  return AnimalModel(
-    id: id,
-    animalName: map['animalName'] ?? '',
-    animalDetail: map['animalDetail'] ?? '',
-    animalPicture: map['animalPicture'] ?? '',
-    zoneId: zoneId,
-  );
-}
+    return AnimalModel(
+      id: id,
+      animalName: map['animalName'] ?? '',
+      animalDetail: map['animalDetail'] ?? '',
+      animalPicture: map['animalPicture'] ?? '',
+      zoneId: zoneId,
+    );
+  }
 }

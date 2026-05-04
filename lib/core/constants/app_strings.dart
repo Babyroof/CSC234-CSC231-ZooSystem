@@ -16,7 +16,8 @@ class AppStrings {
   static const String emailRequired = 'Please enter your email';
   static const String invalidEmail = 'Please enter a valid email';
   static const String passwordRequired = 'Please enter your password';
-  static const String passwordTooShort = 'Password must be at least 6 characters';
+  static const String passwordTooShort =
+      'Password must be at least 6 characters';
 
   // Error Messages
   static const String loginFailed = 'Login failed';

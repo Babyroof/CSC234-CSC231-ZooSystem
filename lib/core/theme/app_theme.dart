@@ -6,9 +6,9 @@ class AppTheme {
     return ThemeData(
       primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.background,
-      
-      fontFamily: 'Inter', 
-      
+
+      fontFamily: 'Inter',
+
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.primaryYellow,
@@ -18,7 +18,7 @@ class AppTheme {
       ),
 
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent, 
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         iconTheme: IconThemeData(color: AppColors.black),
@@ -31,19 +31,37 @@ class AppTheme {
       ),
 
       textTheme: const TextTheme(
-        displayLarge: TextStyle(color: AppColors.black, fontWeight: FontWeight.w600),
-        titleLarge: TextStyle(color: AppColors.black, fontSize: 20, fontWeight: FontWeight.w600),
-        bodyLarge: TextStyle(color: AppColors.black, fontSize: 16, fontWeight: FontWeight.w400),
-        bodyMedium: TextStyle(color: AppColors.navIcon, fontSize: 14, fontWeight: FontWeight.w400),
+        displayLarge: TextStyle(
+          color: AppColors.black,
+          fontWeight: FontWeight.w600,
+        ),
+        titleLarge: TextStyle(
+          color: AppColors.black,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+        bodyLarge: TextStyle(
+          color: AppColors.black,
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+        ),
+        bodyMedium: TextStyle(
+          color: AppColors.navIcon,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontFamily: 'Inter'),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Inter',
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20), 
+            borderRadius: BorderRadius.circular(20),
           ),
           elevation: 0,
         ),
@@ -52,12 +70,18 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,
         ),
-        hintStyle: const TextStyle(color: AppColors.navIcon, fontWeight: FontWeight.w400),
+        hintStyle: const TextStyle(
+          color: AppColors.navIcon,
+          fontWeight: FontWeight.w400,
+        ),
         prefixIconColor: AppColors.navIcon,
       ),
     );

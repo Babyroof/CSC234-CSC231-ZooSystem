@@ -38,6 +38,7 @@ dependencies:
   firebase_core: ^3.15.2    
   cloud_firestore: ^5.6.0 
   firebase_auth: ^5.3.1
+  flutter_riverpod: ^2.6.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -45,6 +46,13 @@ dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.4
+  build_runner: ">=2.4.0 <2.14.0"
+  fake_cloud_firestore: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

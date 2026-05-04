@@ -13,7 +13,6 @@ import '../../features/home/screens/home_screen.dart';
 import '../../features/animals_info/screens/animal_screen.dart';
 import '../../features/animals_info/screens/animal_info_screen.dart';
 import '../../features/events_show/models/event_model.dart';
-import '../../features/events_show/screens/event_info_screen.dart';
 
 class AppRoute {
   static const String login = '/login';

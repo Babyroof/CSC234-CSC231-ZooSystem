@@ -1,30 +1,30 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import '../models/animal_model.dart';
 import '../models/zone_model.dart';
 
 class AnimalService {
-  FirebaseFirestore get _db => FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  AnimalService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
 
   //Random Animals
   Future<List<AnimalModel>> getRandomPopularAnimals(int count) async {
-  try {
-    final snap = await _db.collection('animal').get();
-    print('Firestore animal docs count: ${snap.docs.length}'); // เพิ่มตรงนี้
-    
-    List<AnimalModel> list = snap.docs
-        .map((doc) {
-          print('Doc ID: ${doc.id}, Data: ${doc.data()}'); // ดู raw data
-          return AnimalModel.fromMap(doc.id, doc.data());
-        })
-        .toList();
-    list.shuffle();
-    return list.take(count).toList();
-  } catch (e) {
-    print('getRandomPopularAnimals ERROR: $e'); // ดู error จริงๆ
-    return [];
+    try {
+      final snap = await _db.collection('animal').get();
+      print('Firestore animal docs count: ${snap.docs.length}'); // เพิ่มตรงนี้
+
+      List<AnimalModel> list = snap.docs.map((doc) {
+        print('Doc ID: ${doc.id}, Data: ${doc.data()}'); // ดู raw data
+        return AnimalModel.fromMap(doc.id, doc.data());
+      }).toList();
+      list.shuffle();
+      return list.take(count).toList();
+    } catch (e) {
+      print('getRandomPopularAnimals ERROR: $e'); // ดู error จริงๆ
+      return [];
+    }
   }
-}
 
   // GET all zones
   Future<List<ZoneModel>> getZones() async {
