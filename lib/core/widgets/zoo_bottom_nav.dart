@@ -31,7 +31,7 @@ class ZooBottomNav extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -44,7 +44,8 @@ class ZooBottomNav extends StatelessWidget {
             children: [
               _NavItem(
                 index: 0,
-                icon: Icons.home_filled,
+                icon: Icons.home_outlined,
+                selectedIcon: Icons.home,
                 label: 'Home',
                 currentIndex: currentIndex,
                 onTap: (i) => _handleTap(context, i),
@@ -52,6 +53,7 @@ class ZooBottomNav extends StatelessWidget {
               _NavItem(
                 index: 1,
                 icon: Icons.map_outlined,
+                selectedIcon: Icons.map,
                 label: 'Map',
                 currentIndex: currentIndex,
                 onTap: (i) => _handleTap(context, i),
@@ -59,6 +61,7 @@ class ZooBottomNav extends StatelessWidget {
               _NavItem(
                 index: 2,
                 icon: Icons.confirmation_num_outlined,
+                selectedIcon: Icons.confirmation_num,
                 label: 'Tickets',
                 currentIndex: currentIndex,
                 onTap: (i) => _handleTap(context, i),
@@ -66,6 +69,7 @@ class ZooBottomNav extends StatelessWidget {
               _NavItem(
                 index: 3,
                 icon: Icons.person_outline,
+                selectedIcon: Icons.person,
                 label: 'Profile',
                 currentIndex: currentIndex,
                 onTap: (i) => _handleTap(context, i),
@@ -81,6 +85,7 @@ class ZooBottomNav extends StatelessWidget {
 class _NavItem extends StatefulWidget {
   final int index;
   final IconData icon;
+  final IconData selectedIcon;
   final String label;
   final int currentIndex;
   final Function(int) onTap;
@@ -88,6 +93,7 @@ class _NavItem extends StatefulWidget {
   const _NavItem({
     required this.index,
     required this.icon,
+    required this.selectedIcon,
     required this.label,
     required this.currentIndex,
     required this.onTap,
@@ -124,8 +130,8 @@ class _NavItemState extends State<_NavItem> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                widget.icon,
-                color: _isActive ? AppColors.navIcon : AppColors.navIcon,
+                _isActive ? widget.selectedIcon : widget.icon,
+                color: AppColors.navIcon,
                 size: 26,
               ),
               const SizedBox(height: 4),

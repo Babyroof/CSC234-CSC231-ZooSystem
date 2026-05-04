@@ -86,8 +86,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (value == null || value.isEmpty) {
       return 'Please enter your phone number';
     }
-    if (value.length != 10) {
-      return 'Phone number must be 10 digits';
+    if (value.length != 9) {
+      return 'Phone number must be 9 digits';
     }
     return null;
   }
