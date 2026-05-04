@@ -7,7 +7,7 @@ class ProfileService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   //GET Profile
-   Future<UserModel?> getUserProfile() async {
+  Future<UserModel?> getUserProfile() async {
     try {
       final uid = _auth.currentUser?.uid;
       if (uid == null) return null;

@@ -212,7 +212,7 @@ class _ChangePhoneNumberScreenState extends State<ChangePhoneNumberScreen> {
                         letterSpacing: 0,
                         color: Colors.white,
                       ),
-                      )
+                    ),
                   ),
                 ),
                 const SizedBox(height: 100),

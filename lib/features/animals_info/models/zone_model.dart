@@ -5,10 +5,7 @@ class ZoneModel {
   ZoneModel({required this.id, required this.zoneName});
 
   factory ZoneModel.fromMap(String id, Map<String, dynamic> map) {
-    return ZoneModel(
-      id: id,
-      zoneName: map['zoneName'] ?? '',
-    );
+    return ZoneModel(id: id, zoneName: map['zoneName'] ?? '');
   }
 
   Map<String, dynamic> toMap() {
