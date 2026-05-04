@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
+import 'package:zoopernova_zoo_system/core/utils/validators.dart';
 import 'package:zoopernova_zoo_system/features/auth/widgets/custom_text_field.dart';
 import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -47,20 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return null;
   }
 
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your email';
-    }
-    //Use regex to handle when have .(dot) but not berfore the domain
-    final emailRegex = RegExp(
-      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
-    );
-
-    if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email';
-    }
-    return null;
-  }
+  String? _validateEmail(String? value) => AppValidators.email(value);
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
@@ -146,7 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     fit: BoxFit.cover,
                   ),
                 ),
-                child: Container(color: Colors.black.withOpacity(0.1)),
+                child: Container(color: Colors.black.withValues(alpha: 0.1)),
               ),
               // Bottom Content Section
               Expanded(
@@ -320,17 +308,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   color: AppColors.grey,
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: _navigateToLogin,
-                                child: const Text(
-                                  'Sign In',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                    height: 1.0,
-                                    letterSpacing: 0,
-                                    color: AppColors.black,
+                              Semantics(
+                                container: true,
+                                label: 'Sign In',
+                                button: true,
+                                excludeSemantics: true,
+                                child: GestureDetector(
+                                  onTap: _navigateToLogin,
+                                  child: const Text(
+                                    'Sign In',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      height: 1.0,
+                                      letterSpacing: 0,
+                                      color: AppColors.black,
+                                    ),
                                   ),
                                 ),
                               ),

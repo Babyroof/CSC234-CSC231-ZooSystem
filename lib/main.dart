@@ -26,28 +26,28 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
 
       //initialRoute: AppRoute.main,
-      home: AuthGate(),
+      home: const HomeScreen(),
       routes: AppRoute.getRoutes(),
     );
   }
 }
 
-class AuthGate extends StatelessWidget {
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+// class AuthGate extends StatelessWidget {
+//   Widget build(BuildContext context) {
+//     return StreamBuilder<User?>(
+//       stream: FirebaseAuth.instance.authStateChanges(),
+//       builder: (context, snapshot) {
+//         if (snapshot.connectionState == ConnectionState.waiting) {
+//           return const Scaffold(
+//             body: Center(child: CircularProgressIndicator()),
+//           );
+//         }
 
-        if (snapshot.hasData) {
-          return const HomeScreen();
-        }
-        return const LoginScreen();
-      },
-    );
-  }
-}
+//         if (snapshot.hasData) {
+//           return const HomeScreen();
+//         }
+//         return const LoginScreen();
+//       },
+//     );
+//   }
+// }

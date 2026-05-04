@@ -10,14 +10,14 @@ class CustomTextField extends StatefulWidget {
   final bool isPassword;
 
   const CustomTextField({
-    Key? key,
+    super.key,
     required this.label,
     required this.hintText,
     required this.controller,
     this.keyboardType = TextInputType.text,
     this.validator,
     this.isPassword = false,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -53,6 +53,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
           controller: widget.controller,
           keyboardType: widget.keyboardType,
           obscureText: _obscureText,
+          autocorrect: !widget.isPassword,
+          enableSuggestions: !widget.isPassword,
           validator: widget.validator,
           decoration: InputDecoration(
             hintText: widget.hintText,
