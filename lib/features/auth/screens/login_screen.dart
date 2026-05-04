@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 import 'package:zoopernova_zoo_system/core/utils/validators.dart';
 import 'package:zoopernova_zoo_system/features/auth/widgets/custom_text_field.dart';
 import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
+import '../../profile/services/profile_notifier.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   final AuthService? authService;
 
-  const LoginScreen({super.key, this.authService});
-
+  const LoginScreen({Key? key, this.authService}) : super(key: key);
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -83,6 +84,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('Login successful')));
+
+          ref.invalidate(profileNotifierProvider);
           //Navigate to home page
           Navigator.pushReplacementNamed(context, AppRoute.home);
         } else {
@@ -294,6 +297,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: GestureDetector(
+                              onTap: () => Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                AppRoute.home,
+                                (route) => false,
+                              ),
+                              child: const Text(
+                                'Continue as Guest',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 14,
+                                  height: 1.0,
+                                  letterSpacing: 0,
+                                  decoration: TextDecoration.underline,
+                                  color: AppColors.grey,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
