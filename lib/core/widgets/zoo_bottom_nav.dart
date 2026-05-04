@@ -5,10 +5,7 @@ import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 class ZooBottomNav extends StatelessWidget {
   final int currentIndex;
 
-  const ZooBottomNav({
-    super.key,
-    required this.currentIndex,
-  });
+  const ZooBottomNav({super.key, required this.currentIndex});
 
   void _handleTap(BuildContext context, int index) {
     if (index == currentIndex) return;
@@ -34,7 +31,7 @@ class ZooBottomNav extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -45,18 +42,38 @@ class ZooBottomNav extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           child: Row(
             children: [
-              _NavItem(index: 0, icon: Icons.home_filled,
-                  label: 'Home', currentIndex: currentIndex,
-                  onTap: (i) => _handleTap(context, i)),
-              _NavItem(index: 1, icon: Icons.map_outlined,
-                  label: 'Map', currentIndex: currentIndex,
-                  onTap: (i) => _handleTap(context, i)),
-              _NavItem(index: 2, icon: Icons.confirmation_num_outlined,
-                  label: 'Tickets', currentIndex: currentIndex,
-                  onTap: (i) => _handleTap(context, i)),
-              _NavItem(index: 3, icon: Icons.person_outline,
-                  label: 'Profile', currentIndex: currentIndex,
-                  onTap: (i) => _handleTap(context, i)),
+              _NavItem(
+                index: 0,
+                icon: Icons.home_outlined,
+                selectedIcon: Icons.home,
+                label: 'Home',
+                currentIndex: currentIndex,
+                onTap: (i) => _handleTap(context, i),
+              ),
+              _NavItem(
+                index: 1,
+                icon: Icons.map_outlined,
+                selectedIcon: Icons.map,
+                label: 'Map',
+                currentIndex: currentIndex,
+                onTap: (i) => _handleTap(context, i),
+              ),
+              _NavItem(
+                index: 2,
+                icon: Icons.confirmation_num_outlined,
+                selectedIcon: Icons.confirmation_num,
+                label: 'Tickets',
+                currentIndex: currentIndex,
+                onTap: (i) => _handleTap(context, i),
+              ),
+              _NavItem(
+                index: 3,
+                icon: Icons.person_outline,
+                selectedIcon: Icons.person,
+                label: 'Profile',
+                currentIndex: currentIndex,
+                onTap: (i) => _handleTap(context, i),
+              ),
             ],
           ),
         ),
@@ -68,6 +85,7 @@ class ZooBottomNav extends StatelessWidget {
 class _NavItem extends StatefulWidget {
   final int index;
   final IconData icon;
+  final IconData selectedIcon;
   final String label;
   final int currentIndex;
   final Function(int) onTap;
@@ -75,6 +93,7 @@ class _NavItem extends StatefulWidget {
   const _NavItem({
     required this.index,
     required this.icon,
+    required this.selectedIcon,
     required this.label,
     required this.currentIndex,
     required this.onTap,
@@ -111,8 +130,8 @@ class _NavItemState extends State<_NavItem> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                widget.icon,
-                color: _isActive ? AppColors.navIcon : AppColors.navIcon,
+                _isActive ? widget.selectedIcon : widget.icon,
+                color: AppColors.navIcon,
                 size: 26,
               ),
               const SizedBox(height: 4),
@@ -121,8 +140,7 @@ class _NavItemState extends State<_NavItem> {
                 maxLines: 1,
                 style: TextStyle(
                   color: _isActive ? AppColors.navIcon : AppColors.navIcon,
-                  fontWeight:
-                      _isActive ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: _isActive ? FontWeight.w600 : FontWeight.w400,
                   fontSize: 12,
                   fontFamily: 'Inter',
                 ),
