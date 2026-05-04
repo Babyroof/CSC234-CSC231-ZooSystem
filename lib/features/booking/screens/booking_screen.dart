@@ -77,8 +77,7 @@ class _BookingNotifier extends StateNotifier<_BookingState> {
     }
   }
 
-  void incrementKid() =>
-      state = state.copyWith(kidCount: state.kidCount + 1);
+  void incrementKid() => state = state.copyWith(kidCount: state.kidCount + 1);
   void decrementKid() {
     if (state.kidCount > 0) {
       state = state.copyWith(kidCount: state.kidCount - 1);
@@ -95,16 +94,14 @@ class _BookingNotifier extends StateNotifier<_BookingState> {
 
   void toggleBuffetFood() =>
       state = state.copyWith(buffetFood: !state.buffetFood);
-  void toggleTourGuide() =>
-      state = state.copyWith(tourGuide: !state.tourGuide);
-  void toggleGolfCar() =>
-      state = state.copyWith(golfCar: !state.golfCar);
+  void toggleTourGuide() => state = state.copyWith(tourGuide: !state.tourGuide);
+  void toggleGolfCar() => state = state.copyWith(golfCar: !state.golfCar);
 }
 
 final _bookingProvider =
     StateNotifierProvider.autoDispose<_BookingNotifier, _BookingState>(
-  (ref) => _BookingNotifier(),
-);
+      (ref) => _BookingNotifier(),
+    );
 
 // ── Screen ────────────────────────────────────────────────────────────────
 class BookingScreen extends ConsumerWidget {
@@ -146,8 +143,9 @@ class BookingScreen extends ConsumerWidget {
                           ageRange: 'Age 9 - 59',
                           count: state.adultCount,
                           onIncrement: notifier.incrementAdult,
-                          onDecrement:
-                              state.adultCount > 0 ? notifier.decrementAdult : null,
+                          onDecrement: state.adultCount > 0
+                              ? notifier.decrementAdult
+                              : null,
                         ),
                         _divider(),
                         _TicketRow(
@@ -157,8 +155,9 @@ class BookingScreen extends ConsumerWidget {
                           ageRange: 'Age 1 - 8',
                           count: state.kidCount,
                           onIncrement: notifier.incrementKid,
-                          onDecrement:
-                              state.kidCount > 0 ? notifier.decrementKid : null,
+                          onDecrement: state.kidCount > 0
+                              ? notifier.decrementKid
+                              : null,
                         ),
                         _divider(),
                         _TicketRow(
@@ -168,8 +167,9 @@ class BookingScreen extends ConsumerWidget {
                           ageRange: 'Age 60+',
                           count: state.elderCount,
                           onIncrement: notifier.incrementElder,
-                          onDecrement:
-                              state.elderCount > 0 ? notifier.decrementElder : null,
+                          onDecrement: state.elderCount > 0
+                              ? notifier.decrementElder
+                              : null,
                         ),
                       ],
                     ),
@@ -216,30 +216,30 @@ class BookingScreen extends ConsumerWidget {
   }
 
   Widget _sectionTitle(String text) => Text(
-        text,
-        style: const TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          color: AppColors.black,
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      color: AppColors.black,
+    ),
+  );
 
   Widget _card({required List<Widget> children}) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(children: children),
-      );
+    decoration: BoxDecoration(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(children: children),
+  );
 
   Widget _divider() => Divider(
-        height: 1,
-        thickness: 1,
-        color: AppColors.background,
-        indent: 16,
-        endIndent: 16,
-      );
+    height: 1,
+    thickness: 1,
+    color: AppColors.background,
+    indent: 16,
+    endIndent: 16,
+  );
 }
 
 // ── AppBar ────────────────────────────────────────────────────────────────
@@ -356,25 +356,25 @@ class _DatePickerRow extends StatelessWidget {
   }
 
   Widget _datePart(String label) => Text(
-        label,
-        style: const TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 14,
-          color: AppColors.grey,
-        ),
-      );
+    label,
+    style: const TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 14,
+      color: AppColors.grey,
+    ),
+  );
 
   Widget _slash() => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8),
-        child: Text(
-          '/',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            color: AppColors.grey,
-          ),
-        ),
-      );
+    padding: EdgeInsets.symmetric(horizontal: 8),
+    child: Text(
+      '/',
+      style: TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 14,
+        color: AppColors.grey,
+      ),
+    ),
+  );
 }
 
 // ── Ticket Row ────────────────────────────────────────────────────────────
@@ -620,14 +620,14 @@ class _RecommendBadge extends StatelessWidget {
 
 // ── Icon Box ─────────────────────────────────────────────────────────────
 Widget _iconBox(IconData icon) => Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Icon(icon, size: 22, color: AppColors.black),
-    );
+  width: 44,
+  height: 44,
+  decoration: BoxDecoration(
+    color: AppColors.background,
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Icon(icon, size: 22, color: AppColors.black),
+);
 
 // ── Bottom Bar ────────────────────────────────────────────────────────────
 class _BottomBar extends StatelessWidget {
@@ -644,8 +644,7 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canCheckout =
-        state.totalPeople > 0 && state.selectedDate != null;
+    final canCheckout = state.totalPeople > 0 && state.selectedDate != null;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
