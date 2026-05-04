@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
+import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
+import 'package:zoopernova_zoo_system/core/utils/validators.dart';
 import 'package:zoopernova_zoo_system/features/auth/widgets/custom_text_field.dart';
 import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthService? authService;
 
-  const LoginScreen({Key? key, this.authService}) : super(key: key);
+  const LoginScreen({super.key, this.authService});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -46,20 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your email';
-    }
-    // Simple email validation
-    final emailRegex = RegExp(
-      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
-    );
-
-    if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email';
-    }
-    return null;
-  }
+  String? _validateEmail(String? value) => AppValidators.email(value);
 
   String? _validatePassword(String? value) {
     if (_backendError != null) {
@@ -95,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
           ).showSnackBar(const SnackBar(content: Text('Login successful')));
           //Navigate to home page
-          Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushReplacementNamed(context, AppRoute.home);
         } else {
           setState(() {
             _backendError = result ?? 'Email or Password is not correct';
@@ -119,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _navigateToSignUp() {
-    Navigator.pushNamed(context, '/register');
+    Navigator.pushNamed(context, AppRoute.register);
   }
 
   @override
@@ -144,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Container(
                   // Overlay for better text visibility
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                 ),
               ),
               // Bottom Content Section
