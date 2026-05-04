@@ -1,10 +1,16 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/models/auth_model.dart';
 import 'profile_service.dart';
 
+final authStateProvider = StreamProvider<User?>((ref) {
+  return FirebaseAuth.instance.authStateChanges();
+});
+
 class ProfileNotifier extends AsyncNotifier<UserModel?> {
   @override
   Future<UserModel?> build() async {
+    ref.watch(authStateProvider);
     return ProfileService().getUserProfile();
   }
 

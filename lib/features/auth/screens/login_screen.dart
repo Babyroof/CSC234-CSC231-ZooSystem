@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 import 'package:zoopernova_zoo_system/core/utils/validators.dart';
 import 'package:zoopernova_zoo_system/features/auth/widgets/custom_text_field.dart';
 import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
-import '../../profile/services/profile_notifier.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
+class LoginScreen extends StatefulWidget {
   final AuthService? authService;
 
-  const LoginScreen({Key? key, this.authService}) : super(key: key);
+  const LoginScreen({super.key, this.authService});
+
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -81,12 +80,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       if (mounted) {
         if (result == "Success") {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Login successful')));
-
-          ref.invalidate(profileNotifierProvider);
-          //Navigate to home page
           Navigator.pushReplacementNamed(context, AppRoute.home);
         } else {
           setState(() {

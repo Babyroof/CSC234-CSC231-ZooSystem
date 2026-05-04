@@ -18,7 +18,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _lastnameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _usernameController = TextEditingController();
   final _phoneController = TextEditingController();
 
   bool _isLoading = false;
@@ -29,7 +28,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _lastnameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _usernameController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
@@ -60,16 +58,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return null;
   }
 
-  String? _validateUsername(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your username';
-    }
-    if (value.contains('_') || value.contains('!')) {
-      return 'Username cannot contain special characters like _ or !';
-    }
-    return null;
-  }
-
   String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your phone number';
@@ -91,7 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       lastname: _lastnameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,
-      username: _usernameController.text.trim(),
+      username: '',
       phoneNumber: _phoneController.text.trim(),
     );
 
@@ -230,14 +218,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   controller: _passwordController,
                                   isPassword: true,
                                   validator: _validatePassword,
-                                ),
-                                const SizedBox(height: 20),
-                                // Username Field
-                                CustomTextField(
-                                  label: 'Username',
-                                  hintText: 'Enter Username',
-                                  controller: _usernameController,
-                                  validator: _validateUsername,
                                 ),
                                 const SizedBox(height: 20),
                                 // Phone Number Field
