@@ -125,15 +125,18 @@ Document ID: Auto-ID
 ### 5. Collection: booking (CRUD — primary feature)
 Document ID: Auto-ID
 
-| Field       | Type      | Description                           | Example               |
-|-------------|-----------|---------------------------------------|-----------------------|
-| userId      | string    | FK: Auth UID of the booking user      | W9aX2... (from Auth)  |
-| adultTotal  | number    | Number of adults (NOT string)         | 2                     |
-| childTotal  | number    | Number of children (NOT string)       | 1                     |
-| elderTotal  | number    | Number of elderly (NOT string)        | 0                     |
-| date        | timestamp | Visit date — must use Firebase Timestamp | March 25, 2026     |
-| addOns      | array     | Selected add-ons (multiple selection) | ["Animal Food", "Trail Cart"] |
-| status      | string    | Booking status: pending or done       | pending               |
+| Field          | Type      | Description                           | Example               |
+|----------------|-----------|---------------------------------------|-----------------------|
+| userId         | string    | FK: Auth UID of the booking user      | W9aX2... (from Auth)  |
+| adultTotal     | number    | Number of adults (NOT string)         | 2                     |
+| childTotal     | number    | Number of children (NOT string)       | 1                     |
+| elderTotal     | number    | Number of elderly (NOT string)        | 0                     |
+| date           | timestamp | Visit date — must use Firebase Timestamp | March 25, 2026     |
+| BuffetFood     | boolean   | Add-on: Buffet food                   | true                  |
+| Event_Elephant | boolean   | Add-on: Elephant show                 | false                 |
+| Event_Penguin  | boolean   | Add-on: Penguin show                  | true                  |
+| GolfCar        | boolean   | Add-on: Golf car                      | false                 |
+| status         | string    | Booking status: pending or done       | pending               |
 
 ---
 
@@ -217,7 +220,7 @@ through the Firebase Console — there is no admin UI in the app.
 - NEVER use Auto-ID for user documents — always use Firebase Auth UID
 - NEVER send adultTotal, childTotal, or elderTotal as String — must be Number
 - NEVER send date as String — must be Firebase Timestamp
-
+- NEVER send BuffetFood, Event_Elephant, Event_Penguin, GolfCar as String — must be Boolean
 
 ---
 
