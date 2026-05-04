@@ -86,14 +86,14 @@ class ProfileScreen extends ConsumerWidget {
                         onEditTap: user == null
                             ? null
                             : () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ChangeNameScreen(
-                                      currentFirstname: user.firstname,
-                                      currentLastname: user.lastname,
-                                    ),
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChangeNameScreen(
+                                    currentFirstname: user.firstname,
+                                    currentLastname: user.lastname,
                                   ),
                                 ),
+                              ),
                         hasDivider: true,
                       ),
                       _buildRow(

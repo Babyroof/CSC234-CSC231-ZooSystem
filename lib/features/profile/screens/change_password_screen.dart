@@ -87,9 +87,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
       }
     } else if (result == 'wrong-password') {
-      setState(
-        () => _currentPasswordError = 'Current password is incorrect',
-      );
+      setState(() => _currentPasswordError = 'Current password is incorrect');
     } else {
       setState(() => _currentPasswordError = result);
     }

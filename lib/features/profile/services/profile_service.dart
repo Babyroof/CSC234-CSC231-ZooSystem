@@ -44,10 +44,9 @@ class ProfileService {
       );
       await user.reauthenticateWithCredential(credential);
       final uid = user.uid;
-      await _firestore
-          .collection('user')
-          .doc(uid)
-          .update({'phoneNumber': newPhoneNumber});
+      await _firestore.collection('user').doc(uid).update({
+        'phoneNumber': newPhoneNumber,
+      });
       return "Success";
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
