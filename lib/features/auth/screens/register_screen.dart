@@ -87,7 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return 'Please enter your phone number';
     }
     if (value.length != 10) {
-      return 'Phone number must be 9 characters';
+      return 'Phone number must be 10 digits';
     }
     return null;
   }
@@ -102,7 +102,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       firstname: _firstnameController.text.trim(),
       lastname: _lastnameController.text.trim(),
       email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
+      password: _passwordController.text,
       username: _usernameController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
     );
@@ -310,7 +310,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Do not have an account? ',
+                                'Already have an account? ',
                                 style: const TextStyle(
                                   fontFamily: 'Inter',
                                   fontWeight: FontWeight.w400,

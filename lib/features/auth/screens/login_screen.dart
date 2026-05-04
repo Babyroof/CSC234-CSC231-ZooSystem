@@ -87,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final result = await _authService.login(
         _emailController.text.trim(),
-        _passwordController.text.trim(),
+        _passwordController.text,
       );
       if (mounted) {
         if (result == "Success") {
