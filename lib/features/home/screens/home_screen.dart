@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadData() async {
     try {
       final events = await _eventService.getEvents();
-      final animals = await _animalService.getRandomPopularAnimals(4);
+      final animals = await _animalService.getRandomAnimals(4);
       final userData = await _profileService.getUserProfile();
       final animalData = await _animalService.getAnimalsWithZone();
 
@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 _currentUser != null
                                     ? 'Hi, ${_currentUser!.firstname} ${_currentUser!.lastname}'
-                                    : 'Hi, ....',
+                                    : 'Hi, Anonymous...',
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -294,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
                     child: Text(
-                      'Popular Animals',
+                      'Recommend Animals',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

@@ -140,13 +140,13 @@ void main() {
 
     group('getRandomPopularAnimals', () {
       test('returns at most the requested count', () async {
-        final result = await service.getRandomPopularAnimals(1);
+        final result = await service.getRandomAnimals(1);
 
         expect(result.length, lessThanOrEqualTo(1));
       });
 
       test('returns all animals when count exceeds total', () async {
-        final result = await service.getRandomPopularAnimals(100);
+        final result = await service.getRandomAnimals(100);
 
         expect(result.length, 2);
       });
@@ -154,7 +154,7 @@ void main() {
       test('returns empty list when collection is empty', () async {
         final emptyService = AnimalService(db: FakeFirebaseFirestore());
 
-        final result = await emptyService.getRandomPopularAnimals(3);
+        final result = await emptyService.getRandomAnimals(3);
 
         expect(result, isEmpty);
       });

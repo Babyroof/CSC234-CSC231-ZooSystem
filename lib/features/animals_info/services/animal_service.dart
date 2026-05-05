@@ -9,7 +9,7 @@ class AnimalService {
     : _db = db ?? FirebaseFirestore.instance;
 
   //Random Animals
-  Future<List<AnimalModel>> getRandomPopularAnimals(int count) async {
+  Future<List<AnimalModel>> getRandomAnimals(int count) async {
     try {
       final snap = await _db.collection('animal').get();
       print('Firestore animal docs count: ${snap.docs.length}'); // เพิ่มตรงนี้
@@ -21,7 +21,7 @@ class AnimalService {
       list.shuffle();
       return list.take(count).toList();
     } catch (e) {
-      print('getRandomPopularAnimals ERROR: $e'); // ดู error จริงๆ
+      print('getRandomAnimals ERROR: $e'); // ดู error จริงๆ
       return [];
     }
   }
