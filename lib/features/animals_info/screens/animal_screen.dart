@@ -215,11 +215,29 @@ class _AnimalScreenState extends State<AnimalScreen> {
                                         animal['animalPicture'],
                                         fit: BoxFit.cover,
                                         width: double.infinity,
-                                        errorBuilder: (_, __, ___) => Container(
-                                          color: Colors.grey[200],
-                                          child: const Icon(
-                                            Icons.pets,
-                                            color: Colors.grey,
+                                        loadingBuilder: (_, child, progress) {
+                                          if (progress == null) return child;
+                                          return Container(
+                                            color: AppColors.primary.withValues(alpha: 0.08),
+                                            child: const Center(
+                                              child: CircularProgressIndicator(
+                                                color: AppColors.primary,
+                                                strokeWidth: 2,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        errorBuilder: (context, err, stack) => Container(
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primary.withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: const Center(
+                                            child: Icon(
+                                              Icons.pets,
+                                              color: AppColors.primary,
+                                              size: 40,
+                                            ),
                                           ),
                                         ),
                                       ),

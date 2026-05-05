@@ -35,12 +35,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadData() async {
     try {
       final events = await _eventService.getEvents();
-      final animals = await _animalService.getRandomAnimals(4);
+      await _animalService.getRandomAnimals(4);
       final userData = await _profileService.getUserProfile();
       final animalData = await _animalService.getAnimalsWithZone();
-
-      print('Events loaded: ${events.length}'); // debug ดูก่อน
-      print('Animals loaded: ${animals.length}'); // debug ดูก่อน
 
       if (mounted) {
         setState(() {
@@ -53,7 +50,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _popularAnimals = animalData.take(4).toList();
       }
     } catch (e) {
-      print('Error loading data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -239,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha:0.05),
                                   blurRadius: 10,
                                 ),
                               ],
@@ -254,6 +250,31 @@ class _HomeScreenState extends State<HomeScreen> {
                                       event.eventPicture,
                                       fit: BoxFit.cover,
                                       width: double.infinity,
+                                      loadingBuilder: (_, child, progress) {
+                                        if (progress == null) return child;
+                                        return Container(
+                                          color: AppColors.primary.withValues(alpha: 0.08),
+                                          child: const Center(
+                                            child: CircularProgressIndicator(
+                                              color: AppColors.primary,
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      errorBuilder: (context, err, stack) => Container(
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.celebration_outlined,
+                                            color: AppColors.primary,
+                                            size: 36,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -326,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha:0.05),
                                 blurRadius: 8,
                               ),
                             ],
@@ -336,10 +357,39 @@ class _HomeScreenState extends State<HomeScreen> {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Image.network(
-                                  animal['animalPicture'],
+                                  animal['animalPicture'] ?? '',
                                   width: 80,
                                   height: 80,
                                   fit: BoxFit.cover,
+                                  loadingBuilder: (_, child, progress) {
+                                    if (progress == null) return child;
+                                    return Container(
+                                      width: 80,
+                                      height: 80,
+                                      color: AppColors.primary.withValues(alpha: 0.08),
+                                      child: const Center(
+                                        child: CircularProgressIndicator(
+                                          color: AppColors.primary,
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, err, stack) => Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.pets,
+                                        color: AppColors.primary,
+                                        size: 36,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 16),
