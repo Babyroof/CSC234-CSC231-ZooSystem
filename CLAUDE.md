@@ -28,12 +28,20 @@ lib/
 ├── cores/
 │   ├── constants/      ← app_colors.dart, app_strings.dart
 │   ├── routes/         ← app_route.dart (GoRouter + auth guard)
-│   ├── services/       ← database_service.dart (shared Firebase/Firestore instance)
+│   ├── services/       ← database_service.dart, seed_service.dart
 │   ├── theme/          ← app_theme.dart (uses constants colors, applied in main.dart)
-│   └── widgets/        ← loading_widget.dart, error_widget.dart (shared ALL features)
+│   ├── utils/          ← shared utility helpers
+│   └── widgets/        ← main_wrapper.dart, zoo_bottom_nav.dart (shared ALL features)
 │
 ├── features/
-│   ├── animal_info/
+│   ├── admin/          ← Admin-only features (guarded by auth role)
+│   │   ├── animals/    ← Admin CRUD for animals
+│   │   ├── auth/       ← Admin auth flow
+│   │   ├── events/     ← Admin CRUD for events
+│   │   ├── maps/       ← Admin map management
+│   │   ├── tickets/    ← Admin ticket/booking management
+│   │   └── zones/      ← Admin CRUD for zones
+│   ├── animals_info/
 │   │   ├── models/     ← animal_model.dart
 │   │   ├── screens/    ← animal_list_screen.dart, animal_detail_screen.dart
 │   │   ├── services/   ← animal_service.dart
@@ -56,7 +64,7 @@ lib/
 │   ├── home/
 │   │   ├── models/     ← home_model.dart
 │   │   ├── screens/    ← home_screen.dart
-│   │   ├── services/   ← event_service.dart
+│   │   ├── services/   ← home_service.dart
 │   │   └── widgets/    ← menu_button.dart
 │   ├── map/
 │   │   ├── models/     ← zone_model.dart
@@ -64,8 +72,8 @@ lib/
 │   │   ├── services/   ← map_service.dart
 │   │   └── widgets/
 │   ├── profile/
-│   │   ├── models/    
-│   │   ├── screens/    ← change_name_screen.dart,change_phone_number_screen.dart, profile_screen.dart
+│   │   ├── models/
+│   │   ├── screens/    ← change_name_screen.dart, change_phone_number_screen.dart, profile_screen.dart
 │   │   ├── services/   ← profile_service.dart
 │   │   └── widgets/
 │
@@ -81,8 +89,8 @@ Document ID: Firebase Auth UID — NEVER use Auto-ID
 | Field       | Type   | Description          | Example          |
 |-------------|--------|----------------------|------------------|
 | username    | string | Display name         | natt_bua         |
-| firstname   | string | First name           | Nathithorn        |
-| lastname    | string | Last name            | Buapraserith      |
+| firstname   | string | First name           | Nathithorn       |
+| lastname    | string | Last name            | Buapraserith     |
 | email       | string | Registration email   | natt@email.com   |
 | phoneNumber | string | Phone number         | 0812345678       |
 
@@ -93,9 +101,9 @@ Document ID: Firebase Auth UID — NEVER use Auto-ID
 ### 2. Collection: zone
 Document ID: Auto-ID
 
-| Field    | Type   | Description | Example                        |
-|----------|--------|-------------|--------------------------------|
-| zoneName | string | Zone name   | Bird Zone, Aquatic Zone        |
+| Field    | Type   | Description | Example                 |
+|----------|--------|-------------|-------------------------|
+| zoneName | string | Zone name   | Bird Zone, Aquatic Zone |
 
 ---
 
@@ -108,35 +116,38 @@ Document ID: Auto-ID
 | animalDetail  | string    | Description or history           | Native to South America  |
 | animalPicture | string    | Public URL from Firebase Storage | https://.../parrot.jpg   |
 | zoneId        | reference | FK → document in zone collection | zone/abc123XYZ           |
+| location_x    | int64     | X position of animal on map      | 100                      |
+| location_y    | int64     | Y position of animal on map      | 40                       |
 
 ---
 
 ### 4. Collection: event
 Document ID: Auto-ID
 
-| Field        | Type   | Description       | Example                    |
-|--------------|--------|-------------------|----------------------------|
-| eventName    | string | Event name        | Smart Seal Show            |
-| eventDetail  | string | Event description | 2 shows per day...         |
-| eventPicture | string | Cover image URL   | https://.../seal_show.png  |
+| Field        | Type   | Description                | Example                   |
+|--------------|--------|----------------------------|---------------------------|
+| eventName    | string | Event name                 | Smart Seal Show           |
+| eventDetail  | string | Event description          | 2 shows per day...        |
+| eventPicture | string | Cover image URL            | https://.../seal_show.png |
+| location_x   | int64  | X position of event on map | 100                       |
+| location_y   | int64  | Y position of event on map | 10                        |
 
 ---
 
 ### 5. Collection: booking (CRUD — primary feature)
 Document ID: Auto-ID
 
-| Field          | Type      | Description                           | Example               |
-|----------------|-----------|---------------------------------------|-----------------------|
-| userId         | string    | FK: Auth UID of the booking user      | W9aX2... (from Auth)  |
-| adultTotal     | number    | Number of adults (NOT string)         | 2                     |
-| childTotal     | number    | Number of children (NOT string)       | 1                     |
-| elderTotal     | number    | Number of elderly (NOT string)        | 0                     |
-| date           | timestamp | Visit date — must use Firebase Timestamp | March 25, 2026     |
-| BuffetFood     | boolean   | Add-on: Buffet food                   | true                  |
-| Event_Elephant | boolean   | Add-on: Elephant show                 | false                 |
-| Event_Penguin  | boolean   | Add-on: Penguin show                  | true                  |
-| GolfCar        | boolean   | Add-on: Golf car                      | false                 |
-| status         | string    | Booking status: pending or done       | pending               |
+| Field      | Type      | Description                              | Example               |
+|------------|-----------|------------------------------------------|-----------------------|
+| userId     | string    | FK: Auth UID of the booking user         | W9aX2... (from Auth)  |
+| adultTotal | number    | Number of adults (NOT string)            | 2                     |
+| childTotal | number    | Number of children (NOT string)          | 1                     |
+| elderTotal | number    | Number of elderly (NOT string)           | 0                     |
+| date       | timestamp | Visit date — must use Firebase Timestamp | March 25, 2026        |
+| BuffetFood | boolean   | Add-on: Buffet food                      | true                  |
+| GuideTour  | boolean   | Add-on: Guide tour                       | false                 |
+| GolfCar    | boolean   | Add-on: Golf car                         | false                 |
+| status     | string    | Booking status: pending or done          | pending               |
 
 ---
 
@@ -203,8 +214,8 @@ Screen reads updated state from Riverpod provider
 | booking    | Auth user  | Owner     | Owner      | Owner      | Full CRUD — must be logged in and be owner |
 
 ### Admin Strategy
-Admin operations (create/update/delete for animal, zone, event) are managed directly
-through the Firebase Console — there is no admin UI in the app.
+Admin CRUD for animals, zones, events, maps, and tickets is handled inside features/admin/
+Admin operations are protected by auth role guard in GoRouter — not accessible to regular users.
 
 ---
 
@@ -220,7 +231,8 @@ through the Firebase Console — there is no admin UI in the app.
 - NEVER use Auto-ID for user documents — always use Firebase Auth UID
 - NEVER send adultTotal, childTotal, or elderTotal as String — must be Number
 - NEVER send date as String — must be Firebase Timestamp
-- NEVER send BuffetFood, Event_Elephant, Event_Penguin, GolfCar as String — must be Boolean
+- NEVER send BuffetFood, GuideTour, GolfCar as String — must be Boolean
+- NEVER send location_x or location_y as String — must be int64
 
 ---
 

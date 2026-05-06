@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 
 // ── Mock prices (replace with remote config / service later) ──────────────
-const _kPriceAdult = 40;
+const _kPriceAdult = 300;
 const _kPriceKid = 150;
 const _kPriceElder = 40;
 const _kPriceBuffet = 200; // per person
@@ -721,7 +721,20 @@ class _BottomBar extends StatelessWidget {
             height: 52,
             child: ElevatedButton(
               onPressed: canCheckout
-                  ? () => Navigator.pushNamed(context, '/payment')
+                  ? () => Navigator.pushNamed(
+                      context,
+                      '/payment',
+                      arguments: {
+                        'totalAmount': state.totalAmount,
+                        'adultCount': state.adultCount,
+                        'kidCount': state.kidCount,
+                        'elderCount': state.elderCount,
+                        'adultUnitPrice': _kPriceAdult,
+                        'kidUnitPrice': _kPriceKid,
+                        'elderUnitPrice': _kPriceElder,
+                        'dateMs': state.selectedDate?.millisecondsSinceEpoch,
+                      },
+                    )
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
