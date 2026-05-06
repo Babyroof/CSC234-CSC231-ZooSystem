@@ -235,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha:0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 10,
                                 ),
                               ],
@@ -253,7 +253,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       loadingBuilder: (_, child, progress) {
                                         if (progress == null) return child;
                                         return Container(
-                                          color: AppColors.primary.withValues(alpha: 0.08),
+                                          color: AppColors.primary.withValues(
+                                            alpha: 0.08,
+                                          ),
                                           child: const Center(
                                             child: CircularProgressIndicator(
                                               color: AppColors.primary,
@@ -262,19 +264,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         );
                                       },
-                                      errorBuilder: (context, err, stack) => Container(
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.celebration_outlined,
-                                            color: AppColors.primary,
-                                            size: 36,
+                                      errorBuilder: (context, err, stack) =>
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary
+                                                  .withValues(alpha: 0.12),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons.celebration_outlined,
+                                                color: AppColors.primary,
+                                                size: 36,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
                                     ),
                                   ),
                                 ),
@@ -347,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha:0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 8,
                               ),
                             ],
@@ -366,7 +371,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     return Container(
                                       width: 80,
                                       height: 80,
-                                      color: AppColors.primary.withValues(alpha: 0.08),
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.08,
+                                      ),
                                       child: const Center(
                                         child: CircularProgressIndicator(
                                           color: AppColors.primary,
@@ -375,21 +382,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     );
                                   },
-                                  errorBuilder: (context, err, stack) => Container(
-                                    width: 80,
-                                    height: 80,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Center(
-                                      child: Icon(
-                                        Icons.pets,
-                                        color: AppColors.primary,
-                                        size: 36,
+                                  errorBuilder: (context, err, stack) =>
+                                      Container(
+                                        width: 80,
+                                        height: 80,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withValues(
+                                            alpha: 0.12,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.pets,
+                                            color: AppColors.primary,
+                                            size: 36,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
                                 ),
                               ),
                               const SizedBox(width: 16),

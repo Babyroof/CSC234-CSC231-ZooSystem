@@ -218,7 +218,9 @@ class _AnimalScreenState extends State<AnimalScreen> {
                                         loadingBuilder: (_, child, progress) {
                                           if (progress == null) return child;
                                           return Container(
-                                            color: AppColors.primary.withValues(alpha: 0.08),
+                                            color: AppColors.primary.withValues(
+                                              alpha: 0.08,
+                                            ),
                                             child: const Center(
                                               child: CircularProgressIndicator(
                                                 color: AppColors.primary,
@@ -227,19 +229,22 @@ class _AnimalScreenState extends State<AnimalScreen> {
                                             ),
                                           );
                                         },
-                                        errorBuilder: (context, err, stack) => Container(
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary.withValues(alpha: 0.12),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: const Center(
-                                            child: Icon(
-                                              Icons.pets,
-                                              color: AppColors.primary,
-                                              size: 40,
+                                        errorBuilder: (context, err, stack) =>
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.12),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.pets,
+                                                  color: AppColors.primary,
+                                                  size: 40,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
                                       ),
                                     ),
                                   ),

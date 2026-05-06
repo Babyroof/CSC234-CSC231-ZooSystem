@@ -722,19 +722,19 @@ class _BottomBar extends StatelessWidget {
             child: ElevatedButton(
               onPressed: canCheckout
                   ? () => Navigator.pushNamed(
-                        context,
-                        '/payment',
-                        arguments: {
-                          'totalAmount': state.totalAmount,
-                          'adultCount': state.adultCount,
-                          'kidCount': state.kidCount,
-                          'elderCount': state.elderCount,
-                          'adultUnitPrice': _kPriceAdult,
-                          'kidUnitPrice': _kPriceKid,
-                          'elderUnitPrice': _kPriceElder,
-                          'dateMs': state.selectedDate?.millisecondsSinceEpoch,
-                        },
-                      )
+                      context,
+                      '/payment',
+                      arguments: {
+                        'totalAmount': state.totalAmount,
+                        'adultCount': state.adultCount,
+                        'kidCount': state.kidCount,
+                        'elderCount': state.elderCount,
+                        'adultUnitPrice': _kPriceAdult,
+                        'kidUnitPrice': _kPriceKid,
+                        'elderUnitPrice': _kPriceElder,
+                        'dateMs': state.selectedDate?.millisecondsSinceEpoch,
+                      },
+                    )
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,

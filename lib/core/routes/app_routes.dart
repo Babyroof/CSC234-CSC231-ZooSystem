@@ -50,14 +50,16 @@ class AppRoute {
       booking: (context) => const BookingScreen(),
       payment: (context) {
         final args =
-            ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?
-            ?? const {};
+            ModalRoute.of(context)?.settings.arguments
+                as Map<String, dynamic>? ??
+            const {};
         return PaymentScreen(bookingArgs: args);
       },
       ticket: (context) {
         final args =
-            ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?
-            ?? const {};
+            ModalRoute.of(context)?.settings.arguments
+                as Map<String, dynamic>? ??
+            const {};
         return TicketScreen(bookingArgs: args);
       },
       profile: (context) => const ProfileScreen(),

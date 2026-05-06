@@ -26,8 +26,10 @@ class _CountdownNotifier extends StateNotifier<int> {
 
 final _qrDataProvider = Provider.autoDispose<String>((_) {
   final rng = Random();
-  final uid =
-      List.generate(32, (_) => rng.nextInt(16).toRadixString(16)).join();
+  final uid = List.generate(
+    32,
+    (_) => rng.nextInt(16).toRadixString(16),
+  ).join();
   return 'ZOOPERNOVA-PAY:$uid';
 });
 
@@ -233,8 +235,7 @@ class PaymentScreen extends ConsumerWidget {
                                       color: AppColors.black,
                                     ),
                                     dataModuleStyle: const QrDataModuleStyle(
-                                      dataModuleShape:
-                                          QrDataModuleShape.square,
+                                      dataModuleShape: QrDataModuleShape.square,
                                       color: AppColors.black,
                                     ),
                                   ),
@@ -316,8 +317,9 @@ class PaymentScreen extends ConsumerWidget {
                             fontFamily: 'Inter',
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color:
-                                isExpired ? AppColors.change : AppColors.black,
+                            color: isExpired
+                                ? AppColors.change
+                                : AppColors.black,
                           ),
                         ),
                       ],

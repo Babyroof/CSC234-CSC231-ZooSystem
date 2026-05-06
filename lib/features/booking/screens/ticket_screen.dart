@@ -23,8 +23,18 @@ class TicketScreen extends ConsumerWidget {
   String _formatDate(DateTime d) {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${days[d.weekday - 1]}, ${d.day.toString().padLeft(2, '0')}/${months[d.month - 1]}/${d.year}';
   }
@@ -82,17 +92,11 @@ class TicketScreen extends ConsumerWidget {
           GestureDetector(
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const TicketHistoryScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const TicketHistoryScreen()),
             ),
             child: const Padding(
               padding: EdgeInsets.only(right: 20),
-              child: Icon(
-                Icons.history,
-                size: 24,
-                color: AppColors.black,
-              ),
+              child: Icon(Icons.history, size: 24, color: AppColors.black),
             ),
           ),
         ],
@@ -252,7 +256,11 @@ class _TicketCard extends StatelessWidget {
           // Divider
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Divider(height: 1, color: AppColors.background, thickness: 1.5),
+            child: Divider(
+              height: 1,
+              color: AppColors.background,
+              thickness: 1.5,
+            ),
           ),
 
           // Total amount
