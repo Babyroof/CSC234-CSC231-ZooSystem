@@ -8,6 +8,7 @@ class CustomTextField extends StatefulWidget {
   final TextInputType keyboardType;
   final FormFieldValidator<String>? validator;
   final bool isPassword;
+  final Color? focusColor;
 
   const CustomTextField({
     super.key,
@@ -17,6 +18,7 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType = TextInputType.text,
     this.validator,
     this.isPassword = false,
+    this.focusColor,
   });
 
   @override
@@ -75,7 +77,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1),
+              borderSide: BorderSide(
+                color: widget.focusColor ?? AppColors.primary,
+                width: 1,
+              ),
             ),
             filled: true,
             fillColor: AppColors.white,
