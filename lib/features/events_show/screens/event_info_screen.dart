@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
+import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 import 'package:zoopernova_zoo_system/core/widgets/zoo_bottom_nav.dart';
 import '../models/event_model.dart';
 
@@ -104,27 +105,42 @@ class EventInfoScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            event.eventName,
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.black,
-                              height: 22 / 17,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
                           Row(
                             children: [
-                              const Text('🌲', style: TextStyle(fontSize: 16)),
+                              Expanded(
+                                child: Text(
+                                  event.eventName,
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.black,
+                                    height: 22 / 17,
+                                  ),
+                                ),
+                              ),
                               const SizedBox(width: 8),
-                              const Text(
-                                'Savana',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
+                              GestureDetector(
+                                onTap: () {
+                                  if (event.locationX == null ||
+                                      event.locationY == null)
+                                    return;
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoute.map,
+                                    arguments: {
+                                      'focusEvent': {
+                                        'eventName': event.eventName,
+                                        'eventDetail': event.eventDetail,
+                                        'eventPicture': event.eventPicture,
+                                        'locationX': event.locationX,
+                                        'locationY': event.locationY,
+                                      },
+                                    },
+                                  );
+                                },
+                                child: const Icon(
+                                  Icons.map_outlined,
                                   color: AppColors.black,
-                                  height: 22 / 14,
                                 ),
                               ),
                             ],

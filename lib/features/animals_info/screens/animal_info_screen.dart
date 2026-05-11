@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/routes/app_routes.dart';
 import '../../../core/widgets/zoo_bottom_nav.dart';
 import '../../../core/constants/app_colors.dart';
 
@@ -139,9 +140,32 @@ class AnimalInfoScreen extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(width: 8),
-                            const Icon(
-                              Icons.map_outlined,
-                              color: AppColors.black,
+                            GestureDetector(
+                              onTap: () {
+                                final lx = animal['location_x'];
+                                final ly = animal['location_y'];
+                                if (lx == null || ly == null) return;
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoute.map,
+                                  arguments: {
+                                    'focusAnimal': {
+                                      'animalName': animal['animalName'] ?? '',
+                                      'animalDetail':
+                                          animal['animalDetail'] ?? '',
+                                      'animalPicture':
+                                          animal['animalPicture'] ?? '',
+                                      'zoneName': animal['zoneName'] ?? '',
+                                      'locationX': (lx as num).toDouble(),
+                                      'locationY': (ly as num).toDouble(),
+                                    },
+                                  },
+                                );
+                              },
+                              child: const Icon(
+                                Icons.map_outlined,
+                                color: AppColors.black,
+                              ),
                             ),
                           ],
                         ),

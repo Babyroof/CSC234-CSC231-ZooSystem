@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -65,16 +67,31 @@ class EventAdminState {
 
 class EventAdminNotifier extends StateNotifier<EventAdminState> {
   EventAdminNotifier(this._service) : super(const EventAdminState()) {
-    loadEvents();
+    _subscribeToEvents();
   }
 
   final EventAdminService _service;
+  StreamSubscription<List<EventAdminModel>>? _eventsSubscription;
 
-  Future<void> loadEvents() async {
+  void _subscribeToEvents() {
     state = state.copyWith(isLoading: true);
-    final events = await _service.getEvents();
-    state = state.copyWith(isLoading: false, items: events);
-    _guardCurrentPage();
+    _eventsSubscription = _service.getEvents().listen(
+      (events) {
+        if (!mounted) return;
+        state = state.copyWith(isLoading: false, items: events);
+        _guardCurrentPage();
+      },
+      onError: (Object e) {
+        if (!mounted) return;
+        state = state.copyWith(isLoading: false);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _eventsSubscription?.cancel();
+    super.dispose();
   }
 
   void setSearchText(String value) {
@@ -163,9 +180,8 @@ class _EventAdminScreenState extends ConsumerState<EventAdminScreen> {
                               onCreatePressed: () {
                                 showDialog(
                                   context: context,
-                                  builder: (_) => CreateEventAdminDialog(
-                                    onCreated: notifier.loadEvents,
-                                  ),
+                                  builder: (_) =>
+                                      const CreateEventAdminDialog(),
                                 );
                               },
                             ),
@@ -182,10 +198,8 @@ class _EventAdminScreenState extends ConsumerState<EventAdminScreen> {
                                       onEdit: (item) {
                                         showDialog(
                                           context: context,
-                                          builder: (_) => EditEventAdminDialog(
-                                            event: item,
-                                            onSaved: notifier.loadEvents,
-                                          ),
+                                          builder: (_) =>
+                                              EditEventAdminDialog(event: item),
                                         );
                                       },
                                       onDelete: (item) {
@@ -194,7 +208,6 @@ class _EventAdminScreenState extends ConsumerState<EventAdminScreen> {
                                           builder: (_) =>
                                               DeleteEventAdminDialog(
                                                 event: item,
-                                                onDeleted: notifier.loadEvents,
                                               ),
                                         );
                                       },

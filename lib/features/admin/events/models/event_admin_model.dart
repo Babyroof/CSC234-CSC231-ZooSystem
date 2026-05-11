@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class EventAdminModel {
   final String id;
   final String eventName;
@@ -14,6 +16,18 @@ class EventAdminModel {
     required this.locationX,
     required this.locationY,
   });
+
+  factory EventAdminModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return EventAdminModel(
+      id: doc.id,
+      eventName: data['eventName'] as String? ?? '',
+      eventDetail: data['eventDetail'] as String? ?? '',
+      eventPicture: data['eventPicture'] as String? ?? '',
+      locationX: (data['location_x'] as num?)?.toInt() ?? 0,
+      locationY: (data['location_y'] as num?)?.toInt() ?? 0,
+    );
+  }
 
   factory EventAdminModel.fromMap(String id, Map<String, dynamic> map) {
     return EventAdminModel(

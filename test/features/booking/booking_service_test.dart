@@ -103,7 +103,7 @@ void main() {
       await fakeFirestore.collection('booking').doc(docId).set({
         'BuffetFood': true,
         'GolfCar': false,
-        'GuidTour': true,
+        'GuideTour': true,
         'adultTotal': 2,
         'childTotal': 1,
         'elderTotal': 0,
@@ -230,7 +230,7 @@ void main() {
       await fakeFirestore.collection('booking').doc('todelete').set({
         'BuffetFood': false,
         'GolfCar': false,
-        'GuidTour': false,
+        'GuideTour': false,
         'adultTotal': 1,
         'childTotal': 0,
         'elderTotal': 0,
@@ -255,7 +255,7 @@ void main() {
       final docData = {
         'BuffetFood': false,
         'GolfCar': false,
-        'GuidTour': false,
+        'GuideTour': false,
         'adultTotal': 1,
         'childTotal': 0,
         'elderTotal': 0,

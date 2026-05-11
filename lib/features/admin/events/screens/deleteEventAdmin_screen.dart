@@ -27,7 +27,6 @@ class _DeleteEventAdminDialogState
     setState(() => _isDeleting = true);
     try {
       await ref.read(eventAdminServiceProvider).deleteEvent(widget.event.id);
-      widget.onDeleted?.call();
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {

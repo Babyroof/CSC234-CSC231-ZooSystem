@@ -76,7 +76,7 @@ void main() {
       await fakeFirestore.collection('booking').doc('bk2').set({
         'BuffetFood': false,
         'GolfCar': false,
-        'GuidTour': false,
+        'GuideTour': false,
         'adultTotal': 1,
         'childTotal': 0,
         'elderTotal': 0,
@@ -96,7 +96,7 @@ void main() {
       await fakeFirestore.collection('booking').doc('bk3').set({
         'BuffetFood': false,
         'GolfCar': false,
-        'GuidTour': false,
+        'GuideTour': false,
         'adultTotal': 0,
         'childTotal': 0,
         'elderTotal': 0,
@@ -114,7 +114,7 @@ void main() {
       await fakeFirestore.collection('booking').doc('bk4').set({
         'BuffetFood': false,
         'GolfCar': false,
-        'GuidTour': false,
+        'GuideTour': false,
         'date': Timestamp.fromDate(DateTime(2026, 1, 1)),
         'status': 'pending',
         'userId': 'uid',

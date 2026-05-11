@@ -1,83 +1,110 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event_admin_model.dart';
 
 class EventAdminService {
-  // TODO: Inject FirebaseFirestore — replace all methods with real Firestore calls
-  final List<EventAdminModel> _events = [
-    const EventAdminModel(
-      id: 'mock_1',
-      eventName: 'Smart Seal Show',
-      eventDetail: '2 shows per day at 10:00 and 14:00.',
-      eventPicture: '',
-      locationX: 300,
-      locationY: 400,
-    ),
-    const EventAdminModel(
-      id: 'mock_2',
-      eventName: 'Elephant Bathing',
-      eventDetail: 'Watch elephants get their daily bath at 09:00.',
-      eventPicture: '',
-      locationX: 600,
-      locationY: 250,
-    ),
-  ];
+  final FirebaseFirestore _db;
+  final FirebaseStorage _storage;
 
-  int _nextId = 3;
+  EventAdminService({FirebaseFirestore? db, FirebaseStorage? storage})
+    : _db = db ?? FirebaseFirestore.instance,
+      _storage = storage ?? FirebaseStorage.instance;
 
-  Future<List<EventAdminModel>> getEvents() async {
-    // TODO: Query 'event' collection
-    return List.from(_events);
+  /// Returns a real-time stream of all events from Firestore.
+  Stream<List<EventAdminModel>> getEvents() {
+    return _db
+        .collection('event')
+        .snapshots()
+        .map(
+          (snap) => snap.docs
+              .map<EventAdminModel>(EventAdminModel.fromFirestore)
+              .toList(),
+        )
+        .handleError((Object e) {
+          debugPrint('[EventAdminService] getEvents stream error: $e');
+          throw e;
+        });
   }
 
-  Future<void> addEvent({
+  Future<EventAdminModel?> getEventById(String eventId) async {
+    try {
+      final doc = await _db.collection('event').doc(eventId).get();
+      if (!doc.exists) return null;
+      return EventAdminModel.fromFirestore(doc);
+    } catch (e) {
+      debugPrint('[EventAdminService] getEventById error: $e');
+      rethrow;
+    }
+  }
+
+  /// Create: ONLY eventName, eventDetail, eventPicture — NO location fields.
+  Future<void> createEvent({
     required String eventName,
     required String eventDetail,
     required String eventPicture,
-    required int locationX,
-    required int locationY,
   }) async {
-    // TODO: _db.collection('event').add({...})
-    _events.add(
-      EventAdminModel(
-        id: 'mock_${_nextId++}',
-        eventName: eventName,
-        eventDetail: eventDetail,
-        eventPicture: eventPicture,
-        locationX: locationX,
-        locationY: locationY,
-      ),
-    );
+    try {
+      await _db.collection('event').add({
+        'eventName': eventName,
+        'eventDetail': eventDetail,
+        'eventPicture': eventPicture,
+      });
+      debugPrint('[EventAdminService] createEvent: success');
+    } catch (e) {
+      debugPrint('[EventAdminService] createEvent error: $e');
+      rethrow;
+    }
   }
 
-  Future<void> updateEvent(
-    String id, {
+  /// Update: uses .update() NOT .set() — NEVER writes location_x or location_y.
+  Future<void> updateEvent({
+    required String eventId,
     required String eventName,
     required String eventDetail,
     required String eventPicture,
-    required int locationX,
-    required int locationY,
   }) async {
-    // TODO: _db.collection('event').doc(id).update({...})
-    final index = _events.indexWhere((e) => e.id == id);
-    if (index == -1) return;
-    _events[index] = EventAdminModel(
-      id: id,
-      eventName: eventName,
-      eventDetail: eventDetail,
-      eventPicture: eventPicture,
-      locationX: locationX,
-      locationY: locationY,
-    );
+    try {
+      await _db.collection('event').doc(eventId).update({
+        'eventName': eventName,
+        'eventDetail': eventDetail,
+        'eventPicture': eventPicture,
+      });
+      debugPrint('[EventAdminService] updateEvent: $eventId updated');
+    } catch (e) {
+      debugPrint('[EventAdminService] updateEvent error: $e');
+      rethrow;
+    }
   }
 
-  Future<void> deleteEvent(String id) async {
-    // TODO: _db.collection('event').doc(id).delete()
-    _events.removeWhere((e) => e.id == id);
+  Future<void> deleteEvent(String eventId) async {
+    try {
+      await _db.collection('event').doc(eventId).delete();
+      debugPrint('[EventAdminService] deleteEvent: $eventId deleted');
+    } catch (e) {
+      debugPrint('[EventAdminService] deleteEvent error: $e');
+      rethrow;
+    }
   }
 
+  /// Uploads image bytes to Firebase Storage under 'events/' and returns the
+  /// public download URL. The screens keep this flow unchanged.
   Future<String> uploadImage(List<int> bytes, String extension) async {
-    // TODO: Upload to Firebase Storage at 'events/<timestamp>.<ext>', return download URL
-    return '';
+    try {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final ref = _storage.ref('events/$timestamp.$extension');
+      await ref.putData(
+        Uint8List.fromList(bytes),
+        SettableMetadata(contentType: 'image/$extension'),
+      );
+      final url = await ref.getDownloadURL();
+      debugPrint('[EventAdminService] uploadImage: $url');
+      return url;
+    } catch (e) {
+      debugPrint('[EventAdminService] uploadImage error: $e');
+      rethrow;
+    }
   }
 }
 

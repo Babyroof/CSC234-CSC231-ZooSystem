@@ -96,14 +96,11 @@ class _CreateEventAdminDialogState
     try {
       await ref
           .read(eventAdminServiceProvider)
-          .addEvent(
+          .createEvent(
             eventName: name,
             eventDetail: detail,
             eventPicture: _pictureUrl,
-            locationX: int.tryParse(_xController.text.trim()) ?? 0,
-            locationY: int.tryParse(_yController.text.trim()) ?? 0,
           );
-      widget.onCreated?.call();
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {

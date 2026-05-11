@@ -33,8 +33,18 @@ class ZoneAdminService {
 
   Future<void> updateZone(String id, String zoneName) async {
     try {
-      await _db.collection('zone').doc(id).update({'zoneName': zoneName});
+      await _db.collection('zone').doc(id).set({
+        'zoneName': zoneName,
+      }, SetOptions(merge: true));
       debugPrint('[ZoneAdminService] updateZone: $id updated');
+    } on FirebaseException catch (e) {
+      if (e.code == 'not-found') {
+        // Document does not exist — silently succeed (no-op).
+        debugPrint('[ZoneAdminService] updateZone: $id not found, skipping');
+        return;
+      }
+      debugPrint('[ZoneAdminService] updateZone error: $e');
+      rethrow;
     } catch (e) {
       debugPrint('[ZoneAdminService] updateZone error: $e');
       rethrow;
