@@ -8,6 +8,7 @@ import 'package:zoopernova_zoo_system/features/booking/screens/ticket_screen.dar
 import 'package:zoopernova_zoo_system/features/events_show/screens/event_info_screen.dart';
 import 'package:zoopernova_zoo_system/features/events_show/screens/event_screen.dart';
 import 'package:zoopernova_zoo_system/features/map/screens/map_screen.dart';
+import 'package:zoopernova_zoo_system/features/map/screens/qr_scan_screen.dart';
 import 'package:zoopernova_zoo_system/features/profile/screens/profile_screen.dart';
 import 'package:zoopernova_zoo_system/features/auth/screens/login_screen.dart';
 import 'package:zoopernova_zoo_system/features/auth/screens/register_screen.dart';
@@ -57,6 +58,7 @@ class AppRoute {
   static const String adminLogin = '/admin/login';
   static const String adminRegister = '/admin/register';
   static const String adminHome = '/admin/home';
+  static const String qrScan = '/qr_scan';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -107,6 +109,7 @@ class AppRoute {
       adminLogin: (context) => const AdminLoginScreen(),
       adminRegister: (context) => const AdminRegisterScreen(),
       adminHome: (context) => const AdminHomeScreen(),
+      qrScan: (context) => const QrScanScreen(),
     };
   }
 }

@@ -66,7 +66,7 @@ void main() {
       expect(data['adultTotal'], 2);
       expect(data['childTotal'], 1);
       expect(data['elderTotal'], 0);
-      expect(data['status'], 'pending');
+      expect(data['status'], 'Pending');
       expect(data['date'], isA<Timestamp>());
     });
 
@@ -156,7 +156,7 @@ void main() {
       'adultTotal': 1,
       'childTotal': 0,
       'elderTotal': 0,
-      'status': 'pending',
+      'status': 'Done',
     };
 
     test('returns only bookings belonging to the specified user', () async {

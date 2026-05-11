@@ -179,114 +179,111 @@ class _AnimalScreenState extends State<AnimalScreen> {
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
                     ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final animal = animals[index];
-                        return Semantics(
-                          container: true,
-                          label: animal['animalName'] as String,
-                          button: true,
-                          excludeSemantics: true,
-                          child: InkWell(
-                            onTap: () => Navigator.pushNamed(
-                              context,
-                              AppRoute.animalInfo,
-                              arguments: animal,
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final animal = animals[index];
+                      return Semantics(
+                        container: true,
+                        label: animal['animalName'] as String,
+                        button: true,
+                        excludeSemantics: true,
+                        child: InkWell(
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AppRoute.animalInfo,
+                            arguments: animal,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                ),
+                              ],
                             ),
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: AppColors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(
-                                        animal['animalPicture'],
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                        loadingBuilder: (_, child, progress) {
-                                          if (progress == null) return child;
-                                          return Container(
-                                            color: AppColors.primary.withValues(
-                                              alpha: 0.08,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      animal['animalPicture'],
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      loadingBuilder: (_, child, progress) {
+                                        if (progress == null) return child;
+                                        return Container(
+                                          color: AppColors.primary.withValues(
+                                            alpha: 0.08,
+                                          ),
+                                          child: const Center(
+                                            child: CircularProgressIndicator(
+                                              color: AppColors.primary,
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      errorBuilder: (context, err, stack) =>
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary
+                                                  .withValues(alpha: 0.12),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                             child: const Center(
-                                              child: CircularProgressIndicator(
+                                              child: Icon(
+                                                Icons.pets,
                                                 color: AppColors.primary,
-                                                strokeWidth: 2,
+                                                size: 40,
                                               ),
                                             ),
-                                          );
-                                        },
-                                        errorBuilder: (context, err, stack) =>
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: AppColors.primary
-                                                    .withValues(alpha: 0.12),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              child: const Center(
-                                                child: Icon(
-                                                  Icons.pets,
-                                                  color: AppColors.primary,
-                                                  size: 40,
-                                                ),
-                                              ),
-                                            ),
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    0,
+                                    12,
+                                    0,
+                                    4,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        animal['animalName'],
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      0,
-                                      12,
-                                      0,
-                                      4,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          animal['animalName'],
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        animal['zoneName'],
+                                        style: TextStyle(
+                                          color: Colors.grey[500],
+                                          fontSize: 12,
                                         ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          animal['zoneName'],
-                                          style: TextStyle(
-                                            color: Colors.grey[500],
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        );
-                      },
-                      childCount: animals.length, // ✅ ใช้ Firebase data
-                    ),
+                        ),
+                      );
+                    }, childCount: animals.length),
                   ),
                 ),
 

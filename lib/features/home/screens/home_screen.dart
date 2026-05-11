@@ -429,7 +429,29 @@ class _HomeScreenState extends State<HomeScreen> {
                                     const SizedBox(height: 8),
                                     OutlinedButton.icon(
                                       onPressed: () {
-                                        // go to map
+                                        final lx = animal['location_x'];
+                                        final ly = animal['location_y'];
+                                        if (lx == null || ly == null) return;
+                                        Navigator.pushNamed(
+                                          context,
+                                          AppRoute.map,
+                                          arguments: {
+                                            'focusAnimal': {
+                                              'animalName':
+                                                  animal['animalName'] ?? '',
+                                              'animalDetail':
+                                                  animal['animalDetail'] ?? '',
+                                              'animalPicture':
+                                                  animal['animalPicture'] ?? '',
+                                              'zoneName':
+                                                  animal['zoneName'] ?? '',
+                                              'locationX': (lx as num)
+                                                  .toDouble(),
+                                              'locationY': (ly as num)
+                                                  .toDouble(),
+                                            },
+                                          },
+                                        );
                                       },
                                       icon: const Icon(
                                         Icons.map_outlined,
