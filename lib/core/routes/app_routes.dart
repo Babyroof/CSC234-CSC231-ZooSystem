@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zoopernova_zoo_system/core/widgets/admin_guard.dart';
 import 'package:zoopernova_zoo_system/features/admin/auth/screens/admin_login_screen.dart';
 import 'package:zoopernova_zoo_system/features/admin/auth/screens/admin_register_screen.dart';
 import 'package:zoopernova_zoo_system/features/admin/home/screens/admin_home_screen.dart';
@@ -87,26 +88,31 @@ class AppRoute {
       },
       ticket: (context) => const TicketScreen(),
       profile: (context) => const ProfileScreen(),
-      adminAnimals: (context) => const AnimalAdminScreen(),
-      adminAddAnimal: (context) => const AddAnimalAdminScreen(),
-      adminBookings: (context) => const BookingAdminScreen(),
-      adminEvents: (context) => const EventAdminScreen(),
-      adminMap: (context) => const MapAdminScreen(),
-      adminMapUploaded: (context) => const MapUploadedAdminScreen(),
-      adminZones: (context) => const ZoneAdminScreen(),
+      adminAnimals: (context) =>
+          const AdminGuard(child: AnimalAdminScreen()),
+      adminAddAnimal: (context) =>
+          const AdminGuard(child: AddAnimalAdminScreen()),
+      adminBookings: (context) =>
+          const AdminGuard(child: BookingAdminScreen()),
+      adminEvents: (context) => const AdminGuard(child: EventAdminScreen()),
+      adminMap: (context) => const AdminGuard(child: MapAdminScreen()),
+      adminMapUploaded: (context) =>
+          const AdminGuard(child: MapUploadedAdminScreen()),
+      adminZones: (context) => const AdminGuard(child: ZoneAdminScreen()),
       adminMapEdit: (context) {
         final args = ModalRoute.of(context)!.settings.arguments as MapEditArgs;
-        return MapEditAdminScreen(args: args);
+        return AdminGuard(child: MapEditAdminScreen(args: args));
       },
-      adminProfile: (context) => const ProfileAdminScreen(),
+      adminProfile: (context) =>
+          const AdminGuard(child: ProfileAdminScreen()),
       adminEditProfile: (context) {
         final args =
             ModalRoute.of(context)?.settings.arguments as ProfileAdminModel?;
-        return EditProfileAdminScreen(profile: args);
+        return AdminGuard(child: EditProfileAdminScreen(profile: args));
       },
       adminLogin: (context) => const AdminLoginScreen(),
       adminRegister: (context) => const AdminRegisterScreen(),
-      adminHome: (context) => const AdminHomeScreen(),
+      adminHome: (context) => const AdminGuard(child: AdminHomeScreen()),
     };
   }
 }
