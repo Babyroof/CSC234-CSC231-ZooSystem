@@ -10,15 +10,44 @@ class BookingService {
   BookingService({FirebaseFirestore? db})
       : _db = db ?? FirebaseFirestore.instance;
 
-  Future<void> createBooking(BookingModel booking) async {
+  Future<String> createBooking(BookingModel booking) async {
     try {
       final map = booking.toMap();
       // Convert userId String → DocumentReference before writing to Firestore
       map['userId'] = _db.collection('user').doc(booking.userId);
-      await _db.collection(_collection).add(map);
-      debugPrint('[BookingService] createBooking: success');
+      map['status'] = 'Pending';
+      map['totalPrice'] = booking.totalAmount;
+      final docRef = await _db.collection(_collection).add(map);
+      debugPrint('[BookingService] createBooking: ${docRef.id}');
+      return docRef.id;
     } catch (e) {
       debugPrint('[BookingService] createBooking error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateStatus({
+    required String bookingId,
+    required String status,
+  }) async {
+    try {
+      await _db.collection(_collection).doc(bookingId).update({'status': status});
+      debugPrint('[BookingService] updateStatus: $bookingId → $status');
+    } catch (e) {
+      debugPrint('[BookingService] updateStatus error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateChargeId({
+    required String bookingId,
+    required String chargeId,
+  }) async {
+    try {
+      await _db.collection(_collection).doc(bookingId).update({'chargeId': chargeId});
+      debugPrint('[BookingService] updateChargeId: $bookingId → $chargeId');
+    } catch (e) {
+      debugPrint('[BookingService] updateChargeId error: $e');
       rethrow;
     }
   }
@@ -34,12 +63,30 @@ class BookingService {
     }
   }
 
+  Stream<BookingModel?> watchBooking(String bookingId) {
+    try {
+      return _db
+          .collection(_collection)
+          .doc(bookingId)
+          .snapshots()
+          .map((doc) => doc.exists ? BookingModel.fromFirestore(doc) : null)
+          .handleError((Object e) {
+            debugPrint('[BookingService] watchBooking stream error: $e');
+            throw e;
+          });
+    } catch (e) {
+      debugPrint('[BookingService] watchBooking error: $e');
+      rethrow;
+    }
+  }
+
   Stream<List<BookingModel>> getBookingsByUser(String userId) {
     try {
       final userRef = _db.collection('user').doc(userId);
       return _db
           .collection(_collection)
           .where('userId', isEqualTo: userRef)
+          .where('status', isEqualTo: 'Done')
           .orderBy('date', descending: true)
           .snapshots()
           .map(
@@ -53,6 +100,54 @@ class BookingService {
           });
     } catch (e) {
       debugPrint('[BookingService] getBookingsByUser error: $e');
+      rethrow;
+    }
+  }
+
+  Stream<List<BookingModel>> getUpcomingBookings(String userId) {
+    try {
+      final startOfToday = Timestamp.fromDate(
+        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+      );
+      final userRef = _db.collection('user').doc(userId);
+      return _db
+          .collection(_collection)
+          .where('userId', isEqualTo: userRef)
+          .where('status', isEqualTo: 'Done')
+          .where('date', isGreaterThanOrEqualTo: startOfToday)
+          .orderBy('date', descending: false)
+          .snapshots()
+          .map((s) => s.docs.map(BookingModel.fromFirestore).toList())
+          .handleError((Object e) {
+            debugPrint('[BookingService] getUpcomingBookings stream error: $e');
+            throw e;
+          });
+    } catch (e) {
+      debugPrint('[BookingService] getUpcomingBookings error: $e');
+      rethrow;
+    }
+  }
+
+  Stream<List<BookingModel>> getPastBookings(String userId) {
+    try {
+      final startOfToday = Timestamp.fromDate(
+        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+      );
+      final userRef = _db.collection('user').doc(userId);
+      return _db
+          .collection(_collection)
+          .where('userId', isEqualTo: userRef)
+          .where('status', isEqualTo: 'Done')
+          .where('date', isLessThan: startOfToday)
+          .orderBy('date', descending: true)
+          .snapshots()
+          .map((s) => s.docs.map(BookingModel.fromFirestore).toList())
+          .handleError((Object e) {
+            debugPrint('[BookingService] getPastBookings stream error: $e');
+            throw e;
+          });
+    } catch (e) {
+      debugPrint('[BookingService] getPastBookings error: $e');
       rethrow;
     }
   }
