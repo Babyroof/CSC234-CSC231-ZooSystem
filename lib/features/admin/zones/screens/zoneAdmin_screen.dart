@@ -151,9 +151,9 @@ class _ZoneAdminScreenState extends ConsumerState<ZoneAdminScreen> {
       // Stream updates automatically — no manual reload needed.
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: ${e.toString()}')));
       }
     }
   }
@@ -170,9 +170,9 @@ class _ZoneAdminScreenState extends ConsumerState<ZoneAdminScreen> {
       // Stream updates automatically — no manual reload needed.
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: ${e.toString()}')));
       }
     }
   }
@@ -609,9 +609,9 @@ class _DeleteZoneDialogState extends State<_DeleteZoneDialog> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: ${e.toString()}')));
       }
     } finally {
       if (mounted) setState(() => _isDeleting = false);

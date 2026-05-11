@@ -107,7 +107,9 @@ void main() {
       // Assert — two separate documents exist with correct names
       final snap = await fakeFirestore.collection('zone').get();
       expect(snap.docs.length, 2);
-      final names = snap.docs.map((d) => d.data()['zoneName'] as String).toSet();
+      final names = snap.docs
+          .map((d) => d.data()['zoneName'] as String)
+          .toSet();
       expect(names, containsAll(['Reptile Zone', 'Aquatic Zone']));
     });
   });
@@ -126,8 +128,8 @@ void main() {
       await service.updateZone(id, 'New Name');
 
       // Assert — zoneName is updated
-      final data =
-          (await fakeFirestore.collection('zone').doc(id).get()).data()!;
+      final data = (await fakeFirestore.collection('zone').doc(id).get())
+          .data()!;
       expect(data['zoneName'], 'New Name');
 
       // Assert — the unrelated field is NOT overwritten (update, not set)
@@ -135,21 +137,22 @@ void main() {
     });
 
     test(
-        'silently succeeds on non-existent doc — fake_cloud_firestore does not '
-        'throw for update() on missing documents (unlike production Firestore)',
-        () async {
-      // Arrange — empty Firestore; no document exists with this ID
-      // NOTE: Real Firestore would throw a NOT_FOUND error when calling
-      // .update() on a missing document. fake_cloud_firestore ^3.0.0 creates
-      // the document instead of throwing, so we cannot assert a throw here.
-      // This test documents the known limitation of the fake implementation.
+      'silently succeeds on non-existent doc — fake_cloud_firestore does not '
+      'throw for update() on missing documents (unlike production Firestore)',
+      () async {
+        // Arrange — empty Firestore; no document exists with this ID
+        // NOTE: Real Firestore would throw a NOT_FOUND error when calling
+        // .update() on a missing document. fake_cloud_firestore ^3.0.0 creates
+        // the document instead of throwing, so we cannot assert a throw here.
+        // This test documents the known limitation of the fake implementation.
 
-      // Act + Assert — no exception is thrown
-      await expectLater(
-        service.updateZone('nonexistent_id', 'Name'),
-        completes,
-      );
-    });
+        // Act + Assert — no exception is thrown
+        await expectLater(
+          service.updateZone('nonexistent_id', 'Name'),
+          completes,
+        );
+      },
+    );
   });
 
   // ── deleteZone ────────────────────────────────────────────────────────────
@@ -162,8 +165,7 @@ void main() {
       await service.deleteZone(docId);
 
       // Assert — the document no longer exists
-      final doc =
-          await fakeFirestore.collection('zone').doc(docId).get();
+      final doc = await fakeFirestore.collection('zone').doc(docId).get();
       expect(doc.exists, false);
     });
 

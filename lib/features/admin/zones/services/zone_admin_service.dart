@@ -7,17 +7,14 @@ class ZoneAdminService {
   final FirebaseFirestore _db;
 
   ZoneAdminService({FirebaseFirestore? db})
-      : _db = db ?? FirebaseFirestore.instance;
+    : _db = db ?? FirebaseFirestore.instance;
 
   /// Returns a real-time stream of all zones from Firestore.
   Stream<List<ZoneAdminModel>> getZones() {
     return _db
         .collection('zone')
         .snapshots()
-        .map(
-          (snap) =>
-              snap.docs.map(ZoneAdminModel.fromFirestore).toList(),
-        )
+        .map((snap) => snap.docs.map(ZoneAdminModel.fromFirestore).toList())
         .handleError((Object e) {
           debugPrint('[ZoneAdminService] getZones stream error: $e');
           throw e;
