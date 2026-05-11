@@ -25,12 +25,14 @@ void main() {
 
     group('login', () {
       test('returns "Success" with valid credentials', () async {
+        final mockCredential = MockUserCredential();
+        when(mockCredential.user).thenReturn(null);
         when(
           mockAuth.signInWithEmailAndPassword(
             email: anyNamed('email'),
             password: anyNamed('password'),
           ),
-        ).thenAnswer((_) async => MockUserCredential());
+        ).thenAnswer((_) async => mockCredential);
 
         final result = await service.login('valid@test.com', 'password123');
 
