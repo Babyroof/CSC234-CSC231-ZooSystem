@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
@@ -64,16 +66,31 @@ class ZoneAdminState {
 
 class ZoneAdminNotifier extends StateNotifier<ZoneAdminState> {
   ZoneAdminNotifier(this._service) : super(const ZoneAdminState()) {
-    loadZones();
+    _subscribeToZones();
   }
 
   final ZoneAdminService _service;
+  StreamSubscription<List<ZoneAdminModel>>? _zonesSubscription;
 
-  Future<void> loadZones() async {
+  void _subscribeToZones() {
     state = state.copyWith(isLoading: true);
-    final zones = await _service.getZones();
-    state = state.copyWith(isLoading: false, items: zones);
-    _guardCurrentPage();
+    _zonesSubscription = _service.getZones().listen(
+      (zones) {
+        if (!mounted) return;
+        state = state.copyWith(isLoading: false, items: zones);
+        _guardCurrentPage();
+      },
+      onError: (Object e) {
+        if (!mounted) return;
+        state = state.copyWith(isLoading: false);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _zonesSubscription?.cancel();
+    super.dispose();
   }
 
   void setSearchText(String value) {
@@ -131,12 +148,12 @@ class _ZoneAdminScreenState extends ConsumerState<ZoneAdminScreen> {
     if (name == null || name.isEmpty) return;
     try {
       await ref.read(zoneAdminServiceProvider).addZone(name);
-      ref.read(zoneAdminProvider.notifier).loadZones();
+      // Stream updates automatically — no manual reload needed.
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error creating zone: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: ${e.toString()}')),
+        );
       }
     }
   }
@@ -150,12 +167,12 @@ class _ZoneAdminScreenState extends ConsumerState<ZoneAdminScreen> {
     if (name == null || name.isEmpty) return;
     try {
       await ref.read(zoneAdminServiceProvider).updateZone(zone.id, name);
-      ref.read(zoneAdminProvider.notifier).loadZones();
+      // Stream updates automatically — no manual reload needed.
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error updating zone: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: ${e.toString()}')),
+        );
       }
     }
   }
@@ -163,10 +180,7 @@ class _ZoneAdminScreenState extends ConsumerState<ZoneAdminScreen> {
   void _openDelete(ZoneAdminModel zone) {
     showDialog(
       context: context,
-      builder: (_) => _DeleteZoneDialog(
-        zone: zone,
-        onDeleted: () => ref.read(zoneAdminProvider.notifier).loadZones(),
-      ),
+      builder: (_) => _DeleteZoneDialog(zone: zone),
     );
   }
 
@@ -575,10 +589,9 @@ class _ActionButton extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _DeleteZoneDialog extends StatefulWidget {
-  const _DeleteZoneDialog({required this.zone, this.onDeleted});
+  const _DeleteZoneDialog({required this.zone});
 
   final ZoneAdminModel zone;
-  final VoidCallback? onDeleted;
 
   @override
   State<_DeleteZoneDialog> createState() => _DeleteZoneDialogState();
@@ -592,13 +605,13 @@ class _DeleteZoneDialogState extends State<_DeleteZoneDialog> {
     try {
       final container = ProviderScope.containerOf(context);
       await container.read(zoneAdminServiceProvider).deleteZone(widget.zone.id);
-      widget.onDeleted?.call();
+      // Stream updates automatically — no manual reload needed.
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error deleting: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: ${e.toString()}')),
+        );
       }
     } finally {
       if (mounted) setState(() => _isDeleting = false);
