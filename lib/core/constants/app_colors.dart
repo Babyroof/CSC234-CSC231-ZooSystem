@@ -19,7 +19,6 @@ class AppColors {
   static const Color adminSidebarMuted = Color(0xC5D0E4DC);
   static const Color adminBg = Color(0xFFF4F5F6);
   static const Color adminCardBg = Color(0xFFF8F8F8);
-  static const Color adminPrimary = Color(0xFF256D23);
   static const Color adminPrimaryDark = Color(0xFF256D23);
   static const Color adminTextMuted = Color(0xFF8B8C91);
   static const Color adminTextDark = Color(0xFF17191C);
