@@ -35,6 +35,14 @@ class ZoneAdminService {
     try {
       await _db.collection('zone').doc(id).update({'zoneName': zoneName});
       debugPrint('[ZoneAdminService] updateZone: $id updated');
+    } on FirebaseException catch (e) {
+      if (e.code == 'not-found') {
+        // Document does not exist — silently succeed (no-op).
+        debugPrint('[ZoneAdminService] updateZone: $id not found, skipping');
+        return;
+      }
+      debugPrint('[ZoneAdminService] updateZone error: $e');
+      rethrow;
     } catch (e) {
       debugPrint('[ZoneAdminService] updateZone error: $e');
       rethrow;
