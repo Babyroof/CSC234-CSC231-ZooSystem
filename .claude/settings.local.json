@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git ls-tree *)",
+      "Bash(git version *)",
+      "Bash(git merge-tree *)",
+      "Bash(echo \"git exit: $?\")",
+      "Bash(git commit-tree *)",
+      "Bash(git reset *)"
+    ]
+  }
+}

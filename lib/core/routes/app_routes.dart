@@ -85,13 +85,7 @@ class AppRoute {
             const {};
         return PaymentScreen(bookingArgs: args);
       },
-      ticket: (context) {
-        final args =
-            ModalRoute.of(context)?.settings.arguments
-                as Map<String, dynamic>? ??
-            const {};
-        return TicketScreen(bookingArgs: args);
-      },
+      ticket: (context) => const TicketScreen(),
       profile: (context) => const ProfileScreen(),
       adminAnimals: (context) => const AnimalAdminScreen(),
       adminAddAnimal: (context) => const AddAnimalAdminScreen(),
