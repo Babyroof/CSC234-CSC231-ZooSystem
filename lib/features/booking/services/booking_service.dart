@@ -15,8 +15,9 @@ class BookingService {
       final map = booking.toMap();
       // Convert userId String → DocumentReference before writing to Firestore
       map['userId'] = _db.collection('user').doc(booking.userId);
-      map['status'] = 'Pending';
       map['totalPrice'] = booking.totalAmount;
+      // New bookings always start as 'pending' regardless of model value
+      map['status'] = 'pending';
       final docRef = await _db.collection(_collection).add(map);
       debugPrint('[BookingService] createBooking: ${docRef.id}');
       return docRef.id;
@@ -90,7 +91,6 @@ class BookingService {
       return _db
           .collection(_collection)
           .where('userId', isEqualTo: userRef)
-          .where('status', isEqualTo: 'Done')
           .orderBy('date', descending: true)
           .snapshots()
           .map(

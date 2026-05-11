@@ -626,19 +626,19 @@ void main() {
         expect(snap.docs.length, 1);
       });
 
-      test('forces status to Pending regardless of model status', () async {
+      test('forces status to pending regardless of model status', () async {
         // Arrange — model has status 'Done'
         final booking = makeModel(status: 'Done');
 
         // Act
         await service.createBooking(booking);
 
-        // Assert — service always writes 'Pending'
+        // Assert — service always writes lowercase 'pending' (per schema)
         final data = (await fakeFirestore.collection('booking').get())
             .docs
             .first
             .data();
-        expect(data['status'], 'Pending');
+        expect(data['status'], 'pending');
       });
 
       test('stores totalPrice as the calculated totalAmount', () async {
@@ -910,8 +910,8 @@ void main() {
 
     // ── getBookingsByUser ─────────────────────────────────────────────────────
     group('getBookingsByUser', () {
-      test('returns only Done bookings for the specified user', () async {
-        // Arrange
+      test('returns all bookings for user regardless of status', () async {
+        // Arrange — mix of Done and Pending bookings for user_1
         await seedRaw(
           docId: 'done1',
           userId: 'user_1',
@@ -934,9 +934,8 @@ void main() {
         // Act
         final bookings = await service.getBookingsByUser('user_1').first;
 
-        // Assert — only the two Done bookings are returned
-        expect(bookings.length, 2);
-        expect(bookings.every((b) => b.status == 'Done'), true);
+        // Assert — all 3 bookings returned regardless of status
+        expect(bookings.length, 3);
       });
 
       test('filters out bookings belonging to other users', () async {
@@ -962,21 +961,24 @@ void main() {
         expect(bookings.first.userId, 'user_1');
       });
 
-      test('returns empty list when user has no Done bookings', () async {
-        // Arrange — seeded booking is Pending, not Done
-        await seedRaw(
-          docId: 'pending1',
-          userId: 'user_1',
-          status: 'Pending',
-          date: DateTime(2026, 5, 10),
-        );
+      test(
+        'returns pending bookings for user (no status filter applied)',
+        () async {
+          // Arrange — seeded booking has Pending status
+          await seedRaw(
+            docId: 'pending1',
+            userId: 'user_1',
+            status: 'Pending',
+            date: DateTime(2026, 5, 10),
+          );
 
-        // Act
-        final bookings = await service.getBookingsByUser('user_1').first;
+          // Act
+          final bookings = await service.getBookingsByUser('user_1').first;
 
-        // Assert
-        expect(bookings, isEmpty);
-      });
+          // Assert — getBookingsByUser returns all bookings regardless of status
+          expect(bookings.length, 1);
+        },
+      );
 
       test('returns empty list when user has no bookings at all', () async {
         // Act
