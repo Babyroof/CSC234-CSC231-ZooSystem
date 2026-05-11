@@ -17,59 +17,62 @@ void main() {
     String eventPicture = 'https://example.com/seal_show.png',
     int? locationX = 10,
     int? locationY = 20,
-  }) =>
-      EventModel(
-        id: id,
-        eventName: eventName,
-        eventDetail: eventDetail,
-        eventPicture: eventPicture,
-        locationX: locationX,
-        locationY: locationY,
-      );
+  }) => EventModel(
+    id: id,
+    eventName: eventName,
+    eventDetail: eventDetail,
+    eventPicture: eventPicture,
+    locationX: locationX,
+    locationY: locationY,
+  );
 
   // ── fromFirestore ────────────────────────────────────────────────────────
   group('EventModel.fromFirestore', () {
-    test('maps all fields correctly including locationX and locationY',
-        () async {
-      // Arrange
-      await fakeFirestore.collection('event').doc('ev1').set({
-        'eventName': 'Smart Seal Show',
-        'eventDetail': '2 shows per day at the aquatic zone',
-        'eventPicture': 'https://example.com/seal_show.png',
-        'location_x': 10,
-        'location_y': 20,
-      });
-      final doc = await fakeFirestore.collection('event').doc('ev1').get();
+    test(
+      'maps all fields correctly including locationX and locationY',
+      () async {
+        // Arrange
+        await fakeFirestore.collection('event').doc('ev1').set({
+          'eventName': 'Smart Seal Show',
+          'eventDetail': '2 shows per day at the aquatic zone',
+          'eventPicture': 'https://example.com/seal_show.png',
+          'location_x': 10,
+          'location_y': 20,
+        });
+        final doc = await fakeFirestore.collection('event').doc('ev1').get();
 
-      // Act
-      final model = EventModel.fromFirestore(doc);
+        // Act
+        final model = EventModel.fromFirestore(doc);
 
-      // Assert
-      expect(model.id, 'ev1');
-      expect(model.eventName, 'Smart Seal Show');
-      expect(model.eventDetail, '2 shows per day at the aquatic zone');
-      expect(model.eventPicture, 'https://example.com/seal_show.png');
-      expect(model.locationX, 10);
-      expect(model.locationY, 20);
-    });
+        // Assert
+        expect(model.id, 'ev1');
+        expect(model.eventName, 'Smart Seal Show');
+        expect(model.eventDetail, '2 shows per day at the aquatic zone');
+        expect(model.eventPicture, 'https://example.com/seal_show.png');
+        expect(model.locationX, 10);
+        expect(model.locationY, 20);
+      },
+    );
 
-    test('returns null for locationX and locationY when fields are absent',
-        () async {
-      // Arrange
-      await fakeFirestore.collection('event').doc('ev2').set({
-        'eventName': 'Elephant Show',
-        'eventDetail': 'Daily elephant performance',
-        'eventPicture': 'https://example.com/elephant.png',
-      });
-      final doc = await fakeFirestore.collection('event').doc('ev2').get();
+    test(
+      'returns null for locationX and locationY when fields are absent',
+      () async {
+        // Arrange
+        await fakeFirestore.collection('event').doc('ev2').set({
+          'eventName': 'Elephant Show',
+          'eventDetail': 'Daily elephant performance',
+          'eventPicture': 'https://example.com/elephant.png',
+        });
+        final doc = await fakeFirestore.collection('event').doc('ev2').get();
 
-      // Act
-      final model = EventModel.fromFirestore(doc);
+        // Act
+        final model = EventModel.fromFirestore(doc);
 
-      // Assert
-      expect(model.locationX, isNull);
-      expect(model.locationY, isNull);
-    });
+        // Assert
+        expect(model.locationX, isNull);
+        expect(model.locationY, isNull);
+      },
+    );
 
     test('defaults string fields to empty string when missing', () async {
       // Arrange

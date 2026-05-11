@@ -33,11 +33,11 @@ class AnimalModel {
   }
 
   Map<String, dynamic> toMap() => {
-        'animalName': animalName,
-        'animalDetail': animalDetail,
-        'animalPicture': animalPicture,
-        'zoneId': zoneId,
-      };
+    'animalName': animalName,
+    'animalDetail': animalDetail,
+    'animalPicture': animalPicture,
+    'zoneId': zoneId,
+  };
 
   AnimalModel copyWith({
     String? id,
@@ -47,14 +47,13 @@ class AnimalModel {
     DocumentReference? zoneId,
     int? locationX,
     int? locationY,
-  }) =>
-      AnimalModel(
-        id: id ?? this.id,
-        animalName: animalName ?? this.animalName,
-        animalDetail: animalDetail ?? this.animalDetail,
-        animalPicture: animalPicture ?? this.animalPicture,
-        zoneId: zoneId ?? this.zoneId,
-        locationX: locationX ?? this.locationX,
-        locationY: locationY ?? this.locationY,
-      );
+  }) => AnimalModel(
+    id: id ?? this.id,
+    animalName: animalName ?? this.animalName,
+    animalDetail: animalDetail ?? this.animalDetail,
+    animalPicture: animalPicture ?? this.animalPicture,
+    zoneId: zoneId ?? this.zoneId,
+    locationX: locationX ?? this.locationX,
+    locationY: locationY ?? this.locationY,
+  );
 }

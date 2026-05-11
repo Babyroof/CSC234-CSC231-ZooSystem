@@ -71,7 +71,19 @@ class AuthService {
   Future<String?> login(String email, String password) async {
     debugPrint('[AuthService] login: attempt — email=$email');
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final uid = credential.user?.uid;
+      if (uid != null) {
+        final doc = await _firestore.collection('user').doc(uid).get();
+        if (doc.data()?['role'] == 'admin') {
+          await _auth.signOut();
+          debugPrint('[AuthService] login: blocked admin — uid=$uid');
+          return 'Please use the Admin Portal to sign in.';
+        }
+      }
       debugPrint('[AuthService] login: success — $email');
       return "Success";
     } on FirebaseAuthException catch (e) {

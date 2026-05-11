@@ -8,7 +8,7 @@ class BookingService {
   static const String _collection = 'booking';
 
   BookingService({FirebaseFirestore? db})
-      : _db = db ?? FirebaseFirestore.instance;
+    : _db = db ?? FirebaseFirestore.instance;
 
   Future<String> createBooking(BookingModel booking) async {
     try {
@@ -31,7 +31,9 @@ class BookingService {
     required String status,
   }) async {
     try {
-      await _db.collection(_collection).doc(bookingId).update({'status': status});
+      await _db.collection(_collection).doc(bookingId).update({
+        'status': status,
+      });
       debugPrint('[BookingService] updateStatus: $bookingId → $status');
     } catch (e) {
       debugPrint('[BookingService] updateStatus error: $e');
@@ -44,7 +46,9 @@ class BookingService {
     required String chargeId,
   }) async {
     try {
-      await _db.collection(_collection).doc(bookingId).update({'chargeId': chargeId});
+      await _db.collection(_collection).doc(bookingId).update({
+        'chargeId': chargeId,
+      });
       debugPrint('[BookingService] updateChargeId: $bookingId → $chargeId');
     } catch (e) {
       debugPrint('[BookingService] updateChargeId error: $e');

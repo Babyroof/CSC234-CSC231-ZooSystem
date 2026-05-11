@@ -22,8 +22,8 @@ class AdminAuthService {
       final uid = credential.user?.uid;
       if (uid == null) return 'Login failed';
 
-      final doc = await _firestore.collection('user').doc(uid).get();
-      final data = doc.data();
+      final userDoc = await _firestore.collection('user').doc(uid).get();
+      final data = userDoc.data();
       if (data == null || data['role'] != 'admin') {
         await _auth.signOut();
         debugPrint('[AdminAuthService] login: not an admin — uid=$uid');
@@ -72,20 +72,33 @@ class AdminAuthService {
           ...newUser.toJson(),
           'role': 'admin',
         });
-        debugPrint('[AdminAuthService] register: success — uid=${user.uid}');
-        return 'Success';
       } catch (e) {
-        debugPrint('[AdminAuthService] register: Firestore write failed — $e');
+        debugPrint('[AdminAuthService] register: user write failed — $e');
         return 'Cannot save data. Please check Firestore Rules.';
       }
+
+      try {
+        await _firestore.collection('admin').doc(user.uid).set({
+          'userId': _firestore.collection('user').doc(user.uid),
+        });
+      } catch (e) {
+        debugPrint(
+          '[AdminAuthService] register: admin write failed (check Firestore rules) — $e',
+        );
+      }
+
+      debugPrint('[AdminAuthService] register: success — uid=${user.uid}');
+      return 'Success';
     } on FirebaseAuthException catch (e) {
       debugPrint(
         '[AdminAuthService] register: FirebaseAuthException — ${e.code}',
       );
-      if (e.code == 'weak-password')
+      if (e.code == 'weak-password') {
         return 'Password must be at least 6 characters.';
-      if (e.code == 'email-already-in-use')
+      }
+      if (e.code == 'email-already-in-use') {
         return 'This email is already in use.';
+      }
       return e.message ?? 'Firebase Auth Error';
     } catch (e) {
       debugPrint('[AdminAuthService] register: unexpected error — $e');

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -99,9 +99,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingCharge = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Payment setup failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Payment setup failed: $e')));
       }
     }
   }
@@ -118,9 +118,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to cancel booking: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to cancel booking: $e')));
       }
     }
     if (mounted) Navigator.of(context).pop();
@@ -288,8 +288,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                 color: AppColors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color:
-                                      AppColors.primary.withValues(alpha: 0.3),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   width: 2,
                                 ),
                               ),
@@ -319,13 +320,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                             )
                           else
                             Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 16),
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
-                                border:
-                                    Border.all(color: Colors.grey.shade200),
+                                border: Border.all(color: Colors.grey.shade200),
                               ),
                               child: _isLoadingCharge || _qrCodeBase64 == null
                                   ? const SizedBox(
@@ -340,7 +342,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                       height: 300,
                                       child: SvgPicture.memory(
                                         Uint8List.fromList(
-                                            base64Decode(_qrCodeBase64!)),
+                                          base64Decode(_qrCodeBase64!),
+                                        ),
                                         fit: BoxFit.contain,
                                       ),
                                     ),

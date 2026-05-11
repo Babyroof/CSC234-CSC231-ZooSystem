@@ -67,11 +67,13 @@ void main() {
       expect(ids, containsAll(['tk1', 'tk2']));
     });
 
-    test('returns empty list when booking collection has no documents',
-        () async {
-      final results = await service.getAllTickets().first;
-      expect(results, isEmpty);
-    });
+    test(
+      'returns empty list when booking collection has no documents',
+      () async {
+        final results = await service.getAllTickets().first;
+        expect(results, isEmpty);
+      },
+    );
 
     test('returns tickets from ALL users — no user filter applied', () async {
       // Arrange
@@ -169,8 +171,8 @@ void main() {
       );
 
       // Assert
-      final data =
-          (await fakeFirestore.collection('booking').doc('tk1').get()).data()!;
+      final data = (await fakeFirestore.collection('booking').doc('tk1').get())
+          .data()!;
       expect(data['BuffetFood'], false);
       expect(data['GolfCar'], true);
       expect(data['GuidTour'], false);
@@ -202,8 +204,8 @@ void main() {
       );
 
       // Assert
-      final data =
-          (await fakeFirestore.collection('booking').doc('tk1').get()).data()!;
+      final data = (await fakeFirestore.collection('booking').doc('tk1').get())
+          .data()!;
       expect(data['status'], 'Done');
     });
 
@@ -228,8 +230,8 @@ void main() {
       );
 
       // Assert — tk2 is untouched
-      final data =
-          (await fakeFirestore.collection('booking').doc('tk2').get()).data()!;
+      final data = (await fakeFirestore.collection('booking').doc('tk2').get())
+          .data()!;
       expect(data['status'], 'pending');
     });
 
@@ -264,8 +266,10 @@ void main() {
       await service.deleteTicket('todelete');
 
       // Assert
-      final doc =
-          await fakeFirestore.collection('booking').doc('todelete').get();
+      final doc = await fakeFirestore
+          .collection('booking')
+          .doc('todelete')
+          .get();
       expect(doc.exists, false);
     });
 

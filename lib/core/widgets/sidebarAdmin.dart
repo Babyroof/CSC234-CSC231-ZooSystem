@@ -37,7 +37,11 @@ class AdminSidebar extends StatelessWidget {
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     if (context.mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, AppRoute.login, (_) => false);
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoute.adminLogin,
+        (_) => false,
+      );
     }
   }
 
