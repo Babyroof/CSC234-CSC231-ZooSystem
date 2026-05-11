@@ -91,9 +91,14 @@ class _QrScanScreenState extends State<QrScanScreen> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       side: const BorderSide(color: AppColors.primary),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text('Scan Again', style: TextStyle(color: AppColors.primary)),
+                    child: const Text(
+                      'Scan Again',
+                      style: TextStyle(color: AppColors.primary),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -108,7 +113,9 @@ class _QrScanScreenState extends State<QrScanScreen> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text('Done'),
                   ),
@@ -139,10 +146,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
       body: Stack(
         children: [
           // Camera preview
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _controller, onDetect: _onDetect),
 
           // Dark overlay + viewfinder
           CustomPaint(
@@ -173,7 +177,10 @@ class _QrScanScreenState extends State<QrScanScreen> {
                   ),
                   IconButton(
                     onPressed: () => _controller.toggleTorch(),
-                    icon: const Icon(Icons.flash_on_outlined, color: Colors.white),
+                    icon: const Icon(
+                      Icons.flash_on_outlined,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -202,20 +209,32 @@ class _QrScanScreenState extends State<QrScanScreen> {
                     GestureDetector(
                       onTap: _pickFromGallery,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.photo_library_outlined, color: Colors.white, size: 20),
+                            Icon(
+                              Icons.photo_library_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                             SizedBox(width: 8),
                             Text(
                               'Choose from Gallery',
-                              style: TextStyle(color: Colors.white, fontSize: 14),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
@@ -240,14 +259,20 @@ class _QrOverlayPainter extends CustomPainter {
     const cornerWidth = 4.0;
 
     final center = Offset(size.width / 2, size.height / 2);
-    final scanRect = Rect.fromCenter(center: center, width: scanSize, height: scanSize);
+    final scanRect = Rect.fromCenter(
+      center: center,
+      width: scanSize,
+      height: scanSize,
+    );
 
     // Semi-transparent overlay
     canvas.drawPath(
       Path.combine(
         PathOperation.difference,
         Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
-        Path()..addRRect(RRect.fromRectAndRadius(scanRect, const Radius.circular(12))),
+        Path()..addRRect(
+          RRect.fromRectAndRadius(scanRect, const Radius.circular(12)),
+        ),
       ),
       Paint()..color = Colors.black.withValues(alpha: 0.55),
     );

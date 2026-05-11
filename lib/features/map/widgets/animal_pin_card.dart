@@ -31,7 +31,9 @@ class AnimalPinCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
                   child: Image.network(
                     animal['animalPicture'] ?? '',
                     width: double.infinity,
@@ -41,10 +43,16 @@ class AnimalPinCard extends StatelessWidget {
                       height: 200,
                       decoration: const BoxDecoration(
                         color: Color(0xFFE8F5E9),
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
                       ),
                       child: const Center(
-                        child: Icon(Icons.pets, size: 64, color: AppColors.primary),
+                        child: Icon(
+                          Icons.pets,
+                          size: 64,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ),
@@ -60,7 +68,11 @@ class AnimalPinCard extends StatelessWidget {
                         color: Colors.black.withValues(alpha: 0.4),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.close, color: Colors.white, size: 18),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -86,7 +98,10 @@ class AnimalPinCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           animal['zoneName'] ?? '',
-                          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -108,7 +123,10 @@ class AnimalPinCard extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       elevation: 0,
                     ),
                   ),
