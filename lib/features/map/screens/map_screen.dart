@@ -17,7 +17,8 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
-  final TransformationController _transformationController = TransformationController();
+  final TransformationController _transformationController =
+      TransformationController();
   late AnimationController _animationController;
   Animation<Matrix4>? _animationMatrix;
   bool _isFirstLoad = true;
@@ -38,51 +39,43 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..addListener(() {
-        if (_animationMatrix != null) {
-          _transformationController.value = _animationMatrix!.value;
-        }
-      });
+    _animationController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 1500),
+        )..addListener(() {
+          if (_animationMatrix != null) {
+            _transformationController.value = _animationMatrix!.value;
+          }
+        });
 
     _mapSub = FirebaseFirestore.instance
         .collection('settings')
         .doc('map_config')
         .snapshots()
-        .listen(
-      (snap) {
-        if (!mounted) return;
-        final data = snap.data() as Map<String, dynamic>?;
-        if (data?['map_url'] != null) {
-          setState(() => _mapUrl = data!['map_url'] as String);
-        }
-      },
-      onError: (e) => debugPrint('map_config: $e'),
-    );
+        .listen((snap) {
+          if (!mounted) return;
+          final data = snap.data() as Map<String, dynamic>?;
+          if (data?['map_url'] != null) {
+            setState(() => _mapUrl = data!['map_url'] as String);
+          }
+        }, onError: (e) => debugPrint('map_config: $e'));
 
     _animalSub = FirebaseFirestore.instance
         .collection('animal')
         .snapshots()
-        .listen(
-      (snap) {
-        if (!mounted) return;
-        setState(() => _animalDocs = snap.docs);
-      },
-      onError: (e) => debugPrint('animal stream: $e'),
-    );
+        .listen((snap) {
+          if (!mounted) return;
+          setState(() => _animalDocs = snap.docs);
+        }, onError: (e) => debugPrint('animal stream: $e'));
 
     _eventSub = FirebaseFirestore.instance
         .collection('event')
         .snapshots()
-        .listen(
-      (snap) {
-        if (!mounted) return;
-        setState(() => _eventDocs = snap.docs);
-      },
-      onError: (e) => debugPrint('event stream: $e'),
-    );
+        .listen((snap) {
+          if (!mounted) return;
+          setState(() => _eventDocs = snap.docs);
+        }, onError: (e) => debugPrint('event stream: $e'));
 
     _loadZones();
   }
@@ -104,7 +97,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   String _resolveZoneName(dynamic zoneRef) {
     if (zoneRef == null) return '';
-    final path = zoneRef is DocumentReference ? zoneRef.path : zoneRef.toString();
+    final path = zoneRef is DocumentReference
+        ? zoneRef.path
+        : zoneRef.toString();
     return _zoneMap[path] ?? '';
   }
 
@@ -165,14 +160,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     Size imageSize = Size.zero;
     try {
       final completer = Completer<Size>();
-      NetworkImage(_mapUrl).resolve(ImageConfiguration.empty).addListener(
-        ImageStreamListener(
-          (info, _) => completer.complete(
-            Size(info.image.width.toDouble(), info.image.height.toDouble()),
-          ),
-          onError: (_, __) => completer.complete(Size.zero),
-        ),
-      );
+      NetworkImage(_mapUrl)
+          .resolve(ImageConfiguration.empty)
+          .addListener(
+            ImageStreamListener(
+              (info, _) => completer.complete(
+                Size(info.image.width.toDouble(), info.image.height.toDouble()),
+              ),
+              onError: (_, __) => completer.complete(Size.zero),
+            ),
+          );
       imageSize = await completer.future.timeout(
         const Duration(seconds: 5),
         onTimeout: () => Size.zero,
@@ -183,7 +180,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     Matrix4 targetMatrix;
     if (imageSize.width > 0 && imageSize.height > 0) {
-      final s = min(
+      final s =
+          min(
             _screenSize.width / imageSize.width,
             _screenSize.height / imageSize.height,
           ) *
@@ -195,20 +193,23 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         ..scale(s);
     } else {
       targetMatrix = Matrix4.identity()
-        ..translate(
-          _screenSize.width * 0.05,
-          _screenSize.height * 0.05,
-        )
-        ..scale(min(_screenSize.width, _screenSize.height) /
-            max(_screenSize.width, _screenSize.height) *
-            0.9);
+        ..translate(_screenSize.width * 0.05, _screenSize.height * 0.05)
+        ..scale(
+          min(_screenSize.width, _screenSize.height) /
+              max(_screenSize.width, _screenSize.height) *
+              0.9,
+        );
     }
 
     final initialMatrix = Matrix4.identity()..scale(2.0);
     _animationController.duration = const Duration(milliseconds: 1500);
-    _animationMatrix = Matrix4Tween(begin: initialMatrix, end: targetMatrix).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOutQuart),
-    );
+    _animationMatrix = Matrix4Tween(begin: initialMatrix, end: targetMatrix)
+        .animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOutQuart,
+          ),
+        );
     _animationController.forward(from: 0);
   }
 
@@ -223,13 +224,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       ..scale(targetScale);
 
     _animationController.duration = const Duration(milliseconds: 800);
-    _animationMatrix = Matrix4Tween(
-      begin: _transformationController.value,
-      end: targetMatrix,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOutCubic,
-    ));
+    _animationMatrix =
+        Matrix4Tween(
+          begin: _transformationController.value,
+          end: targetMatrix,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOutCubic,
+          ),
+        );
     _animationController.forward(from: 0);
   }
 
@@ -240,7 +244,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     _zoomToLocation(locationX, locationY);
 
-    final data = Map<String, dynamic>.from(item['data'] as Map<String, dynamic>);
+    final data = Map<String, dynamic>.from(
+      item['data'] as Map<String, dynamic>,
+    );
     if (item['type'] == 'animal') {
       data['zoneName'] = _resolveZoneName(data['zoneId']);
       setState(() {
@@ -291,14 +297,19 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   color: borderColor,
                   shape: BoxShape.circle,
                   boxShadow: const [
-                    BoxShadow(color: Colors.black26, blurRadius: 5, spreadRadius: 1),
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                    ),
                   ],
                 ),
                 child: CircleAvatar(
                   radius: pinRadius,
                   backgroundColor: Colors.grey.shade200,
                   backgroundImage: NetworkImage(
-                    imageUrl ?? 'https://cdn-icons-png.flaticon.com/512/1998/1998614.png',
+                    imageUrl ??
+                        'https://cdn-icons-png.flaticon.com/512/1998/1998614.png',
                   ),
                 ),
               ),
@@ -315,7 +326,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     if (_isFirstLoad) {
       _isFirstLoad = false;
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       final focusAnimal = args?['focusAnimal'] as Map<String, dynamic>?;
       final focusEvent = args?['focusEvent'] as Map<String, dynamic>?;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -354,7 +366,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 children: [
                   GestureDetector(
                     onTapDown: (details) {
-                      print('location -> x: ${details.localPosition.dx}, y: ${details.localPosition.dy}');
+                      print(
+                        'location -> x: ${details.localPosition.dx}, y: ${details.localPosition.dy}',
+                      );
                       if (_selectedAnimal != null || _selectedEvent != null) {
                         setState(() {
                           _selectedAnimal = null;
@@ -367,7 +381,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
                   ..._animalDocs.map((doc) {
                     final data = doc.data() as Map<String, dynamic>;
-                    if (data['location_x'] == null || data['location_y'] == null) {
+                    if (data['location_x'] == null ||
+                        data['location_y'] == null) {
                       return const SizedBox.shrink();
                     }
                     return _buildPin(
@@ -392,7 +407,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
                   ..._eventDocs.map((doc) {
                     final data = doc.data() as Map<String, dynamic>;
-                    if (data['location_x'] == null || data['location_y'] == null) {
+                    if (data['location_x'] == null ||
+                        data['location_y'] == null) {
                       return const SizedBox.shrink();
                     }
                     return _buildPin(
@@ -438,7 +454,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(width: 10),
                     GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, AppRoute.qrScan),
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoute.qrScan),
                       child: Container(
                         width: 50,
                         height: 50,
@@ -458,7 +475,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             'lib/assets/images/ZoopernovaQRcodeScanner.svg',
                             width: 26,
                             height: 26,
-                            colorFilter: const ColorFilter.mode(Colors.black87, BlendMode.srcIn),
+                            colorFilter: const ColorFilter.mode(
+                              Colors.black87,
+                              BlendMode.srcIn,
+                            ),
                           ),
                         ),
                       ),

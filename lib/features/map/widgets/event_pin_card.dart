@@ -32,7 +32,9 @@ class EventPinCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
                   child: Image.network(
                     event['eventPicture'] ?? '',
                     width: double.infinity,
@@ -42,10 +44,16 @@ class EventPinCard extends StatelessWidget {
                       height: 200,
                       decoration: const BoxDecoration(
                         color: Color(0xFFFFF3E0),
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
                       ),
                       child: const Center(
-                        child: Icon(Icons.event, size: 64, color: Colors.orangeAccent),
+                        child: Icon(
+                          Icons.event,
+                          size: 64,
+                          color: Colors.orangeAccent,
+                        ),
                       ),
                     ),
                   ),
@@ -61,7 +69,11 @@ class EventPinCard extends StatelessWidget {
                         color: Colors.black.withValues(alpha: 0.4),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.close, color: Colors.white, size: 18),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -115,7 +127,10 @@ class EventPinCard extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       elevation: 0,
                     ),
                   ),
