@@ -27,105 +27,8 @@ class _QrScanScreenState extends State<QrScanScreen> {
 
     setState(() => _isDetecting = false);
     _controller.stop();
-    _showResultSheet(barcode!.rawValue!);
-  }
 
-  void _showResultSheet(String value) {
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Row(
-              children: [
-                Icon(Icons.qr_code_2, color: AppColors.primary, size: 24),
-                SizedBox(width: 8),
-                Text(
-                  'QR Code Detected',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                value,
-                style: const TextStyle(fontSize: 13, color: Colors.black87),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      setState(() => _isDetecting = true);
-                      _controller.start();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: AppColors.primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Scan Again',
-                      style: TextStyle(color: AppColors.primary),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Done'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+    Navigator.pop(context, barcode!.rawValue);
   }
 
   Future<void> _pickFromGallery() async {
@@ -145,16 +48,11 @@ class _QrScanScreenState extends State<QrScanScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Camera preview
           MobileScanner(controller: _controller, onDetect: _onDetect),
-
-          // Dark overlay + viewfinder
           CustomPaint(
             painter: _QrOverlayPainter(),
             child: const SizedBox.expand(),
           ),
-
-          // Top bar
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
@@ -186,8 +84,6 @@ class _QrScanScreenState extends State<QrScanScreen> {
               ),
             ),
           ),
-
-          // Bottom bar
           Positioned(
             bottom: 0,
             left: 0,
@@ -265,7 +161,6 @@ class _QrOverlayPainter extends CustomPainter {
       height: scanSize,
     );
 
-    // Semi-transparent overlay
     canvas.drawPath(
       Path.combine(
         PathOperation.difference,
@@ -277,7 +172,6 @@ class _QrOverlayPainter extends CustomPainter {
       Paint()..color = Colors.black.withValues(alpha: 0.55),
     );
 
-    // Corner markers (L-shaped, สีเขียว)
     final paint = Paint()
       ..color = AppColors.primary
       ..style = PaintingStyle.stroke
@@ -289,16 +183,12 @@ class _QrOverlayPainter extends CustomPainter {
     final r = scanRect.right;
     final b = scanRect.bottom;
 
-    // Top-left
     canvas.drawLine(Offset(l, t + cornerLength), Offset(l, t + 4), paint);
     canvas.drawLine(Offset(l + 4, t), Offset(l + cornerLength, t), paint);
-    // Top-right
     canvas.drawLine(Offset(r - cornerLength, t), Offset(r - 4, t), paint);
     canvas.drawLine(Offset(r, t + 4), Offset(r, t + cornerLength), paint);
-    // Bottom-left
     canvas.drawLine(Offset(l, b - cornerLength), Offset(l, b - 4), paint);
     canvas.drawLine(Offset(l + 4, b), Offset(l + cornerLength, b), paint);
-    // Bottom-right
     canvas.drawLine(Offset(r - cornerLength, b), Offset(r - 4, b), paint);
     canvas.drawLine(Offset(r, b - cornerLength), Offset(r, b - 4), paint);
   }
