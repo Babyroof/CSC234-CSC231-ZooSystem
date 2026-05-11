@@ -62,11 +62,11 @@ void main() {
 
       expect(data['BuffetFood'], true);
       expect(data['GolfCar'], false);
-      expect(data['GuidTour'], true);
+      expect(data['GuideTour'], true);
       expect(data['adultTotal'], 2);
       expect(data['childTotal'], 1);
       expect(data['elderTotal'], 0);
-      expect(data['status'], 'pending');
+      expect(data['status'], 'Pending');
       expect(data['date'], isA<Timestamp>());
     });
 
@@ -152,11 +152,11 @@ void main() {
     final baseDoc = {
       'BuffetFood': false,
       'GolfCar': false,
-      'GuidTour': false,
+      'GuideTour': false,
       'adultTotal': 1,
       'childTotal': 0,
       'elderTotal': 0,
-      'status': 'pending',
+      'status': 'Done',
     };
 
     test('returns only bookings belonging to the specified user', () async {

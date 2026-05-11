@@ -73,7 +73,6 @@ class AnimalService {
   Future<List<Map<String, dynamic>>> getAnimalsWithZone() async {
     List<Map<String, dynamic>> results = [];
     try {
-      // 1. ดึง Zone มาก่อนแบบปลอดภัย
       final zoneSnap = await _db.collection('zone').get();
       final Map<String, String> zoneMap = {};
       for (var doc in zoneSnap.docs) {
@@ -81,20 +80,17 @@ class AnimalService {
         zoneMap[doc.reference.path] = name?.toString() ?? 'Unknown';
       }
 
-      // 2. ดึง Animals
       final animalSnap = await _db.collection('animal').get();
 
       for (var doc in animalSnap.docs) {
         try {
           final data = doc.data();
-          // พิมพ์ดูเลยว่าตัวไหนกำลังถูกประมวลผล
           print('Processing Animal ID: ${doc.id}');
 
           String zoneName = 'Unknown';
           final dynamic zoneRef = data['zoneId'];
 
           if (zoneRef != null) {
-            // ใช้การตรวจสอบแบบกว้างที่สุดเพื่อเลี่ยง TypeError
             String path = "";
             if (zoneRef is DocumentReference) {
               path = zoneRef.path;
@@ -110,9 +106,10 @@ class AnimalService {
             'animalDetail': data['animalDetail'] ?? '',
             'animalPicture': data['animalPicture'] ?? '',
             'zoneName': zoneName,
+            'location_x': data['location_x'],
+            'location_y': data['location_y'],
           });
         } catch (itemError) {
-          // ถ้าพังแค่บางตัว ให้ข้ามตัวนั้นไปก่อน แอปจะได้ไม่ล่มทั้งหน้า
           print('Error at Animal ${doc.id}: ${itemError.toString()}');
           continue;
         }
