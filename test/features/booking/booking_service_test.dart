@@ -66,7 +66,7 @@ void main() {
       expect(data['adultTotal'], 2);
       expect(data['childTotal'], 1);
       expect(data['elderTotal'], 0);
-      expect(data['status'], 'Pending');
+      expect(data['status'], 'pending');
       expect(data['date'], isA<Timestamp>());
     });
 
