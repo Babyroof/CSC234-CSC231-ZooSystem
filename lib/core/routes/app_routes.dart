@@ -5,6 +5,7 @@ import 'package:zoopernova_zoo_system/features/booking/screens/ticket_screen.dar
 import 'package:zoopernova_zoo_system/features/events_show/screens/event_info_screen.dart';
 import 'package:zoopernova_zoo_system/features/events_show/screens/event_screen.dart';
 import 'package:zoopernova_zoo_system/features/map/screens/map_screen.dart';
+import 'package:zoopernova_zoo_system/features/map/screens/qr_scan_screen.dart';
 import 'package:zoopernova_zoo_system/features/profile/screens/profile_screen.dart';
 import 'package:zoopernova_zoo_system/features/auth/screens/login_screen.dart';
 import 'package:zoopernova_zoo_system/features/auth/screens/register_screen.dart';
@@ -28,6 +29,7 @@ class AppRoute {
   static const String payment = '/payment';
   static const String ticket = '/ticket';
   static const String profile = '/profile';
+  static const String qrScan = '/qr_scan';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -63,6 +65,7 @@ class AppRoute {
         return TicketScreen(bookingArgs: args);
       },
       profile: (context) => const ProfileScreen(),
+      qrScan: (context) => const QrScanScreen(),
     };
   }
 }
