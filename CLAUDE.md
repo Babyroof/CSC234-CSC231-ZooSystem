@@ -151,6 +151,17 @@ Document ID: Auto-ID
 
 ---
 
+### 6. Collection: admin
+Document ID: Auto-ID
+
+| Field  | Type      | Description                     | Example                               |
+|--------|-----------|---------------------------------|---------------------------------------|
+| userId | reference | FK → reference to user document | /user/1Ya6LZ0E11PnXia1UE7NZjxfkTU2   |
+
+> Owner (the admin user themselves) can Create and Read their own document. Update and Delete are NOT allowed from the app.
+
+---
+
 ## Architecture Rules
 
 ### Layer Responsibilities
@@ -180,6 +191,7 @@ Screen reads updated state from Riverpod provider
 ## Conventions
 - File names: snake_case always (e.g. animal_model.dart)
 - Class names: PascalCase (e.g. AnimalModel)
+- Field names are case-sensitive — always match exactly as defined in schema above
 - Use freezed for all data models
 - Use @riverpod annotation for all providers (code generation)
 - Provider naming convention: featureNameProvider
@@ -205,17 +217,21 @@ Screen reads updated state from Riverpod provider
 ## Firestore Security Rules
 
 ### RBAC Summary
-| Collection | Create     | Read      | Update     | Delete     | Notes                                      |
-|------------|------------|-----------|------------|------------|--------------------------------------------|
-| animal     | Admin only | Everyone  | Admin only | Admin only | All users can view, no one edits from app  |
-| zone       | Admin only | Everyone  | Admin only | Admin only | All users can view, no editing             |
-| event      | Admin only | Everyone  | Admin only | Admin only | All users can view, no editing             |
-| user       | Auth user  | Owner     | Owner      | Admin only | Owner can only read/edit their own profile |
-| booking    | Auth user  | Owner     | Owner      | Owner      | Full CRUD — must be logged in and be owner |
+| Collection | Create      | Read        | Update      | Delete      | Notes                                        |
+|------------|-------------|-------------|-------------|-------------|----------------------------------------------|
+| animal     | Admin only  | Everyone    | Admin only  | Admin only  | Public Read, Admin Write                     |
+| zone       | Admin only  | Everyone    | Admin only  | Admin only  | Public Read, Admin Write                     |
+| event      | Admin only  | Everyone    | Admin only  | Admin only  | Public Read, Admin Write                     |
+| map        | Admin only  | Everyone    | Admin only  | Admin only  | Public Read, Admin Write                     |
+| booking    | Auth user   | Admin/Owner | Admin/Owner | Admin/Owner | Login สร้างได้, เจ้าของหรือ Admin จัดการได้  |
+| user       | Not allowed | Admin/Owner | Owner       | Owner       | Admin หรือเจ้าของอ่านได้, เจ้าของแก้/ลบได้  |
+| admin      | Owner       | Owner       | Not allowed | Not allowed | ตัวเองสร้างและอ่านได้, แก้/ลบไม่ได้          |
 
 ### Admin Strategy
-Admin CRUD for animals, zones, events, maps, and tickets is handled inside features/admin/
-Admin operations are protected by auth role guard in GoRouter — not accessible to regular users.
+- Admin identity is determined by checking if the authenticated user's UID exists as a `userId` reference in the `admin` collection
+- Admin CRUD for animals, zones, events, maps, and tickets is handled inside `features/admin/`
+- Admin features are protected by auth role guard in GoRouter — not accessible to regular users
+- Admin collection: Owner can Create and Read only — Update and Delete are forbidden from the app
 
 ---
 
@@ -233,6 +249,8 @@ Admin operations are protected by auth role guard in GoRouter — not accessible
 - NEVER send date as String — must be Firebase Timestamp
 - NEVER send BuffetFood, GuideTour, GolfCar as String — must be Boolean
 - NEVER send location_x or location_y as String — must be int64
+- NEVER use wrong field name casing — all field names are case-sensitive (e.g. BuffetFood not buffetfood)
+- NEVER update or delete documents in the admin collection from the app
 
 ---
 

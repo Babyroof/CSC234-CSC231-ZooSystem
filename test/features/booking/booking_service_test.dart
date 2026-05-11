@@ -57,8 +57,8 @@ void main() {
     test('writes all fields with correct values', () async {
       await service.createBooking(testBooking());
 
-      final data =
-          (await fakeFirestore.collection('booking').get()).docs.first.data();
+      final data = (await fakeFirestore.collection('booking').get()).docs.first
+          .data();
 
       expect(data['BuffetFood'], true);
       expect(data['GolfCar'], false);
@@ -70,17 +70,21 @@ void main() {
       expect(data['date'], isA<Timestamp>());
     });
 
-    test('writes userId as DocumentReference pointing to /user/{uid}',
-        () async {
-      await service.createBooking(testBooking(userId: 'user123'));
+    test(
+      'writes userId as DocumentReference pointing to /user/{uid}',
+      () async {
+        await service.createBooking(testBooking(userId: 'user123'));
 
-      final data =
-          (await fakeFirestore.collection('booking').get()).docs.first.data();
-      final userIdField = data['userId'];
+        final data = (await fakeFirestore.collection('booking').get())
+            .docs
+            .first
+            .data();
+        final userIdField = data['userId'];
 
-      expect(userIdField, isA<DocumentReference>());
-      expect((userIdField as DocumentReference).id, 'user123');
-    });
+        expect(userIdField, isA<DocumentReference>());
+        expect((userIdField as DocumentReference).id, 'user123');
+      },
+    );
 
     test('throws on Firestore error', () {
       final errorService = BookingService(db: _ErrorFirestore());
@@ -239,8 +243,10 @@ void main() {
       await service.deleteBooking('todelete');
 
       // Assert
-      final doc =
-          await fakeFirestore.collection('booking').doc('todelete').get();
+      final doc = await fakeFirestore
+          .collection('booking')
+          .doc('todelete')
+          .get();
       expect(doc.exists, false);
     });
 

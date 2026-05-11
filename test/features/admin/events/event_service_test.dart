@@ -66,10 +66,7 @@ void main() {
 
     test('throws on Firestore error', () {
       final errorService = EventService(db: _ErrorFirestore());
-      expect(
-        () => errorService.getEvents(),
-        throwsA(isA<FirebaseException>()),
-      );
+      expect(() => errorService.getEvents(), throwsA(isA<FirebaseException>()));
     });
   });
 
@@ -131,24 +128,26 @@ void main() {
       expect(snap.docs.length, 1);
     });
 
-    test('writes only the 3 allowed fields — no location_x or location_y',
-        () async {
-      // Act
-      await service.createEvent(
-        eventName: 'Smart Seal Show',
-        eventDetail: '2 shows per day',
-        eventPicture: 'https://example.com/seal_show.png',
-      );
+    test(
+      'writes only the 3 allowed fields — no location_x or location_y',
+      () async {
+        // Act
+        await service.createEvent(
+          eventName: 'Smart Seal Show',
+          eventDetail: '2 shows per day',
+          eventPicture: 'https://example.com/seal_show.png',
+        );
 
-      // Assert
-      final data =
-          (await fakeFirestore.collection('event').get()).docs.first.data();
-      expect(data['eventName'], 'Smart Seal Show');
-      expect(data['eventDetail'], '2 shows per day');
-      expect(data['eventPicture'], 'https://example.com/seal_show.png');
-      expect(data.containsKey('location_x'), false);
-      expect(data.containsKey('location_y'), false);
-    });
+        // Assert
+        final data = (await fakeFirestore.collection('event').get()).docs.first
+            .data();
+        expect(data['eventName'], 'Smart Seal Show');
+        expect(data['eventDetail'], '2 shows per day');
+        expect(data['eventPicture'], 'https://example.com/seal_show.png');
+        expect(data.containsKey('location_x'), false);
+        expect(data.containsKey('location_y'), false);
+      },
+    );
 
     test('throws on Firestore error', () {
       final errorService = EventService(db: _ErrorFirestore());
@@ -178,8 +177,8 @@ void main() {
       );
 
       // Assert
-      final data =
-          (await fakeFirestore.collection('event').doc('ev1').get()).data()!;
+      final data = (await fakeFirestore.collection('event').doc('ev1').get())
+          .data()!;
       expect(data['eventName'], 'Night Safari');
       expect(data['eventDetail'], 'After-dark guided tour');
       expect(data['eventPicture'], 'https://example.com/night_safari.png');
@@ -198,8 +197,8 @@ void main() {
       );
 
       // Assert — coordinates must be preserved unchanged
-      final data =
-          (await fakeFirestore.collection('event').doc('ev1').get()).data()!;
+      final data = (await fakeFirestore.collection('event').doc('ev1').get())
+          .data()!;
       expect(data['location_x'], 42);
       expect(data['location_y'], 99);
     });
@@ -228,8 +227,7 @@ void main() {
       await service.deleteEvent('todelete');
 
       // Assert
-      final doc =
-          await fakeFirestore.collection('event').doc('todelete').get();
+      final doc = await fakeFirestore.collection('event').doc('todelete').get();
       expect(doc.exists, false);
     });
 

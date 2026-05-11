@@ -18,8 +18,9 @@ class PaymentService {
     required String bookingId,
     required int amount,
   }) async {
-    final callable = FirebaseFunctions.instance
-        .httpsCallable('createPromptPayCharge');
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'createPromptPayCharge',
+    );
     final result = await callable.call<Map<String, dynamic>>({
       'bookingId': bookingId,
       'amount': amount,

@@ -699,9 +699,9 @@ class _BottomBar extends ConsumerWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Booking failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Booking failed: $e')));
     } finally {
       if (ref.context.mounted) {
         ref.read(_checkoutLoadingProvider.notifier).state = false;

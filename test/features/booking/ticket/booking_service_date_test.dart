@@ -103,7 +103,10 @@ void main() {
     test('excludes Cancelled bookings with future date', () async {
       // Arrange — Cancelled status with a future date must be excluded
       await seedBooking(
-          userId: userRef, status: 'Cancelled', date: futureDate());
+        userId: userRef,
+        status: 'Cancelled',
+        date: futureDate(),
+      );
 
       // Act
       final bookings = await service.getUpcomingBookings('user_123').first;
@@ -154,7 +157,10 @@ void main() {
       // Arrange — one booking for the target user, one for another user
       await seedBooking(userId: userRef, status: 'Done', date: futureDate());
       await seedBooking(
-          userId: otherUserRef, status: 'Done', date: futureDate());
+        userId: otherUserRef,
+        status: 'Done',
+        date: futureDate(),
+      );
 
       // Act
       final bookings = await service.getUpcomingBookings('user_123').first;
@@ -185,8 +191,7 @@ void main() {
     test('excludes Done bookings with date >= today', () async {
       // Arrange — Done bookings dated today or in the future must NOT appear
       await seedBooking(userId: userRef, status: 'Done', date: futureDate());
-      await seedBooking(
-          userId: userRef, status: 'Done', date: todayMidnight());
+      await seedBooking(userId: userRef, status: 'Done', date: todayMidnight());
 
       // Act
       final bookings = await service.getPastBookings('user_123').first;
@@ -208,8 +213,7 @@ void main() {
 
     test('excludes Cancelled bookings with past date', () async {
       // Arrange — Cancelled status with a past date must be excluded
-      await seedBooking(
-          userId: userRef, status: 'Cancelled', date: pastDate());
+      await seedBooking(userId: userRef, status: 'Cancelled', date: pastDate());
 
       // Act
       final bookings = await service.getPastBookings('user_123').first;
@@ -259,8 +263,7 @@ void main() {
     test('excludes bookings belonging to other users', () async {
       // Arrange — one booking for the target user, one for another user
       await seedBooking(userId: userRef, status: 'Done', date: pastDate());
-      await seedBooking(
-          userId: otherUserRef, status: 'Done', date: pastDate());
+      await seedBooking(userId: otherUserRef, status: 'Done', date: pastDate());
 
       // Act
       final bookings = await service.getPastBookings('user_123').first;
@@ -275,23 +278,31 @@ void main() {
   // Edge cases
   // =========================================================================
   group('Edge cases', () {
-    test('booking exactly on today midnight appears in upcoming, not history',
-        () async {
-      // Arrange — date is exactly midnight today (the startOfToday boundary)
-      final today = todayMidnight();
-      await seedBooking(userId: userRef, status: 'Done', date: today);
+    test(
+      'booking exactly on today midnight appears in upcoming, not history',
+      () async {
+        // Arrange — date is exactly midnight today (the startOfToday boundary)
+        final today = todayMidnight();
+        await seedBooking(userId: userRef, status: 'Done', date: today);
 
-      // Act
-      final upcoming = await service.getUpcomingBookings('user_123').first;
-      final past = await service.getPastBookings('user_123').first;
+        // Act
+        final upcoming = await service.getUpcomingBookings('user_123').first;
+        final past = await service.getPastBookings('user_123').first;
 
-      // Assert — midnight today satisfies date >= startOfToday → upcoming
-      expect(upcoming.length, 1,
-          reason: 'midnight today should satisfy date >= startOfToday');
-      // Assert — midnight today does NOT satisfy date < startOfToday → not past
-      expect(past, isEmpty,
-          reason: 'midnight today should not satisfy date < startOfToday');
-    });
+        // Assert — midnight today satisfies date >= startOfToday → upcoming
+        expect(
+          upcoming.length,
+          1,
+          reason: 'midnight today should satisfy date >= startOfToday',
+        );
+        // Assert — midnight today does NOT satisfy date < startOfToday → not past
+        expect(
+          past,
+          isEmpty,
+          reason: 'midnight today should not satisfy date < startOfToday',
+        );
+      },
+    );
 
     test('both streams emit independently without interference', () async {
       // Arrange — one past Done, one future Done
@@ -303,10 +314,16 @@ void main() {
       final past = await service.getPastBookings('user_123').first;
 
       // Assert — each stream returns exactly its own subset
-      expect(upcoming.length, 1,
-          reason: 'upcoming should contain only the future booking');
-      expect(past.length, 1,
-          reason: 'past should contain only the past booking');
+      expect(
+        upcoming.length,
+        1,
+        reason: 'upcoming should contain only the future booking',
+      );
+      expect(
+        past.length,
+        1,
+        reason: 'past should contain only the past booking',
+      );
 
       expect(upcoming.first.date.isAfter(DateTime.now()), isTrue);
       expect(past.first.date.isBefore(DateTime.now()), isTrue);

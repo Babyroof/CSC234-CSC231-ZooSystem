@@ -7,8 +7,7 @@ class ZoneService {
 
   static const String _collection = 'zone';
 
-  ZoneService({FirebaseFirestore? db})
-      : _db = db ?? FirebaseFirestore.instance;
+  ZoneService({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
 
   Stream<List<ZoneModel>> getZones() {
     try {

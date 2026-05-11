@@ -49,21 +49,20 @@ void main() {
     DateTime? date,
     int? totalPrice,
     String? chargeId,
-  }) =>
-      BookingModel(
-        id: id,
-        userId: userId,
-        adultTotal: adultTotal,
-        childTotal: childTotal,
-        elderTotal: elderTotal,
-        date: date ?? DateTime(2026, 5, 10),
-        buffetFood: buffetFood,
-        guidTour: guidTour,
-        golfCar: golfCar,
-        status: status,
-        totalPrice: totalPrice,
-        chargeId: chargeId,
-      );
+  }) => BookingModel(
+    id: id,
+    userId: userId,
+    adultTotal: adultTotal,
+    childTotal: childTotal,
+    elderTotal: elderTotal,
+    date: date ?? DateTime(2026, 5, 10),
+    buffetFood: buffetFood,
+    guidTour: guidTour,
+    golfCar: golfCar,
+    status: status,
+    totalPrice: totalPrice,
+    chargeId: chargeId,
+  );
 
   // =========================================================================
   // Group 1 — BookingModel
@@ -87,7 +86,8 @@ void main() {
 
         // Assert
         // 2*300 + 1*150 + 1*40 + 200 + 350 + 500 = 1840
-        const expected = 2 * BookingPricing.adultPrice +
+        const expected =
+            2 * BookingPricing.adultPrice +
             1 * BookingPricing.kidPrice +
             1 * BookingPricing.elderPrice +
             BookingPricing.buffetFoodPrice +
@@ -258,43 +258,47 @@ void main() {
         fakeFirestore = FakeFirebaseFirestore();
       });
 
-      test('maps all fields correctly when userId is a DocumentReference',
-          () async {
-        // Arrange
-        final userRef = fakeFirestore.collection('user').doc('user_abc');
-        await fakeFirestore.collection('booking').doc('bk1').set({
-          'userId': userRef,
-          'adultTotal': 2,
-          'childTotal': 1,
-          'elderTotal': 1,
-          'date': Timestamp.fromDate(DateTime(2026, 5, 10)),
-          'BuffetFood': true,
-          'GuideTour': true,
-          'GolfCar': true,
-          'status': 'Done',
-          'totalPrice': 1540,
-          'chargeId': 'ch_abc123',
-        });
-        final doc =
-            await fakeFirestore.collection('booking').doc('bk1').get();
+      test(
+        'maps all fields correctly when userId is a DocumentReference',
+        () async {
+          // Arrange
+          final userRef = fakeFirestore.collection('user').doc('user_abc');
+          await fakeFirestore.collection('booking').doc('bk1').set({
+            'userId': userRef,
+            'adultTotal': 2,
+            'childTotal': 1,
+            'elderTotal': 1,
+            'date': Timestamp.fromDate(DateTime(2026, 5, 10)),
+            'BuffetFood': true,
+            'GuideTour': true,
+            'GolfCar': true,
+            'status': 'Done',
+            'totalPrice': 1540,
+            'chargeId': 'ch_abc123',
+          });
+          final doc = await fakeFirestore
+              .collection('booking')
+              .doc('bk1')
+              .get();
 
-        // Act
-        final model = BookingModel.fromFirestore(doc);
+          // Act
+          final model = BookingModel.fromFirestore(doc);
 
-        // Assert
-        expect(model.id, 'bk1');
-        expect(model.userId, 'user_abc');
-        expect(model.adultTotal, 2);
-        expect(model.childTotal, 1);
-        expect(model.elderTotal, 1);
-        expect(model.date, DateTime(2026, 5, 10));
-        expect(model.buffetFood, true);
-        expect(model.guidTour, true);
-        expect(model.golfCar, true);
-        expect(model.status, 'Done');
-        expect(model.totalPrice, 1540);
-        expect(model.chargeId, 'ch_abc123');
-      });
+          // Assert
+          expect(model.id, 'bk1');
+          expect(model.userId, 'user_abc');
+          expect(model.adultTotal, 2);
+          expect(model.childTotal, 1);
+          expect(model.elderTotal, 1);
+          expect(model.date, DateTime(2026, 5, 10));
+          expect(model.buffetFood, true);
+          expect(model.guidTour, true);
+          expect(model.golfCar, true);
+          expect(model.status, 'Done');
+          expect(model.totalPrice, 1540);
+          expect(model.chargeId, 'ch_abc123');
+        },
+      );
 
       test('maps userId correctly when stored as plain String', () async {
         // Arrange
@@ -309,8 +313,7 @@ void main() {
           'GolfCar': false,
           'status': 'Pending',
         });
-        final doc =
-            await fakeFirestore.collection('booking').doc('bk2').get();
+        final doc = await fakeFirestore.collection('booking').doc('bk2').get();
 
         // Act
         final model = BookingModel.fromFirestore(doc);
@@ -331,8 +334,7 @@ void main() {
           'GolfCar': false,
           'status': 'pending',
         });
-        final doc =
-            await fakeFirestore.collection('booking').doc('bk3').get();
+        final doc = await fakeFirestore.collection('booking').doc('bk3').get();
 
         // Act
         final model = BookingModel.fromFirestore(doc);
@@ -352,8 +354,7 @@ void main() {
           'status': 'pending',
           // adultTotal, childTotal, elderTotal intentionally omitted
         });
-        final doc =
-            await fakeFirestore.collection('booking').doc('bk4').get();
+        final doc = await fakeFirestore.collection('booking').doc('bk4').get();
 
         // Act
         final model = BookingModel.fromFirestore(doc);
@@ -375,8 +376,7 @@ void main() {
           'status': 'pending',
           // BuffetFood, GuideTour, GolfCar intentionally omitted
         });
-        final doc =
-            await fakeFirestore.collection('booking').doc('bk5').get();
+        final doc = await fakeFirestore.collection('booking').doc('bk5').get();
 
         // Act
         final model = BookingModel.fromFirestore(doc);
@@ -400,8 +400,7 @@ void main() {
           'GolfCar': false,
           'status': 'pending',
         });
-        final doc =
-            await fakeFirestore.collection('booking').doc('bk6').get();
+        final doc = await fakeFirestore.collection('booking').doc('bk6').get();
 
         // Act
         final model = BookingModel.fromFirestore(doc);
@@ -416,7 +415,11 @@ void main() {
     group('toMap', () {
       test('all boolean fields are bool, not String', () {
         // Arrange
-        final model = makeModel(buffetFood: true, guidTour: false, golfCar: true);
+        final model = makeModel(
+          buffetFood: true,
+          guidTour: false,
+          golfCar: true,
+        );
 
         // Act
         final map = model.toMap();
@@ -429,8 +432,7 @@ void main() {
 
       test('all numeric fields are int, not String', () {
         // Arrange
-        final model =
-            makeModel(adultTotal: 3, childTotal: 2, elderTotal: 1);
+        final model = makeModel(adultTotal: 3, childTotal: 2, elderTotal: 1);
 
         // Act
         final map = model.toMap();
@@ -453,21 +455,28 @@ void main() {
         expect(map['date'], Timestamp.fromDate(DateTime(2026, 5, 10)));
       });
 
-      test('userId in toMap is a plain String (service converts to DocumentReference before write)', () {
-        // Arrange
-        final model = makeModel(userId: 'user_xyz');
+      test(
+        'userId in toMap is a plain String (service converts to DocumentReference before write)',
+        () {
+          // Arrange
+          final model = makeModel(userId: 'user_xyz');
 
-        // Act
-        final map = model.toMap();
+          // Act
+          final map = model.toMap();
 
-        // Assert — model layer stays Firestore-agnostic
-        expect(map['userId'], isA<String>());
-        expect(map['userId'], 'user_xyz');
-      });
+          // Assert — model layer stays Firestore-agnostic
+          expect(map['userId'], isA<String>());
+          expect(map['userId'], 'user_xyz');
+        },
+      );
 
       test('boolean values match the model fields', () {
         // Arrange
-        final model = makeModel(buffetFood: true, guidTour: false, golfCar: true);
+        final model = makeModel(
+          buffetFood: true,
+          guidTour: false,
+          golfCar: true,
+        );
 
         // Act
         final map = model.toMap();
@@ -613,8 +622,7 @@ void main() {
         await service.createBooking(booking);
 
         // Assert
-        final snap =
-            await fakeFirestore.collection('booking').get();
+        final snap = await fakeFirestore.collection('booking').get();
         expect(snap.docs.length, 1);
       });
 
@@ -652,32 +660,41 @@ void main() {
             .docs
             .first
             .data();
-        expect(data['totalPrice'],
-            equals(2 * BookingPricing.adultPrice + BookingPricing.buffetFoodPrice));
+        expect(
+          data['totalPrice'],
+          equals(
+            2 * BookingPricing.adultPrice + BookingPricing.buffetFoodPrice,
+          ),
+        );
       });
 
-      test('stores userId as a DocumentReference pointing to /user/{uid}',
-          () async {
-        // Arrange
-        final booking = makeModel(userId: 'user_abc');
+      test(
+        'stores userId as a DocumentReference pointing to /user/{uid}',
+        () async {
+          // Arrange
+          final booking = makeModel(userId: 'user_abc');
 
-        // Act
-        await service.createBooking(booking);
+          // Act
+          await service.createBooking(booking);
 
-        // Assert
-        final data = (await fakeFirestore.collection('booking').get())
-            .docs
-            .first
-            .data();
-        final userIdField = data['userId'];
-        expect(userIdField, isA<DocumentReference>());
-        expect((userIdField as DocumentReference).id, 'user_abc');
-      });
+          // Assert
+          final data = (await fakeFirestore.collection('booking').get())
+              .docs
+              .first
+              .data();
+          final userIdField = data['userId'];
+          expect(userIdField, isA<DocumentReference>());
+          expect((userIdField as DocumentReference).id, 'user_abc');
+        },
+      );
 
       test('boolean add-on fields are stored as bool, not String', () async {
         // Arrange
-        final booking =
-            makeModel(buffetFood: true, guidTour: false, golfCar: true);
+        final booking = makeModel(
+          buffetFood: true,
+          guidTour: false,
+          golfCar: true,
+        );
 
         // Act
         await service.createBooking(booking);
@@ -820,8 +837,7 @@ void main() {
         await seedRaw(docId: 'bk1', userId: 'uid');
 
         // Act
-        await service.updateChargeId(
-            bookingId: 'bk1', chargeId: 'ch_test_123');
+        await service.updateChargeId(bookingId: 'bk1', chargeId: 'ch_test_123');
 
         // Assert
         final data =
@@ -836,8 +852,7 @@ void main() {
         await seedRaw(docId: 'bk2', userId: 'uid');
 
         // Act
-        await service.updateChargeId(
-            bookingId: 'bk1', chargeId: 'ch_only_bk1');
+        await service.updateChargeId(bookingId: 'bk1', chargeId: 'ch_only_bk1');
 
         // Assert
         final data2 =
@@ -852,7 +867,11 @@ void main() {
       test('emits the correct BookingModel when the document exists', () async {
         // Arrange
         await seedRaw(
-            docId: 'bk1', userId: 'uid', status: 'Done', adultTotal: 3);
+          docId: 'bk1',
+          userId: 'uid',
+          status: 'Done',
+          adultTotal: 3,
+        );
 
         // Act
         final model = await service.watchBooking('bk1').first;
@@ -894,24 +913,26 @@ void main() {
       test('returns only Done bookings for the specified user', () async {
         // Arrange
         await seedRaw(
-            docId: 'done1',
-            userId: 'user_1',
-            status: 'Done',
-            date: DateTime(2026, 5, 10));
+          docId: 'done1',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 5, 10),
+        );
         await seedRaw(
-            docId: 'done2',
-            userId: 'user_1',
-            status: 'Done',
-            date: DateTime(2026, 5, 9));
+          docId: 'done2',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 5, 9),
+        );
         await seedRaw(
-            docId: 'pending1',
-            userId: 'user_1',
-            status: 'Pending',
-            date: DateTime(2026, 5, 8));
+          docId: 'pending1',
+          userId: 'user_1',
+          status: 'Pending',
+          date: DateTime(2026, 5, 8),
+        );
 
         // Act
-        final bookings =
-            await service.getBookingsByUser('user_1').first;
+        final bookings = await service.getBookingsByUser('user_1').first;
 
         // Assert — only the two Done bookings are returned
         expect(bookings.length, 2);
@@ -921,19 +942,20 @@ void main() {
       test('filters out bookings belonging to other users', () async {
         // Arrange
         await seedRaw(
-            docId: 'bk_user1',
-            userId: 'user_1',
-            status: 'Done',
-            date: DateTime(2026, 5, 10));
+          docId: 'bk_user1',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 5, 10),
+        );
         await seedRaw(
-            docId: 'bk_user2',
-            userId: 'user_2',
-            status: 'Done',
-            date: DateTime(2026, 5, 10));
+          docId: 'bk_user2',
+          userId: 'user_2',
+          status: 'Done',
+          date: DateTime(2026, 5, 10),
+        );
 
         // Act
-        final bookings =
-            await service.getBookingsByUser('user_1').first;
+        final bookings = await service.getBookingsByUser('user_1').first;
 
         // Assert
         expect(bookings.length, 1);
@@ -943,14 +965,14 @@ void main() {
       test('returns empty list when user has no Done bookings', () async {
         // Arrange — seeded booking is Pending, not Done
         await seedRaw(
-            docId: 'pending1',
-            userId: 'user_1',
-            status: 'Pending',
-            date: DateTime(2026, 5, 10));
+          docId: 'pending1',
+          userId: 'user_1',
+          status: 'Pending',
+          date: DateTime(2026, 5, 10),
+        );
 
         // Act
-        final bookings =
-            await service.getBookingsByUser('user_1').first;
+        final bookings = await service.getBookingsByUser('user_1').first;
 
         // Assert
         expect(bookings, isEmpty);
@@ -958,8 +980,7 @@ void main() {
 
       test('returns empty list when user has no bookings at all', () async {
         // Act
-        final bookings =
-            await service.getBookingsByUser('unknown_user').first;
+        final bookings = await service.getBookingsByUser('unknown_user').first;
 
         // Assert
         expect(bookings, isEmpty);
@@ -968,24 +989,26 @@ void main() {
       test('returns results ordered by date descending', () async {
         // Arrange
         await seedRaw(
-            docId: 'oldest',
-            userId: 'user_1',
-            status: 'Done',
-            date: DateTime(2026, 3, 1));
+          docId: 'oldest',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 3, 1),
+        );
         await seedRaw(
-            docId: 'newest',
-            userId: 'user_1',
-            status: 'Done',
-            date: DateTime(2026, 7, 1));
+          docId: 'newest',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 7, 1),
+        );
         await seedRaw(
-            docId: 'middle',
-            userId: 'user_1',
-            status: 'Done',
-            date: DateTime(2026, 5, 1));
+          docId: 'middle',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 5, 1),
+        );
 
         // Act
-        final bookings =
-            await service.getBookingsByUser('user_1').first;
+        final bookings = await service.getBookingsByUser('user_1').first;
 
         // Assert — newest first
         expect(bookings[0].date, DateTime(2026, 7, 1));
@@ -1028,8 +1051,7 @@ void main() {
         await service.deleteBooking('remove');
 
         // Assert
-        final remaining =
-            await fakeFirestore.collection('booking').get();
+        final remaining = await fakeFirestore.collection('booking').get();
         expect(remaining.docs.length, 1);
         expect(remaining.docs.first.id, 'keep');
       });

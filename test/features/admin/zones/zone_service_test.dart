@@ -57,10 +57,7 @@ void main() {
 
     test('throws on Firestore error', () {
       final errorService = ZoneService(db: _ErrorFirestore());
-      expect(
-        () => errorService.getZones(),
-        throwsA(isA<FirebaseException>()),
-      );
+      expect(() => errorService.getZones(), throwsA(isA<FirebaseException>()));
     });
   });
 
@@ -148,8 +145,8 @@ void main() {
       await service.updateZone(zoneId: 'z1', zoneName: 'Avian Zone');
 
       // Assert
-      final data =
-          (await fakeFirestore.collection('zone').doc('z1').get()).data()!;
+      final data = (await fakeFirestore.collection('zone').doc('z1').get())
+          .data()!;
       expect(data['zoneName'], 'Avian Zone');
     });
 
@@ -162,8 +159,8 @@ void main() {
       await service.updateZone(zoneId: 'z1', zoneName: 'Avian Zone');
 
       // Assert — z2 is untouched
-      final data =
-          (await fakeFirestore.collection('zone').doc('z2').get()).data()!;
+      final data = (await fakeFirestore.collection('zone').doc('z2').get())
+          .data()!;
       expect(data['zoneName'], 'Aquatic Zone');
     });
 
@@ -186,8 +183,7 @@ void main() {
       await service.deleteZone('todelete');
 
       // Assert
-      final doc =
-          await fakeFirestore.collection('zone').doc('todelete').get();
+      final doc = await fakeFirestore.collection('zone').doc('todelete').get();
       expect(doc.exists, false);
     });
 

@@ -22,54 +22,55 @@ void main() {
     DateTime? date,
     String status = 'pending',
     String userId = 'user123',
-  }) =>
-      BookingModel(
-        id: id,
-        buffetFood: buffetFood,
-        golfCar: golfCar,
-        guidTour: guidTour,
-        adultTotal: adultTotal,
-        childTotal: childTotal,
-        elderTotal: elderTotal,
-        date: date ?? DateTime(2026, 5, 10),
-        status: status,
-        userId: userId,
-      );
+  }) => BookingModel(
+    id: id,
+    buffetFood: buffetFood,
+    golfCar: golfCar,
+    guidTour: guidTour,
+    adultTotal: adultTotal,
+    childTotal: childTotal,
+    elderTotal: elderTotal,
+    date: date ?? DateTime(2026, 5, 10),
+    status: status,
+    userId: userId,
+  );
 
   // ── fromFirestore ────────────────────────────────────────────────────────
   group('BookingModel.fromFirestore', () {
-    test('maps all fields correctly when userId is a DocumentReference',
-        () async {
-      // Arrange
-      final userRef = fakeFirestore.collection('user').doc('user123');
-      await fakeFirestore.collection('booking').doc('bk1').set({
-        'BuffetFood': true,
-        'GolfCar': false,
-        'GuidTour': true,
-        'adultTotal': 2,
-        'childTotal': 1,
-        'elderTotal': 0,
-        'date': Timestamp.fromDate(DateTime(2026, 5, 10)),
-        'status': 'pending',
-        'userId': userRef,
-      });
-      final doc = await fakeFirestore.collection('booking').doc('bk1').get();
+    test(
+      'maps all fields correctly when userId is a DocumentReference',
+      () async {
+        // Arrange
+        final userRef = fakeFirestore.collection('user').doc('user123');
+        await fakeFirestore.collection('booking').doc('bk1').set({
+          'BuffetFood': true,
+          'GolfCar': false,
+          'GuidTour': true,
+          'adultTotal': 2,
+          'childTotal': 1,
+          'elderTotal': 0,
+          'date': Timestamp.fromDate(DateTime(2026, 5, 10)),
+          'status': 'pending',
+          'userId': userRef,
+        });
+        final doc = await fakeFirestore.collection('booking').doc('bk1').get();
 
-      // Act
-      final model = BookingModel.fromFirestore(doc);
+        // Act
+        final model = BookingModel.fromFirestore(doc);
 
-      // Assert
-      expect(model.id, 'bk1');
-      expect(model.buffetFood, true);
-      expect(model.golfCar, false);
-      expect(model.guidTour, true);
-      expect(model.adultTotal, 2);
-      expect(model.childTotal, 1);
-      expect(model.elderTotal, 0);
-      expect(model.date, DateTime(2026, 5, 10));
-      expect(model.status, 'pending');
-      expect(model.userId, 'user123');
-    });
+        // Assert
+        expect(model.id, 'bk1');
+        expect(model.buffetFood, true);
+        expect(model.golfCar, false);
+        expect(model.guidTour, true);
+        expect(model.adultTotal, 2);
+        expect(model.childTotal, 1);
+        expect(model.elderTotal, 0);
+        expect(model.date, DateTime(2026, 5, 10));
+        expect(model.status, 'pending');
+        expect(model.userId, 'user123');
+      },
+    );
 
     test('handles userId stored as plain String', () async {
       await fakeFirestore.collection('booking').doc('bk2').set({
@@ -169,8 +170,11 @@ void main() {
     });
 
     test('boolean fields are bool not String', () {
-      final map = baseModel(buffetFood: true, golfCar: true, guidTour: false)
-          .toMap();
+      final map = baseModel(
+        buffetFood: true,
+        golfCar: true,
+        guidTour: false,
+      ).toMap();
 
       expect(map['BuffetFood'], isA<bool>());
       expect(map['GolfCar'], isA<bool>());
@@ -178,8 +182,11 @@ void main() {
     });
 
     test('numeric fields are int not String', () {
-      final map =
-          baseModel(adultTotal: 3, childTotal: 2, elderTotal: 1).toMap();
+      final map = baseModel(
+        adultTotal: 3,
+        childTotal: 2,
+        elderTotal: 1,
+      ).toMap();
 
       expect(map['adultTotal'], isA<int>());
       expect(map['childTotal'], isA<int>());
@@ -192,12 +199,15 @@ void main() {
       expect(map['date'], isA<Timestamp>());
     });
 
-    test('userId in toMap is a plain String (service converts to DocumentReference)', () {
-      final map = baseModel(userId: 'user123').toMap();
+    test(
+      'userId in toMap is a plain String (service converts to DocumentReference)',
+      () {
+        final map = baseModel(userId: 'user123').toMap();
 
-      expect(map['userId'], isA<String>());
-      expect(map['userId'], 'user123');
-    });
+        expect(map['userId'], isA<String>());
+        expect(map['userId'], 'user123');
+      },
+    );
   });
 
   // ── copyWith ─────────────────────────────────────────────────────────────

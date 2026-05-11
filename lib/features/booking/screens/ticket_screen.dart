@@ -11,13 +11,12 @@ import 'ticket_history_screen.dart';
 
 // ── Provider ─────────────────────────────────────────────────────────────────
 
-final _upcomingBookingsProvider = StreamProvider.autoDispose<List<BookingModel>>(
-  (ref) {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return Stream.value([]);
-    return BookingService().getUpcomingBookings(uid);
-  },
-);
+final _upcomingBookingsProvider =
+    StreamProvider.autoDispose<List<BookingModel>>((ref) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return Stream.value([]);
+      return BookingService().getUpcomingBookings(uid);
+    });
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 

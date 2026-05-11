@@ -49,16 +49,16 @@ class TicketModel {
   }
 
   Map<String, dynamic> toMap() => {
-        'BuffetFood': buffetFood,
-        'GolfCar': golfCar,
-        'GuidTour': guidTour,
-        'adultTotal': adultTotal,
-        'childTotal': childTotal,
-        'elderTotal': elderTotal,
-        'date': Timestamp.fromDate(date),
-        'status': status,
-        'userId': userId,
-      };
+    'BuffetFood': buffetFood,
+    'GolfCar': golfCar,
+    'GuidTour': guidTour,
+    'adultTotal': adultTotal,
+    'childTotal': childTotal,
+    'elderTotal': elderTotal,
+    'date': Timestamp.fromDate(date),
+    'status': status,
+    'userId': userId,
+  };
 
   TicketModel copyWith({
     String? id,
@@ -71,17 +71,16 @@ class TicketModel {
     DateTime? date,
     String? status,
     DocumentReference? userId,
-  }) =>
-      TicketModel(
-        id: id ?? this.id,
-        buffetFood: buffetFood ?? this.buffetFood,
-        golfCar: golfCar ?? this.golfCar,
-        guidTour: guidTour ?? this.guidTour,
-        adultTotal: adultTotal ?? this.adultTotal,
-        childTotal: childTotal ?? this.childTotal,
-        elderTotal: elderTotal ?? this.elderTotal,
-        date: date ?? this.date,
-        status: status ?? this.status,
-        userId: userId ?? this.userId,
-      );
+  }) => TicketModel(
+    id: id ?? this.id,
+    buffetFood: buffetFood ?? this.buffetFood,
+    golfCar: golfCar ?? this.golfCar,
+    guidTour: guidTour ?? this.guidTour,
+    adultTotal: adultTotal ?? this.adultTotal,
+    childTotal: childTotal ?? this.childTotal,
+    elderTotal: elderTotal ?? this.elderTotal,
+    date: date ?? this.date,
+    status: status ?? this.status,
+    userId: userId ?? this.userId,
+  );
 }
