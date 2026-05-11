@@ -34,53 +34,57 @@ void main() {
 
   // ── fromFirestore ────────────────────────────────────────────────────────
   group('AnimalModel.fromFirestore', () {
-    test('maps all fields correctly including locationX and locationY',
-        () async {
-      // Arrange
-      final zoneRef = fakeFirestore.collection('zone').doc('zone1');
-      await fakeFirestore.collection('animal').doc('a1').set({
-        'animalName': 'Scarlet Macaw',
-        'animalDetail': 'Native to South America',
-        'animalPicture': 'https://example.com/macaw.jpg',
-        'zoneId': zoneRef,
-        'location_x': 10,
-        'location_y': 20,
-      });
-      final doc = await fakeFirestore.collection('animal').doc('a1').get();
+    test(
+      'maps all fields correctly including locationX and locationY',
+      () async {
+        // Arrange
+        final zoneRef = fakeFirestore.collection('zone').doc('zone1');
+        await fakeFirestore.collection('animal').doc('a1').set({
+          'animalName': 'Scarlet Macaw',
+          'animalDetail': 'Native to South America',
+          'animalPicture': 'https://example.com/macaw.jpg',
+          'zoneId': zoneRef,
+          'location_x': 10,
+          'location_y': 20,
+        });
+        final doc = await fakeFirestore.collection('animal').doc('a1').get();
 
-      // Act
-      final model = AnimalModel.fromFirestore(doc);
+        // Act
+        final model = AnimalModel.fromFirestore(doc);
 
-      // Assert
-      expect(model.id, 'a1');
-      expect(model.animalName, 'Scarlet Macaw');
-      expect(model.animalDetail, 'Native to South America');
-      expect(model.animalPicture, 'https://example.com/macaw.jpg');
-      expect(model.zoneId, isA<DocumentReference>());
-      expect(model.zoneId.id, 'zone1');
-      expect(model.locationX, 10);
-      expect(model.locationY, 20);
-    });
+        // Assert
+        expect(model.id, 'a1');
+        expect(model.animalName, 'Scarlet Macaw');
+        expect(model.animalDetail, 'Native to South America');
+        expect(model.animalPicture, 'https://example.com/macaw.jpg');
+        expect(model.zoneId, isA<DocumentReference>());
+        expect(model.zoneId.id, 'zone1');
+        expect(model.locationX, 10);
+        expect(model.locationY, 20);
+      },
+    );
 
-    test('returns null for locationX and locationY when fields are absent',
-        () async {
-      // Arrange
-      final zoneRef = fakeFirestore.collection('zone').doc('zone1');
-      await fakeFirestore.collection('animal').doc('a2').set({
-        'animalName': 'Penguin',
-        'animalDetail': 'Antarctic bird',
-        'animalPicture': 'https://example.com/penguin.jpg',
-        'zoneId': zoneRef,
-      });
-      final doc = await fakeFirestore.collection('animal').doc('a2').get();
+    test(
+      'returns null for locationX and locationY when fields are absent',
+      () async {
+        // Arrange
+        final zoneRef = fakeFirestore.collection('zone').doc('zone1');
+        await fakeFirestore.collection('animal').doc('a2').set({
+          'animalName': 'Penguin',
+          'animalDetail': 'Antarctic bird',
+          'animalPicture': 'https://example.com/penguin.jpg',
+          'zoneId': zoneRef,
+        });
+        final doc = await fakeFirestore.collection('animal').doc('a2').get();
 
-      // Act
-      final model = AnimalModel.fromFirestore(doc);
+        // Act
+        final model = AnimalModel.fromFirestore(doc);
 
-      // Assert
-      expect(model.locationX, isNull);
-      expect(model.locationY, isNull);
-    });
+        // Assert
+        expect(model.locationX, isNull);
+        expect(model.locationY, isNull);
+      },
+    );
 
     test('defaults string fields to empty string when missing', () async {
       // Arrange

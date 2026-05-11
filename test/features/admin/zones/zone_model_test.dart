@@ -10,10 +10,7 @@ void main() {
   });
 
   // ── Helper ──────────────────────────────────────────────────────────────
-  ZoneModel baseModel({
-    String id = 'z1',
-    String zoneName = 'Bird Zone',
-  }) =>
+  ZoneModel baseModel({String id = 'z1', String zoneName = 'Bird Zone'}) =>
       ZoneModel(id: id, zoneName: zoneName);
 
   // ── fromFirestore ────────────────────────────────────────────────────────

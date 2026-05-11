@@ -69,7 +69,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       );
       if (mounted) {
         if (result == 'Success') {
-          Navigator.pushReplacementNamed(context, AppRoute.adminHome);
+          Navigator.pushReplacementNamed(context, AppRoute.adminAnimals);
         } else {
           setState(() {
             _backendError = result ?? 'Email or Password is not correct';

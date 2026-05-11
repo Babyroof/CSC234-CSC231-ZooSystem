@@ -8,7 +8,7 @@ class TicketService {
   static const String _collection = 'booking';
 
   TicketService({FirebaseFirestore? db})
-      : _db = db ?? FirebaseFirestore.instance;
+    : _db = db ?? FirebaseFirestore.instance;
 
   Stream<List<TicketModel>> getAllTickets() {
     try {

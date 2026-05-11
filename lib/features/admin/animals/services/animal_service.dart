@@ -8,7 +8,7 @@ class AnimalService {
   static const String _collection = 'animal';
 
   AnimalService({FirebaseFirestore? db})
-      : _db = db ?? FirebaseFirestore.instance;
+    : _db = db ?? FirebaseFirestore.instance;
 
   Stream<List<AnimalModel>> getAnimals() {
     try {

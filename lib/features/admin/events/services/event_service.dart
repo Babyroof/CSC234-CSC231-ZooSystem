@@ -8,7 +8,7 @@ class EventService {
   static const String _collection = 'event';
 
   EventService({FirebaseFirestore? db})
-      : _db = db ?? FirebaseFirestore.instance;
+    : _db = db ?? FirebaseFirestore.instance;
 
   Stream<List<EventModel>> getEvents() {
     try {

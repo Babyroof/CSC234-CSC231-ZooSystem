@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
@@ -5,6 +6,7 @@ import '../models/booking_admin_model.dart';
 import '../services/booking_admin_service.dart';
 import 'package:zoopernova_zoo_system/core/widgets/sidebarAdmin.dart';
 import 'package:zoopernova_zoo_system/core/widgets/adminTopHeader.dart';
+import 'package:zoopernova_zoo_system/features/booking/constants/booking_pricing.dart';
 
 class BookingAdminState {
   const BookingAdminState({
@@ -70,17 +72,28 @@ class BookingAdminState {
 
 class BookingAdminNotifier extends StateNotifier<BookingAdminState> {
   BookingAdminNotifier(this._service) : super(const BookingAdminState()) {
-    loadBookings();
+    _sub = _service.watchBookings().listen((bookings) {
+      state = state.copyWith(isLoading: false, items: bookings);
+      _guardCurrentPage();
+    }, onError: (Object _) => state = state.copyWith(isLoading: false));
   }
 
   final BookingAdminService _service;
+  late final StreamSubscription<List<BookingAdminModel>> _sub;
 
-  Future<void> loadBookings() async {
-    state = state.copyWith(isLoading: true);
-    final bookings = await _service.getBookings();
-    state = state.copyWith(isLoading: false, items: bookings);
-    _guardCurrentPage();
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
   }
+
+  Future<void> deleteBooking(String id) => _service.deleteBooking(id);
+
+  Future<void> updateBooking({
+    required String id,
+    required DateTime date,
+    required String status,
+  }) => _service.updateBooking(id: id, date: date, status: status);
 
   void setSearchText(String value) {
     state = state.copyWith(searchText: value, currentPage: 1);
@@ -134,6 +147,50 @@ class _BookingAdminScreenState extends ConsumerState<BookingAdminScreen> {
     super.dispose();
   }
 
+  Future<void> _showEditDialog(BookingAdminModel item) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => _EditBookingDialog(
+        item: item,
+        onSave:
+            ({
+              required String id,
+              required DateTime date,
+              required String status,
+            }) => ref
+                .read(bookingAdminProvider.notifier)
+                .updateBooking(id: id, date: date, status: status),
+      ),
+    );
+  }
+
+  Future<void> _showDeleteConfirm(BookingAdminModel item) async {
+    final shortId = '#${item.id.substring(0, 6).toUpperCase()}';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Booking'),
+        content: Text(
+          'Delete booking $shortId for ${item.userName}?\nThis cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelled'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.adminDanger),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await ref.read(bookingAdminProvider.notifier).deleteBooking(item.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(bookingAdminProvider);
@@ -180,7 +237,11 @@ class _BookingAdminScreenState extends ConsumerState<BookingAdminScreen> {
                                   ? const Center(
                                       child: CircularProgressIndicator(),
                                     )
-                                  : _BookingList(rows: state.pagedItems),
+                                  : _BookingList(
+                                      rows: state.pagedItems,
+                                      onEdit: _showEditDialog,
+                                      onDelete: _showDeleteConfirm,
+                                    ),
                             ),
                             const SizedBox(height: 10),
                             _Pagination(
@@ -205,6 +266,8 @@ class _BookingAdminScreenState extends ConsumerState<BookingAdminScreen> {
   }
 }
 
+// ─── Toolbar ────────────────────────────────────────────────────────────────
+
 class _ToolBar extends StatelessWidget {
   const _ToolBar({
     required this.controller,
@@ -218,7 +281,7 @@ class _ToolBar extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onStatusChanged;
 
-  static const _statuses = ['All', 'pending', 'done'];
+  static const _statuses = ['All', 'pending', 'done', 'cancel'];
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +300,7 @@ class _ToolBar extends StatelessWidget {
               decoration: const InputDecoration(
                 border: InputBorder.none,
                 prefixIcon: Icon(Icons.search, size: 22),
-                hintText: 'Search',
+                hintText: 'Search by name or ID',
                 hintStyle: TextStyle(color: AppColors.adminTextMuted),
               ),
             ),
@@ -277,75 +340,48 @@ class _ToolBar extends StatelessWidget {
   }
 }
 
+// ─── Header Row ─────────────────────────────────────────────────────────────
+
 class _HeaderRow extends StatelessWidget {
   const _HeaderRow();
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
+    const style = TextStyle(
+      color: AppColors.adminTextMuted,
+      fontWeight: FontWeight.w600,
+      fontSize: 13,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Expanded(
-            flex: 3,
-            child: Text(
-              'ID',
-              style: TextStyle(
-                color: AppColors.adminTextMuted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Text(
-              'Name',
-              style: TextStyle(
-                color: AppColors.adminTextMuted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Text(
-              'Date',
-              style: TextStyle(
-                color: AppColors.adminTextMuted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              'Tickets',
-              style: TextStyle(
-                color: AppColors.adminTextMuted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              'Total',
-              style: TextStyle(
-                color: AppColors.adminTextMuted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          const Expanded(flex: 2, child: Text('ID', style: style)),
+          const Expanded(flex: 3, child: Text('Name', style: style)),
+          const Expanded(flex: 2, child: Text('Date', style: style)),
+          const Expanded(flex: 3, child: Text('Guests', style: style)),
+          const Expanded(flex: 3, child: Text('Add-ons', style: style)),
+          const Expanded(flex: 2, child: Text('Total (฿)', style: style)),
+          const Expanded(flex: 2, child: Text('Status', style: style)),
+          const Expanded(flex: 2, child: Text('Actions', style: style)),
         ],
       ),
     );
   }
 }
 
+// ─── Booking List ────────────────────────────────────────────────────────────
+
 class _BookingList extends StatelessWidget {
-  const _BookingList({required this.rows});
+  const _BookingList({
+    required this.rows,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   final List<BookingAdminModel> rows;
+  final void Function(BookingAdminModel) onEdit;
+  final void Function(BookingAdminModel) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -357,93 +393,144 @@ class _BookingList extends StatelessWidget {
         ),
       );
     }
-
     return ListView.builder(
       itemCount: rows.length,
-      itemBuilder: (context, index) =>
-          _BookingRow(item: rows[index], isHighlighted: index.isEven),
+      itemBuilder: (context, index) => _BookingRow(
+        item: rows[index],
+        isHighlighted: index.isEven,
+        onEdit: () => onEdit(rows[index]),
+        onDelete: () => onDelete(rows[index]),
+      ),
     );
   }
 }
 
+// ─── Booking Row ─────────────────────────────────────────────────────────────
+
 class _BookingRow extends StatelessWidget {
-  const _BookingRow({required this.item, required this.isHighlighted});
+  const _BookingRow({
+    required this.item,
+    required this.isHighlighted,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   final BookingAdminModel item;
   final bool isHighlighted;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    final shortId = '#${item.id.substring(0, 3).toUpperCase()}';
+    final shortId = '#${item.id.substring(0, 6).toUpperCase()}';
     final d = item.date;
     final dateStr =
-        '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+        '${d.day.toString().padLeft(2, '0')}/'
+        '${d.month.toString().padLeft(2, '0')}/'
+        '${d.year}';
     const textColor = Color(0xFF333333);
-    const fontWeight = FontWeight.w400;
     final bgColor = isHighlighted ? Colors.white : AppColors.adminRowAlt;
+
+    final addons = [
+      if (item.buffetFood)
+        _AddonChip(label: 'Buffet', color: const Color(0xFFF59E0B)),
+      if (item.guideTour)
+        _AddonChip(label: 'Guide', color: const Color(0xFF3B82F6)),
+      if (item.golfCar)
+        _AddonChip(label: 'Golf', color: const Color(0xFF10B981)),
+    ];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 2),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              shortId,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+            ),
+          ),
           Expanded(
             flex: 3,
             child: Text(
-              shortId,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: fontWeight,
-                color: textColor,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Text(
               item.userName,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: fontWeight,
-                color: textColor,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Text(
-              dateStr,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: fontWeight,
-                color: textColor,
-              ),
+              style: const TextStyle(fontSize: 14, color: textColor),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           Expanded(
             flex: 2,
             child: Text(
-              '${item.totalTickets}',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: fontWeight,
-                color: textColor,
-              ),
+              dateStr,
+              style: const TextStyle(fontSize: 13, color: textColor),
             ),
           ),
           Expanded(
             flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _GuestLine(label: 'Adult', count: item.adultTotal),
+                _GuestLine(label: 'Kid', count: item.childTotal),
+                _GuestLine(label: 'Elder', count: item.elderTotal),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: addons.isEmpty
+                ? const Text(
+                    '—',
+                    style: TextStyle(
+                      color: AppColors.adminTextMuted,
+                      fontSize: 13,
+                    ),
+                  )
+                : Wrap(spacing: 4, runSpacing: 4, children: addons),
+          ),
+          Expanded(
+            flex: 2,
             child: Text(
-              _formatTotal(item),
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: fontWeight,
-                color: textColor,
+              _formatTotal(),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF333333),
               ),
+            ),
+          ),
+          Expanded(flex: 2, child: _StatusBadge(status: item.status)),
+          Expanded(
+            flex: 2,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ActionIconButton(
+                  icon: Icons.edit_outlined,
+                  color: AppColors.adminPrimaryDark,
+                  tooltip: 'Edit',
+                  onTap: onEdit,
+                ),
+                const SizedBox(width: 4),
+                _ActionIconButton(
+                  icon: Icons.delete_outline,
+                  color: AppColors.adminDanger,
+                  tooltip: 'Delete',
+                  onTap: onDelete,
+                ),
+              ],
             ),
           ),
         ],
@@ -451,24 +538,299 @@ class _BookingRow extends StatelessWidget {
     );
   }
 
-  String _formatTotal(BookingAdminModel item) {
-    const adultPrice = 200;
-    const childPrice = 100;
-    const elderPrice = 150;
+  String _formatTotal() {
     int total =
-        item.adultTotal * adultPrice +
-        item.childTotal * childPrice +
-        item.elderTotal * elderPrice;
-    if (item.buffetFood) total += 200;
-    if (item.guideTour) total += 100;
-    if (item.golfCar) total += 200;
-    final formatted = total.toString().replaceAllMapped(
+        item.adultTotal * BookingPricing.adultPrice +
+        item.childTotal * BookingPricing.kidPrice +
+        item.elderTotal * BookingPricing.elderPrice +
+        (item.buffetFood ? BookingPricing.buffetFoodPrice : 0) +
+        (item.guideTour ? BookingPricing.guidTourPrice : 0) +
+        (item.golfCar ? BookingPricing.golfCarPrice : 0);
+    return total.toString().replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]},',
     );
-    return formatted;
   }
 }
+
+// ─── Guest Line ──────────────────────────────────────────────────────────────
+
+class _GuestLine extends StatelessWidget {
+  const _GuestLine({required this.label, required this.count});
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '$label: $count',
+      style: TextStyle(
+        fontSize: 12,
+        color: count > 0 ? const Color(0xFF333333) : AppColors.adminTextMuted,
+      ),
+    );
+  }
+}
+
+// ─── Addon Chip ──────────────────────────────────────────────────────────────
+
+class _AddonChip extends StatelessWidget {
+  const _AddonChip({required this.label, required this.color});
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Status Badge ────────────────────────────────────────────────────────────
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final (bg, fg) = switch (status) {
+      'done' => (const Color(0xFFD1FAE5), const Color(0xFF065F46)),
+      'cancel' => (AppColors.adminDangerBg, AppColors.adminDanger),
+      _ => (const Color(0xFFFEF3C7), const Color(0xFF92400E)),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg),
+      ),
+    );
+  }
+}
+
+// ─── Action Icon Button ──────────────────────────────────────────────────────
+
+class _ActionIconButton extends StatelessWidget {
+  const _ActionIconButton({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
+    required this.onTap,
+  });
+  final IconData icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Icon(icon, size: 18, color: color),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Edit Booking Dialog ─────────────────────────────────────────────────────
+
+class _EditBookingDialog extends StatefulWidget {
+  const _EditBookingDialog({required this.item, required this.onSave});
+
+  final BookingAdminModel item;
+  final Future<void> Function({
+    required String id,
+    required DateTime date,
+    required String status,
+  })
+  onSave;
+
+  @override
+  State<_EditBookingDialog> createState() => _EditBookingDialogState();
+}
+
+class _EditBookingDialogState extends State<_EditBookingDialog> {
+  late DateTime _date;
+  late String _status;
+  bool _saving = false;
+
+  static const _statuses = ['pending', 'done', 'cancel'];
+
+  @override
+  void initState() {
+    super.initState();
+    _date = widget.item.date;
+    _status = _statuses.contains(widget.item.status)
+        ? widget.item.status
+        : 'pending';
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      await widget.onSave(id: widget.item.id, date: _date, status: _status);
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateStr =
+        '${_date.day.toString().padLeft(2, '0')}/'
+        '${_date.month.toString().padLeft(2, '0')}/'
+        '${_date.year}';
+
+    return AlertDialog(
+      title: Text(
+        'Edit Booking #${widget.item.id.substring(0, 6).toUpperCase()}',
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Visit Date',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.adminTextMuted,
+              ),
+            ),
+            const SizedBox(height: 6),
+            InkWell(
+              onTap: _pickDate,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.adminBorderLight),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 16,
+                      color: AppColors.adminTextMuted,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(dateStr, style: const TextStyle(fontSize: 14)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Status',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.adminTextMuted,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.adminBorderLight),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _status,
+                  isExpanded: true,
+                  borderRadius: BorderRadius.circular(8),
+                  icon: const Icon(Icons.unfold_more, size: 18),
+                  style: const TextStyle(
+                    color: AppColors.adminTextDark,
+                    fontSize: 14,
+                  ),
+                  items: _statuses
+                      .map(
+                        (s) =>
+                            DropdownMenuItem<String>(value: s, child: Text(s)),
+                      )
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setState(() => _status = v);
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.adminPrimaryDark,
+          ),
+          onPressed: _saving ? null : _save,
+          child: _saving
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Pagination ──────────────────────────────────────────────────────────────
 
 class _Pagination extends StatelessWidget {
   const _Pagination({

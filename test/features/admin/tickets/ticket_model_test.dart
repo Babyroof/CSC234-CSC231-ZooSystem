@@ -163,8 +163,11 @@ void main() {
     });
 
     test('boolean fields are bool not String', () {
-      final map =
-          baseModel(buffetFood: true, golfCar: true, guidTour: false).toMap();
+      final map = baseModel(
+        buffetFood: true,
+        golfCar: true,
+        guidTour: false,
+      ).toMap();
 
       expect(map['BuffetFood'], isA<bool>());
       expect(map['GolfCar'], isA<bool>());
@@ -172,8 +175,11 @@ void main() {
     });
 
     test('numeric fields are int not String', () {
-      final map =
-          baseModel(adultTotal: 3, childTotal: 2, elderTotal: 1).toMap();
+      final map = baseModel(
+        adultTotal: 3,
+        childTotal: 2,
+        elderTotal: 1,
+      ).toMap();
 
       expect(map['adultTotal'], isA<int>());
       expect(map['childTotal'], isA<int>());

@@ -140,29 +140,31 @@ void main() {
       expect(snap.docs.length, 1);
     });
 
-    test('writes only the 4 allowed fields — no location_x or location_y',
-        () async {
-      // Arrange
-      final zoneRef = fakeFirestore.collection('zone').doc('zone1');
+    test(
+      'writes only the 4 allowed fields — no location_x or location_y',
+      () async {
+        // Arrange
+        final zoneRef = fakeFirestore.collection('zone').doc('zone1');
 
-      // Act
-      await service.createAnimal(
-        animalName: 'Tiger',
-        animalDetail: 'Big cat',
-        animalPicture: 'https://example.com/tiger.jpg',
-        zoneId: zoneRef,
-      );
+        // Act
+        await service.createAnimal(
+          animalName: 'Tiger',
+          animalDetail: 'Big cat',
+          animalPicture: 'https://example.com/tiger.jpg',
+          zoneId: zoneRef,
+        );
 
-      // Assert
-      final data =
-          (await fakeFirestore.collection('animal').get()).docs.first.data();
-      expect(data['animalName'], 'Tiger');
-      expect(data['animalDetail'], 'Big cat');
-      expect(data['animalPicture'], 'https://example.com/tiger.jpg');
-      expect(data['zoneId'], isA<DocumentReference>());
-      expect(data.containsKey('location_x'), false);
-      expect(data.containsKey('location_y'), false);
-    });
+        // Assert
+        final data = (await fakeFirestore.collection('animal').get()).docs.first
+            .data();
+        expect(data['animalName'], 'Tiger');
+        expect(data['animalDetail'], 'Big cat');
+        expect(data['animalPicture'], 'https://example.com/tiger.jpg');
+        expect(data['zoneId'], isA<DocumentReference>());
+        expect(data.containsKey('location_x'), false);
+        expect(data.containsKey('location_y'), false);
+      },
+    );
 
     test('throws on Firestore error', () {
       final errorService = AnimalService(db: _ErrorFirestore());
@@ -196,8 +198,8 @@ void main() {
       );
 
       // Assert
-      final data =
-          (await fakeFirestore.collection('animal').doc('a1').get()).data()!;
+      final data = (await fakeFirestore.collection('animal').doc('a1').get())
+          .data()!;
       expect(data['animalName'], 'White Tiger');
       expect(data['animalDetail'], 'Rare colour variant');
       expect(data['animalPicture'], 'https://example.com/white_tiger.jpg');
@@ -219,8 +221,8 @@ void main() {
       );
 
       // Assert — coordinates must be preserved unchanged
-      final data =
-          (await fakeFirestore.collection('animal').doc('a1').get()).data()!;
+      final data = (await fakeFirestore.collection('animal').doc('a1').get())
+          .data()!;
       expect(data['location_x'], 42);
       expect(data['location_y'], 99);
     });
@@ -251,8 +253,10 @@ void main() {
       await service.deleteAnimal('todelete');
 
       // Assert
-      final doc =
-          await fakeFirestore.collection('animal').doc('todelete').get();
+      final doc = await fakeFirestore
+          .collection('animal')
+          .doc('todelete')
+          .get();
       expect(doc.exists, false);
     });
 

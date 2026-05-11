@@ -30,10 +30,10 @@ class EventModel {
   }
 
   Map<String, dynamic> toMap() => {
-        'eventName': eventName,
-        'eventDetail': eventDetail,
-        'eventPicture': eventPicture,
-      };
+    'eventName': eventName,
+    'eventDetail': eventDetail,
+    'eventPicture': eventPicture,
+  };
 
   EventModel copyWith({
     String? id,
@@ -42,13 +42,12 @@ class EventModel {
     String? eventPicture,
     int? locationX,
     int? locationY,
-  }) =>
-      EventModel(
-        id: id ?? this.id,
-        eventName: eventName ?? this.eventName,
-        eventDetail: eventDetail ?? this.eventDetail,
-        eventPicture: eventPicture ?? this.eventPicture,
-        locationX: locationX ?? this.locationX,
-        locationY: locationY ?? this.locationY,
-      );
+  }) => EventModel(
+    id: id ?? this.id,
+    eventName: eventName ?? this.eventName,
+    eventDetail: eventDetail ?? this.eventDetail,
+    eventPicture: eventPicture ?? this.eventPicture,
+    locationX: locationX ?? this.locationX,
+    locationY: locationY ?? this.locationY,
+  );
 }
