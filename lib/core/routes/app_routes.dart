@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:zoopernova_zoo_system/features/admin/auth/screens/admin_login_screen.dart';
+import 'package:zoopernova_zoo_system/features/admin/auth/screens/admin_register_screen.dart';
+import 'package:zoopernova_zoo_system/features/admin/home/screens/admin_home_screen.dart';
 import 'package:zoopernova_zoo_system/features/booking/screens/booking_screen.dart';
 import 'package:zoopernova_zoo_system/features/booking/screens/payment_screen.dart';
 import 'package:zoopernova_zoo_system/features/booking/screens/ticket_screen.dart';
@@ -51,6 +54,9 @@ class AppRoute {
   static const String adminZones = '/admin/zones';
   static const String adminProfile = '/admin/profile';
   static const String adminEditProfile = '/admin/profile/edit';
+  static const String adminLogin = '/admin/login';
+  static const String adminRegister = '/admin/register';
+  static const String adminHome = '/admin/home';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -104,6 +110,9 @@ class AppRoute {
             ModalRoute.of(context)?.settings.arguments as ProfileAdminModel?;
         return EditProfileAdminScreen(profile: args);
       },
+      adminLogin: (context) => const AdminLoginScreen(),
+      adminRegister: (context) => const AdminRegisterScreen(),
+      adminHome: (context) => const AdminHomeScreen(),
     };
   }
 }
