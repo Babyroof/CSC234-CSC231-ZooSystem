@@ -45,7 +45,7 @@ void main() {
         await fakeFirestore.collection('booking').doc('bk1').set({
           'BuffetFood': true,
           'GolfCar': false,
-          'GuidTour': true,
+          'GuideTour': true,
           'adultTotal': 2,
           'childTotal': 1,
           'elderTotal': 0,
@@ -160,7 +160,7 @@ void main() {
       // Assert
       expect(map['BuffetFood'], true);
       expect(map['GolfCar'], false);
-      expect(map['GuidTour'], true);
+      expect(map['GuideTour'], true);
       expect(map['adultTotal'], 2);
       expect(map['childTotal'], 1);
       expect(map['elderTotal'], 0);
@@ -178,7 +178,7 @@ void main() {
 
       expect(map['BuffetFood'], isA<bool>());
       expect(map['GolfCar'], isA<bool>());
-      expect(map['GuidTour'], isA<bool>());
+      expect(map['GuideTour'], isA<bool>());
     });
 
     test('numeric fields are int not String', () {
