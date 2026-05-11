@@ -21,8 +21,12 @@ class EventModel {
       eventName: map['eventName'] ?? '',
       eventDetail: map['eventDetail'] ?? '',
       eventPicture: map['eventPicture'] ?? '',
-      locationX: map['location_x'] != null ? (map['location_x'] as num).toDouble() : null,
-      locationY: map['location_y'] != null ? (map['location_y'] as num).toDouble() : null,
+      locationX: map['location_x'] != null
+          ? (map['location_x'] as num).toDouble()
+          : null,
+      locationY: map['location_y'] != null
+          ? (map['location_y'] as num).toDouble()
+          : null,
     );
   }
 }

@@ -121,7 +121,9 @@ class EventInfoScreen extends StatelessWidget {
                               const SizedBox(width: 8),
                               GestureDetector(
                                 onTap: () {
-                                  if (event.locationX == null || event.locationY == null) return;
+                                  if (event.locationX == null ||
+                                      event.locationY == null)
+                                    return;
                                   Navigator.pushNamed(
                                     context,
                                     AppRoute.map,

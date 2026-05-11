@@ -151,8 +151,10 @@ class AnimalInfoScreen extends StatelessWidget {
                                   arguments: {
                                     'focusAnimal': {
                                       'animalName': animal['animalName'] ?? '',
-                                      'animalDetail': animal['animalDetail'] ?? '',
-                                      'animalPicture': animal['animalPicture'] ?? '',
+                                      'animalDetail':
+                                          animal['animalDetail'] ?? '',
+                                      'animalPicture':
+                                          animal['animalPicture'] ?? '',
                                       'zoneName': animal['zoneName'] ?? '',
                                       'locationX': (lx as num).toDouble(),
                                       'locationY': (ly as num).toDouble(),
