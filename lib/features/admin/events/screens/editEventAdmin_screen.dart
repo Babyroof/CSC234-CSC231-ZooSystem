@@ -111,14 +111,11 @@ class _EditEventAdminDialogState extends ConsumerState<EditEventAdminDialog> {
       await ref
           .read(eventAdminServiceProvider)
           .updateEvent(
-            widget.event.id,
+            eventId: widget.event.id,
             eventName: name,
             eventDetail: detail,
             eventPicture: _pictureUrl,
-            locationX: int.tryParse(_xController.text.trim()) ?? 0,
-            locationY: int.tryParse(_yController.text.trim()) ?? 0,
           );
-      widget.onSaved?.call();
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
