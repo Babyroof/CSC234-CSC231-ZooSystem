@@ -33,7 +33,9 @@ class ZoneAdminService {
 
   Future<void> updateZone(String id, String zoneName) async {
     try {
-      await _db.collection('zone').doc(id).set({'zoneName': zoneName}, SetOptions(merge: true));
+      await _db.collection('zone').doc(id).set({
+        'zoneName': zoneName,
+      }, SetOptions(merge: true));
       debugPrint('[ZoneAdminService] updateZone: $id updated');
     } catch (e) {
       debugPrint('[ZoneAdminService] updateZone error: $e');
