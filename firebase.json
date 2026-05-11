@@ -1,1 +1,29 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"zoopernova-c3a89","appId":"1:343877425513:android:0d51e8c6e17c00362085f8","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"zoopernova-c3a89","configurations":{"android":"1:343877425513:android:0d51e8c6e17c00362085f8","ios":"1:343877425513:ios:2e4f369dfe4431772085f8","macos":"1:343877425513:ios:2e4f369dfe4431772085f8","web":"1:343877425513:web:3d21d5b9dac8ab6c2085f8","windows":"1:343877425513:web:a88ecb1b783681902085f8"}}}}}}
+{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "zoopernova-c3a89",
+          "appId": "1:343877425513:android:0d51e8c6e17c00362085f8",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "zoopernova-c3a89",
+          "configurations": {
+            "android": "1:343877425513:android:0d51e8c6e17c00362085f8",
+            "ios":     "1:343877425513:ios:2e4f369dfe4431772085f8",
+            "macos":   "1:343877425513:ios:2e4f369dfe4431772085f8",
+            "web":     "1:343877425513:web:3d21d5b9dac8ab6c2085f8",
+            "windows": "1:343877425513:web:a88ecb1b783681902085f8"
+          }
+        }
+      }
+    }
+  }
+}

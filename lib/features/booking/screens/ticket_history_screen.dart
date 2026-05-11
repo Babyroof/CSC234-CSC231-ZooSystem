@@ -1,34 +1,59 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/zoo_bottom_nav.dart';
+import '../models/booking_model.dart';
+import '../services/booking_service.dart';
 
-// ── Mock history data ────────────────────────────────────────────────────────
+// ── Provider ─────────────────────────────────────────────────────────────────
 
-const _mockHistory = [
-  {'id': 'TK2847', 'date': 'Tue, 06/May/2026', 'amount': 690},
-  {'id': 'TK1293', 'date': 'Sat, 19/Apr/2026', 'amount': 430},
-  {'id': 'TK0571', 'date': 'Mon, 07/Apr/2026', 'amount': 190},
-  {'id': 'TK3914', 'date': 'Sun, 23/Mar/2026', 'amount': 1050},
-  {'id': 'TK0088', 'date': 'Fri, 14/Feb/2026', 'amount': 280},
-];
+final _bookingHistoryProvider = StreamProvider.autoDispose<List<BookingModel>>((
+  ref,
+) {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return Stream.value([]);
+  return BookingService().getPastBookings(uid);
+});
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
-class TicketHistoryScreen extends StatelessWidget {
+class TicketHistoryScreen extends ConsumerWidget {
   const TicketHistoryScreen({super.key});
 
-  void _showQrSheet(BuildContext context, String ticketId) {
+  void _showQrSheet(BuildContext context, String bookingId) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _TicketQrSheet(ticketId: ticketId),
+      builder: (_) => _TicketQrSheet(bookingId: bookingId),
     );
   }
 
+  String _formatDate(DateTime d) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${days[d.weekday - 1]}, ${d.day.toString().padLeft(2, '0')}/${months[d.month - 1]}/${d.year}';
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyAsync = ref.watch(_bookingHistoryProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       extendBody: true,
@@ -54,18 +79,48 @@ class TicketHistoryScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
-        itemCount: _mockHistory.length,
-        separatorBuilder: (context, i) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final item = _mockHistory[index];
-          final id = item['id'] as String;
-          return _HistoryCard(
-            ticketId: id,
-            date: item['date'] as String,
-            amount: item['amount'] as int,
-            onQrTap: () => _showQrSheet(context, id),
+      body: historyAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Text(
+            'Failed to load history',
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              color: AppColors.grey,
+            ),
+          ),
+        ),
+        data: (bookings) {
+          if (bookings.isEmpty) {
+            return const Center(
+              child: Text(
+                'No booking history yet.',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: AppColors.grey,
+                ),
+              ),
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+            itemCount: bookings.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final booking = bookings[index];
+              final shortId = booking.id.length > 8
+                  ? booking.id.substring(0, 8).toUpperCase()
+                  : booking.id.toUpperCase();
+              return _HistoryCard(
+                ticketId: shortId,
+                date: _formatDate(booking.date),
+                amount: booking.totalPrice ?? booking.totalAmount,
+                status: booking.status,
+                onQrTap: () => _showQrSheet(context, booking.id),
+              );
+            },
           );
         },
       ),
@@ -80,17 +135,26 @@ class _HistoryCard extends StatelessWidget {
   final String ticketId;
   final String date;
   final int amount;
+  final String status;
   final VoidCallback onQrTap;
 
   const _HistoryCard({
     required this.ticketId,
     required this.date,
     required this.amount,
+    required this.status,
     required this.onQrTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isPending = status.toLowerCase() == 'pending';
+    final statusColor = isPending ? AppColors.grey : AppColors.primary;
+    final statusIcon = isPending
+        ? Icons.hourglass_empty_outlined
+        : Icons.check_circle_outline;
+    final statusLabel = isPending ? 'Pending' : 'Paid by QR Code';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -158,7 +222,17 @@ class _HistoryCard extends StatelessWidget {
                     color: AppColors.grey,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
+                Text(
+                  '฿$amount',
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.black,
+                  ),
+                ),
+                const SizedBox(height: 4),
                 const Text(
                   'Status',
                   style: TextStyle(
@@ -170,14 +244,10 @@ class _HistoryCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    Icon(
-                      Icons.check_circle_outline,
-                      size: 15,
-                      color: AppColors.primary,
-                    ),
+                    Icon(statusIcon, size: 15, color: statusColor),
                     const SizedBox(width: 4),
-                    const Text(
-                      'Paid by QR Code',
+                    Text(
+                      statusLabel,
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 13,
@@ -199,13 +269,13 @@ class _HistoryCard extends StatelessWidget {
 // ── Ticket QR Bottom Sheet ────────────────────────────────────────────────────
 
 class _TicketQrSheet extends StatelessWidget {
-  final String ticketId;
+  final String bookingId;
 
-  const _TicketQrSheet({required this.ticketId});
+  const _TicketQrSheet({required this.bookingId});
 
   @override
   Widget build(BuildContext context) {
-    final qrData = 'ZOOPERNOVA-TICKET:$ticketId';
+    final qrData = 'ZOOPERNOVA-TICKET:$bookingId';
 
     return Container(
       decoration: const BoxDecoration(
@@ -236,7 +306,7 @@ class _TicketQrSheet extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '#$ticketId',
+            '#${bookingId.length > 8 ? bookingId.substring(0, 8).toUpperCase() : bookingId.toUpperCase()}',
             style: const TextStyle(
               fontFamily: 'Inter',
               fontSize: 13,

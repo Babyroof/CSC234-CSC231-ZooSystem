@@ -285,7 +285,7 @@ class _AnimalScreenState extends State<AnimalScreen> {
                           ),
                         );
                       },
-                      childCount: animals.length, // ✅ ใช้ Firebase data
+                      childCount: animals.length, 
                     ),
                   ),
                 ),

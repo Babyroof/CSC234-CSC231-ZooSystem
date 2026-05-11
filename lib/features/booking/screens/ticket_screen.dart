@@ -1,24 +1,27 @@
-import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/zoo_bottom_nav.dart';
+import '../constants/booking_pricing.dart';
+import '../models/booking_model.dart';
+import '../services/booking_service.dart';
 import 'ticket_history_screen.dart';
 
-// ── Local providers ──────────────────────────────────────────────────────────
+// ── Provider ─────────────────────────────────────────────────────────────────
 
-final _ticketIdProvider = Provider.autoDispose<String>((_) {
-  final rng = Random();
-  return 'TK${(rng.nextInt(9000) + 1000)}';
-});
+final _upcomingBookingsProvider =
+    StreamProvider.autoDispose<List<BookingModel>>((ref) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return Stream.value([]);
+      return BookingService().getUpcomingBookings(uid);
+    });
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 class TicketScreen extends ConsumerWidget {
-  final Map<String, dynamic> bookingArgs;
-
-  const TicketScreen({super.key, this.bookingArgs = const {}});
+  const TicketScreen({super.key});
 
   String _formatDate(DateTime d) {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -50,19 +53,7 @@ class TicketScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ticketId = ref.watch(_ticketIdProvider);
-
-    final totalAmount = bookingArgs['totalAmount'] as int? ?? 0;
-    final adultCount = bookingArgs['adultCount'] as int? ?? 0;
-    final kidCount = bookingArgs['kidCount'] as int? ?? 0;
-    final elderCount = bookingArgs['elderCount'] as int? ?? 0;
-    final adultUnit = bookingArgs['adultUnitPrice'] as int? ?? 0;
-    final kidUnit = bookingArgs['kidUnitPrice'] as int? ?? 0;
-    final elderUnit = bookingArgs['elderUnitPrice'] as int? ?? 0;
-    final dateMs = bookingArgs['dateMs'] as int?;
-    final date = dateMs != null
-        ? DateTime.fromMillisecondsSinceEpoch(dateMs)
-        : DateTime.now();
+    final upcomingAsync = ref.watch(_upcomingBookingsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -101,22 +92,47 @@ class TicketScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
-        children: [
-          _TicketCard(
-            ticketId: ticketId,
-            date: _formatDate(date),
-            adultCount: adultCount,
-            kidCount: kidCount,
-            elderCount: elderCount,
-            adultUnit: adultUnit,
-            kidUnit: kidUnit,
-            elderUnit: elderUnit,
-            totalAmount: totalAmount,
-            onQrTap: () => _showQrSheet(context, ticketId),
-          ),
-        ],
+      body: upcomingAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text(e.toString())),
+        data: (bookings) {
+          if (bookings.isEmpty) {
+            return const Center(
+              child: Text(
+                'No upcoming tickets',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: AppColors.grey,
+                ),
+              ),
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+            itemCount: bookings.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final booking = bookings[index];
+              final ticketId = booking.id;
+              return _TicketCard(
+                ticketId: ticketId,
+                date: _formatDate(booking.date),
+                adultCount: booking.adultTotal,
+                kidCount: booking.childTotal,
+                elderCount: booking.elderTotal,
+                adultUnit: BookingPricing.adultPrice,
+                kidUnit: BookingPricing.kidPrice,
+                elderUnit: BookingPricing.elderPrice,
+                totalAmount: booking.totalPrice ?? booking.totalAmount,
+                buffetFood: booking.buffetFood,
+                tourGuide: booking.guidTour,
+                golfCar: booking.golfCar,
+                onQrTap: () => _showQrSheet(context, ticketId),
+              );
+            },
+          );
+        },
       ),
       bottomNavigationBar: ZooBottomNav(currentIndex: 2),
     );
@@ -135,6 +151,9 @@ class _TicketCard extends StatelessWidget {
   final int kidUnit;
   final int elderUnit;
   final int totalAmount;
+  final bool buffetFood;
+  final bool tourGuide;
+  final bool golfCar;
   final VoidCallback onQrTap;
 
   const _TicketCard({
@@ -147,6 +166,9 @@ class _TicketCard extends StatelessWidget {
     required this.kidUnit,
     required this.elderUnit,
     required this.totalAmount,
+    required this.buffetFood,
+    required this.tourGuide,
+    required this.golfCar,
     required this.onQrTap,
   });
 
@@ -199,7 +221,7 @@ class _TicketCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '#$ticketId',
+                      '#${ticketId.length > 8 ? ticketId.substring(0, 8).toUpperCase() : ticketId.toUpperCase()}',
                       style: const TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 16,
@@ -253,6 +275,35 @@ class _TicketCard extends StatelessWidget {
               unitPrice: elderUnit,
             ),
 
+          // Add-ons section
+          if (buffetFood || tourGuide || golfCar) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+              child: Divider(
+                height: 1,
+                color: AppColors.background,
+                thickness: 1.5,
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Add-ons',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: AppColors.grey,
+                ),
+              ),
+            ),
+            if (buffetFood)
+              _AddonItem(icon: Icons.restaurant, label: 'Buffet Food'),
+            if (tourGuide)
+              _AddonItem(icon: Icons.record_voice_over, label: 'Tour Guide'),
+            if (golfCar)
+              _AddonItem(icon: Icons.directions_car, label: 'Golf Car'),
+          ],
+
           // Divider
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -294,9 +345,9 @@ class _TicketCard extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Status
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: const Text(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
               'Status',
               style: TextStyle(
                 fontFamily: 'Inter',
@@ -393,6 +444,39 @@ class _TicketItem extends StatelessWidget {
               color: AppColors.black,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Add-on Item Row ───────────────────────────────────────────────────────────
+
+class _AddonItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _AddonItem({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppColors.primary),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.black,
+            ),
+          ),
+          const Spacer(),
+          Icon(Icons.check_circle, size: 18, color: AppColors.primary),
         ],
       ),
     );

@@ -1,10 +1,15 @@
-import 'dart:math';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qr_flutter/qr_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/constants/app_colors.dart';
+import '../models/booking_model.dart';
+import '../services/booking_service.dart';
+import '../services/payment_service.dart';
 
-// ── Local providers ──────────────────────────────────────────────────────────
+// ── Local providers ───────────────────────────────────────────────────────────
 
 final _countdownProvider =
     StateNotifierProvider.autoDispose<_CountdownNotifier, int>(
@@ -24,28 +29,108 @@ class _CountdownNotifier extends StateNotifier<int> {
   }
 }
 
-final _qrDataProvider = Provider.autoDispose<String>((_) {
-  final rng = Random();
-  final uid = List.generate(
-    32,
-    (_) => rng.nextInt(16).toRadixString(16),
-  ).join();
-  return 'ZOOPERNOVA-PAY:$uid';
-});
+// â”€â”€ Screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-final _refIdProvider = Provider.autoDispose<String>((_) {
-  final rng = Random();
-  return List.generate(15, (_) => rng.nextInt(10)).join();
-});
-
-// ── Screen ───────────────────────────────────────────────────────────────────
-
-class PaymentScreen extends ConsumerWidget {
+class PaymentScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> bookingArgs;
 
   const PaymentScreen({super.key, this.bookingArgs = const {}});
 
-  int get _totalAmount => bookingArgs['totalAmount'] as int? ?? 0;
+  @override
+  ConsumerState<PaymentScreen> createState() => _PaymentScreenState();
+}
+
+class _PaymentScreenState extends ConsumerState<PaymentScreen> {
+  String? _qrCodeBase64;
+  bool _isLoadingCharge = true;
+  bool _navigated = false;
+  StreamSubscription<BookingModel?>? _bookingSub;
+
+  int get _totalAmount => widget.bookingArgs['totalAmount'] as int? ?? 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _initPayment();
+  }
+
+  Future<void> _initPayment() async {
+    final bookingId = widget.bookingArgs['bookingId'] as String?;
+    if (bookingId == null || bookingId.isEmpty) {
+      setState(() => _isLoadingCharge = false);
+      return;
+    }
+
+    try {
+      final result = await PaymentService().createPromptPayCharge(
+        bookingId: bookingId,
+        amount: _totalAmount,
+      );
+      try {
+        await BookingService().updateChargeId(
+          bookingId: bookingId,
+          chargeId: result.chargeId,
+        );
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoadingCharge = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to save charge ID: $e')),
+          );
+        }
+        return;
+      }
+      if (mounted) {
+        setState(() {
+          _qrCodeBase64 = result.qrCodeBase64;
+          _isLoadingCharge = false;
+        });
+      }
+      _bookingSub = BookingService().watchBooking(bookingId).listen((booking) {
+        if (booking?.status == 'Done' && !_navigated && mounted) {
+          _navigated = true;
+          Navigator.pushNamed(
+            context,
+            '/ticket',
+            arguments: widget.bookingArgs,
+          );
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingCharge = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Payment setup failed: $e')));
+      }
+    }
+  }
+
+  Future<void> _onCountdownExpired() async {
+    final bookingId = widget.bookingArgs['bookingId'] as String?;
+    if (bookingId == null || bookingId.isEmpty) return;
+    await _bookingSub?.cancel();
+    _bookingSub = null;
+    try {
+      await BookingService().updateStatus(
+        bookingId: bookingId,
+        status: 'Cancelled',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to cancel booking: $e')));
+      }
+    }
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  void dispose() {
+    _bookingSub?.cancel();
+    super.dispose();
+  }
 
   String _formatTime(int seconds) {
     final m = (seconds ~/ 60).toString().padLeft(2, '0');
@@ -54,13 +139,19 @@ class PaymentScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final seconds = ref.watch(_countdownProvider);
-    final qrData = ref.watch(_qrDataProvider);
-    final refId = ref.watch(_refIdProvider);
+    // Use the real Firestore booking document ID as the reference ID
+    final refId = widget.bookingArgs['bookingId'] as String? ?? '';
     final isExpired = seconds == 0;
     final timeLabel = _formatTime(seconds);
     final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    ref.listen<int>(_countdownProvider, (prev, next) {
+      if (prev != null && prev > 0 && next == 0) {
+        _onCountdownExpired();
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -190,56 +281,73 @@ class PaymentScreen extends ConsumerWidget {
                           const SizedBox(height: 16),
 
                           // QR code
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppColors.primary.withValues(alpha: 0.3),
-                                width: 2,
-                              ),
-                            ),
-                            child: isExpired
-                                ? SizedBox(
-                                    width: 180,
-                                    height: 180,
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(
-                                          Icons.timer_off_outlined,
-                                          size: 48,
-                                          color: AppColors.grey,
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          'QR Expired',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 14,
-                                            color: AppColors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : QrImageView(
-                                    data: qrData,
-                                    version: QrVersions.auto,
-                                    size: 180,
-                                    backgroundColor: AppColors.white,
-                                    eyeStyle: const QrEyeStyle(
-                                      eyeShape: QrEyeShape.square,
-                                      color: AppColors.black,
-                                    ),
-                                    dataModuleStyle: const QrDataModuleStyle(
-                                      dataModuleShape: QrDataModuleShape.square,
-                                      color: AppColors.black,
-                                    ),
+                          if (isExpired)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.3,
                                   ),
-                          ),
+                                  width: 2,
+                                ),
+                              ),
+                              child: SizedBox(
+                                width: 180,
+                                height: 180,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(
+                                      Icons.timer_off_outlined,
+                                      size: 48,
+                                      color: AppColors.grey,
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'QR Expired',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 14,
+                                        color: AppColors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else
+                            Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: _isLoadingCharge || _qrCodeBase64 == null
+                                  ? const SizedBox(
+                                      width: double.infinity,
+                                      height: 300,
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    )
+                                  : SizedBox(
+                                      width: double.infinity,
+                                      height: 300,
+                                      child: SvgPicture.memory(
+                                        Uint8List.fromList(
+                                          base64Decode(_qrCodeBase64!),
+                                        ),
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                            ),
                           const SizedBox(height: 16),
 
                           const Text(
@@ -380,7 +488,7 @@ class PaymentScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Done Payment button
+                    // Done Payment button â€” fallback manual navigation
                     Expanded(
                       flex: 2,
                       child: SizedBox(
@@ -389,7 +497,7 @@ class PaymentScreen extends ConsumerWidget {
                           onPressed: () => Navigator.pushNamed(
                             context,
                             '/ticket',
-                            arguments: bookingArgs,
+                            arguments: widget.bookingArgs,
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,

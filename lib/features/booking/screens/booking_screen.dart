@@ -1,14 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../constants/booking_pricing.dart';
+import '../models/booking_model.dart';
+import '../services/booking_service.dart';
 
-// ── Mock prices (replace with remote config / service later) ──────────────
-const _kPriceAdult = 300;
-const _kPriceKid = 150;
-const _kPriceElder = 40;
-const _kPriceBuffet = 200; // per person
-const _kPriceTourGuide = 350; // per booking
-const _kPriceGolfCar = 500; // per booking
+// ── Prices sourced from canonical BookingPricing constants ────────────────
+const _kPriceAdult = BookingPricing.adultPrice;
+const _kPriceKid = BookingPricing.kidPrice;
+const _kPriceElder = BookingPricing.elderPrice;
+const _kPriceBuffet = BookingPricing.buffetFoodPrice; // per booking
+const _kPriceTourGuide = BookingPricing.guidTourPrice; // per booking
+const _kPriceGolfCar = BookingPricing.golfCarPrice; // per booking
 
 // ── Local state ───────────────────────────────────────────────────────────
 class _BookingState {
@@ -37,7 +41,8 @@ class _BookingState {
         adultCount * _kPriceAdult +
         kidCount * _kPriceKid +
         elderCount * _kPriceElder;
-    final buffet = buffetFood ? totalPeople * _kPriceBuffet : 0;
+    // Buffet is a flat per-booking fee (matches BookingModel.totalAmount)
+    final buffet = buffetFood ? _kPriceBuffet : 0;
     final guide = tourGuide ? _kPriceTourGuide : 0;
     final golf = golfCar ? _kPriceGolfCar : 0;
     return tickets + buffet + guide + golf;
@@ -102,6 +107,9 @@ final _bookingProvider =
     StateNotifierProvider.autoDispose<_BookingNotifier, _BookingState>(
       (ref) => _BookingNotifier(),
     );
+
+// ── Checkout loading state ────────────────────────────────────────────────
+final _checkoutLoadingProvider = StateProvider.autoDispose<bool>((_) => false);
 
 // ── Screen ────────────────────────────────────────────────────────────────
 class BookingScreen extends ConsumerWidget {
@@ -181,7 +189,7 @@ class BookingScreen extends ConsumerWidget {
                         _AddonRow(
                           icon: Icons.restaurant,
                           label: 'Buffet Food',
-                          priceLabel: '$_kPriceBuffet ฿ / person',
+                          priceLabel: '$_kPriceBuffet ฿ / booking',
                           isSelected: state.buffetFood,
                           onToggle: notifier.toggleBuffetFood,
                         ),
@@ -630,7 +638,7 @@ Widget _iconBox(IconData icon) => Container(
 );
 
 // ── Bottom Bar ────────────────────────────────────────────────────────────
-class _BottomBar extends StatelessWidget {
+class _BottomBar extends ConsumerWidget {
   final _BookingState state;
 
   const _BottomBar({required this.state});
@@ -642,9 +650,69 @@ class _BottomBar extends StatelessWidget {
     return '${days[d.weekday - 1]}, $dd / $mm / ${d.year}';
   }
 
+  Future<void> _checkout(BuildContext context, WidgetRef ref) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to book tickets.')),
+      );
+      return;
+    }
+
+    ref.read(_checkoutLoadingProvider.notifier).state = true;
+
+    try {
+      final booking = BookingModel(
+        id: '',
+        userId: uid,
+        adultTotal: state.adultCount,
+        childTotal: state.kidCount,
+        elderTotal: state.elderCount,
+        date: state.selectedDate!,
+        buffetFood: state.buffetFood,
+        golfCar: state.golfCar,
+        guidTour: state.tourGuide,
+        status: 'pending',
+      );
+
+      final bookingId = await BookingService().createBooking(booking);
+
+      if (!context.mounted) return;
+
+      Navigator.pushNamed(
+        context,
+        '/payment',
+        arguments: {
+          'bookingId': bookingId,
+          'totalAmount': state.totalAmount,
+          'adultCount': state.adultCount,
+          'kidCount': state.kidCount,
+          'elderCount': state.elderCount,
+          'adultUnitPrice': _kPriceAdult,
+          'kidUnitPrice': _kPriceKid,
+          'elderUnitPrice': _kPriceElder,
+          'buffetFood': state.buffetFood,
+          'tourGuide': state.tourGuide,
+          'golfCar': state.golfCar,
+          'dateMs': state.selectedDate?.millisecondsSinceEpoch,
+        },
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Booking failed: $e')));
+    } finally {
+      if (ref.context.mounted) {
+        ref.read(_checkoutLoadingProvider.notifier).state = false;
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final canCheckout = state.totalPeople > 0 && state.selectedDate != null;
+    final isLoading = ref.watch(_checkoutLoadingProvider);
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
@@ -720,21 +788,8 @@ class _BottomBar extends StatelessWidget {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: canCheckout
-                  ? () => Navigator.pushNamed(
-                      context,
-                      '/payment',
-                      arguments: {
-                        'totalAmount': state.totalAmount,
-                        'adultCount': state.adultCount,
-                        'kidCount': state.kidCount,
-                        'elderCount': state.elderCount,
-                        'adultUnitPrice': _kPriceAdult,
-                        'kidUnitPrice': _kPriceKid,
-                        'elderUnitPrice': _kPriceElder,
-                        'dateMs': state.selectedDate?.millisecondsSinceEpoch,
-                      },
-                    )
+              onPressed: (canCheckout && !isLoading)
+                  ? () => _checkout(context, ref)
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -744,15 +799,24 @@ class _BottomBar extends StatelessWidget {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                'Checkout',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.white,
-                ),
-              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: AppColors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : const Text(
+                      'Checkout',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.white,
+                      ),
+                    ),
             ),
           ),
         ],
