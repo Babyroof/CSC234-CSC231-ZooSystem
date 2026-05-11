@@ -48,6 +48,7 @@ dependencies:
   file_picker: ^8.1.2
   mobile_scanner: ^6.0.0
   image_picker: ^1.1.2
+  web: ^1.1.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
