@@ -24,14 +24,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _isFirstLoad = true;
   Size _screenSize = Size.zero;
 
-  String _mapUrl = 'https://i.ibb.co/nqPjNm6N/Zoopernova-Map.png';
+  String? _mapUrl;
   List<QueryDocumentSnapshot> _animalDocs = [];
   List<QueryDocumentSnapshot> _eventDocs = [];
   Map<String, String> _zoneMap = {};
   Map<String, dynamic>? _selectedAnimal;
   Map<String, dynamic>? _selectedEvent;
 
-  late final StreamSubscription<DocumentSnapshot> _mapSub;
+  late final StreamSubscription<QuerySnapshot> _mapSub;
   late final StreamSubscription<QuerySnapshot> _animalSub;
   late final StreamSubscription<QuerySnapshot> _eventSub;
 
@@ -50,16 +50,29 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         });
 
     _mapSub = FirebaseFirestore.instance
-        .collection('settings')
-        .doc('map_config')
+        .collection('map')
         .snapshots()
         .listen((snap) {
           if (!mounted) return;
-          final data = snap.data() as Map<String, dynamic>?;
-          if (data?['map_url'] != null) {
-            setState(() => _mapUrl = data!['map_url'] as String);
+          if (snap.docs.isEmpty) return;
+          final data = snap.docs.first.data();
+          final url = data['mapPicture'] as String?;
+          if (url != null && url.isNotEmpty) {
+            final isFirstUrl = _mapUrl == null;
+            setState(() => _mapUrl = url);
+            if (isFirstUrl && _isFirstLoad == false) {
+              if (_selectedAnimal == null && _selectedEvent == null) {
+                _startZoomOutAnimation();
+              } else {
+                final lx = (_selectedAnimal ?? _selectedEvent)?['locationX'];
+                final ly = (_selectedAnimal ?? _selectedEvent)?['locationY'];
+                if (lx != null && ly != null) {
+                  _zoomToLocation((lx as num).toDouble(), (ly as num).toDouble());
+                }
+              }
+            }
           }
-        }, onError: (e) => debugPrint('map_config: $e'));
+        }, onError: (e) => debugPrint('map stream: $e'));
 
     _animalSub = FirebaseFirestore.instance
         .collection('animal')
@@ -160,7 +173,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     Size imageSize = Size.zero;
     try {
       final completer = Completer<Size>();
-      NetworkImage(_mapUrl)
+      NetworkImage(_mapUrl!)
           .resolve(ImageConfiguration.empty)
           .addListener(
             ImageStreamListener(
@@ -417,7 +430,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           final ly = (focusEvent['locationY'] as num).toDouble();
           _zoomToLocation(lx, ly);
           if (mounted) setState(() => _selectedEvent = focusEvent);
-        } else {
+        } else if (_mapUrl != null) {
           _startZoomOutAnimation();
         }
       });
@@ -448,7 +461,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         });
                       }
                     },
-                    child: Image.network(_mapUrl, fit: BoxFit.cover),
+                    child: _mapUrl != null
+                        ? Image.network(_mapUrl!, fit: BoxFit.cover)
+                        : const Center(child: CircularProgressIndicator()),
                   ),
 
                   ..._animalDocs.map((doc) {

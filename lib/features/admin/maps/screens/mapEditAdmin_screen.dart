@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +18,7 @@ class MapEditArgs {
     required this.name,
     required this.x,
     required this.y,
+    this.pictureUrl,
   });
 
   final String itemId;
@@ -24,6 +26,7 @@ class MapEditArgs {
   final String name;
   final int x;
   final int y;
+  final String? pictureUrl;
 }
 
 // ---------------------------------------------------------------------------
@@ -38,20 +41,59 @@ class MapEditAdminScreen extends ConsumerStatefulWidget {
   ConsumerState<MapEditAdminScreen> createState() => _MapEditAdminScreenState();
 }
 
-class _MapEditAdminScreenState extends ConsumerState<MapEditAdminScreen> {
+class _MapEditAdminScreenState extends ConsumerState<MapEditAdminScreen>
+    with TickerProviderStateMixin {
   bool _isLoading = true;
   bool _isSaving = false;
   String? _mapUrl;
   List<MapPinModel> _otherPins = [];
   late int _editX;
   late int _editY;
+  Size? _canvasSize;
+
+  late final TransformationController _transformController;
+  late final AnimationController _animController;
+  Animation<Matrix4>? _animMatrix;
 
   @override
   void initState() {
     super.initState();
     _editX = widget.args.x;
     _editY = widget.args.y;
+    _transformController = TransformationController();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..addListener(() {
+        if (_animMatrix != null) {
+          _transformController.value = _animMatrix!.value;
+        }
+      });
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _transformController.dispose();
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _zoomToPin() {
+    if (_canvasSize == null) return;
+    const scale = 2.5;
+    final tx = _canvasSize!.width / 2 - scale * widget.args.x;
+    final ty = _canvasSize!.height / 2 - scale * widget.args.y;
+    final target = Matrix4.identity()
+      ..translateByDouble(tx, ty, 0, 1)
+      ..scaleByDouble(scale, scale, 1, 1);
+    _animMatrix = Matrix4Tween(
+      begin: Matrix4.identity(),
+      end: target,
+    ).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOutCubic),
+    );
+    _animController.forward(from: 0);
   }
 
   Future<void> _loadData() async {
@@ -66,28 +108,29 @@ class _MapEditAdminScreenState extends ConsumerState<MapEditAdminScreen> {
           .toList();
       _isLoading = false;
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _zoomToPin();
+    });
   }
 
-  Future<void> _onMapTap(Offset local, Size canvasSize) async {
+  Future<void> _onMapTap(Offset local) async {
     if (_isSaving) return;
 
-    final newX = ((local.dx / canvasSize.width) * 1000).round().clamp(0, 1000);
-    final newY = ((local.dy / canvasSize.height) * 1000).round().clamp(0, 1000);
+    final newX = local.dx.round();
+    final newY = local.dy.round();
 
-    // Preview the pin at the tapped position
     setState(() {
       _editX = newX;
       _editY = newY;
     });
 
-    // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => MapConfirmDialog(x: newX, y: newY),
     );
 
     if (confirmed != true) {
-      // Revert preview back to last saved position
       setState(() {
         _editX = widget.args.x;
         _editY = widget.args.y;
@@ -133,7 +176,17 @@ class _MapEditAdminScreenState extends ConsumerState<MapEditAdminScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const AdminTopHeader(title: 'Map Management'),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back_ios, size: 14),
+                      label: const Text('Back to Map'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.adminPrimary,
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Expanded(
                       child: Container(
                         width: double.infinity,
@@ -147,13 +200,23 @@ class _MapEditAdminScreenState extends ConsumerState<MapEditAdminScreen> {
                             : Column(
                                 children: [
                                   Expanded(
-                                    child: _MapEditCanvas(
-                                      mapUrl: _mapUrl,
-                                      otherPins: _otherPins,
-                                      editX: _editX,
-                                      editY: _editY,
-                                      isSaving: _isSaving,
-                                      onTap: _onMapTap,
+                                    child: LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        _canvasSize = Size(
+                                          constraints.maxWidth,
+                                          constraints.maxHeight,
+                                        );
+                                        return _MapEditCanvas(
+                                          controller: _transformController,
+                                          mapUrl: _mapUrl,
+                                          otherPins: _otherPins,
+                                          editX: _editX,
+                                          editY: _editY,
+                                          editPictureUrl: widget.args.pictureUrl,
+                                          isSaving: _isSaving,
+                                          onTap: _onMapTap,
+                                        );
+                                      },
                                     ),
                                   ),
                                   const SizedBox(height: 16),
@@ -201,22 +264,24 @@ class _MapEditAdminScreenState extends ConsumerState<MapEditAdminScreen> {
 
 class _MapEditCanvas extends StatelessWidget {
   const _MapEditCanvas({
+    required this.controller,
     required this.mapUrl,
     required this.otherPins,
     required this.editX,
     required this.editY,
+    required this.editPictureUrl,
     required this.isSaving,
     required this.onTap,
   });
 
+  final TransformationController controller;
   final String? mapUrl;
   final List<MapPinModel> otherPins;
   final int editX;
   final int editY;
+  final String? editPictureUrl;
   final bool isSaving;
-  final void Function(Offset local, Size canvasSize) onTap;
-
-  static const double _coordMax = 1000.0;
+  final void Function(Offset local) onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -231,67 +296,78 @@ class _MapEditCanvas extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final w = constraints.maxWidth;
-          final h = constraints.maxHeight;
-          final canvasSize = Size(w, h);
-
-          return GestureDetector(
-            onTapDown: (details) => onTap(details.localPosition, canvasSize),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: CachedNetworkImage(
-                    imageUrl: mapUrl!,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) =>
-                        const Center(child: CircularProgressIndicator()),
-                    errorWidget: (_, __, ___) => const Center(
-                      child: Icon(
-                        Icons.broken_image_outlined,
-                        size: 64,
-                        color: AppColors.adminTextMuted,
-                      ),
+      child: InteractiveViewer(
+        transformationController: controller,
+        constrained: false,
+        minScale: 0.1,
+        maxScale: 5.0,
+        boundaryMargin: const EdgeInsets.all(2000),
+        child: GestureDetector(
+          onTapDown: (details) => onTap(details.localPosition),
+          child: Stack(
+            children: [
+              CachedNetworkImage(
+                imageUrl: mapUrl!,
+                placeholder: (_, _) =>
+                    const Center(child: CircularProgressIndicator()),
+                errorWidget: (_, _, _) => const Center(
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    size: 64,
+                    color: AppColors.adminTextMuted,
+                  ),
+                ),
+              ),
+              // Other pins — fluid-scaled circular images
+              ...otherPins.map(
+                (pin) => Positioned(
+                  left: pin.x.toDouble() - 20,
+                  top: pin.y.toDouble() - 20,
+                  child: Tooltip(
+                    message: pin.name,
+                    child: AnimatedBuilder(
+                      animation: controller,
+                      builder: (_, _) {
+                        final scale = controller.value.getMaxScaleOnAxis();
+                        final r = (20.0 / sqrt(scale)).clamp(6.0, 36.0);
+                        return MapAdminPinAvatar(
+                          pictureUrl: pin.pictureUrl,
+                          highlighted: false,
+                          radius: r,
+                        );
+                      },
                     ),
                   ),
                 ),
-                // Other pins — black
-                ...otherPins.map(
-                  (pin) => Positioned(
-                    left: (pin.x / _coordMax) * w - 14,
-                    top: (pin.y / _coordMax) * h - 28,
-                    child: Tooltip(
-                      message: pin.name,
-                      child: const Icon(
-                        Icons.location_on,
-                        color: Colors.black87,
-                        size: 28,
-                      ),
+              ),
+              // Editing pin — fluid-scaled + highlighted
+              Positioned(
+                left: editX.toDouble() - 20,
+                top: editY.toDouble() - 20,
+                child: IgnorePointer(
+                  child: Opacity(
+                    opacity: isSaving ? 0.6 : 1.0,
+                    child: AnimatedBuilder(
+                      animation: controller,
+                      builder: (_, _) {
+                        final scale = controller.value.getMaxScaleOnAxis();
+                        final r = (20.0 / sqrt(scale)).clamp(6.0, 36.0);
+                        return MapAdminPinAvatar(
+                          pictureUrl: editPictureUrl,
+                          highlighted: true,
+                          radius: r,
+                        );
+                      },
                     ),
                   ),
                 ),
-                // Edited pin — red
-                Positioned(
-                  left: (editX / _coordMax) * w - 14,
-                  top: (editY / _coordMax) * h - 28,
-                  child: IgnorePointer(
-                    child: Icon(
-                      Icons.location_on,
-                      color: isSaving ? Colors.red.shade300 : Colors.red,
-                      size: 32,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
-
-// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
