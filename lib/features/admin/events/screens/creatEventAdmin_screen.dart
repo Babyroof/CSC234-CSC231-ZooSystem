@@ -42,6 +42,7 @@ class _CreateEventAdminDialogState
       builder: (_) => MapLocationPickerDialog(
         initialX: int.tryParse(_xController.text.trim()) ?? 0,
         initialY: int.tryParse(_yController.text.trim()) ?? 0,
+        pictureUrl: _pictureUrl.isNotEmpty ? _pictureUrl : null,
       ),
     );
     if (result != null) {
