@@ -1,12 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 import 'package:zoopernova_zoo_system/core/widgets/sidebarAdmin.dart';
 import 'package:zoopernova_zoo_system/core/widgets/adminTopHeader.dart';
 import '../models/animal_admin_model.dart';
 import '../services/animal_admin_service.dart';
+import '../widgets/qr_download_helper.dart';
 import 'editAnimalAdmin_screen.dart';
 import 'deleteAnimalAdmin_screen.dart';
 
@@ -362,7 +364,7 @@ class _HeaderRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 4,
+            flex: 3,
             child: Text(
               'Zone',
               style: TextStyle(
@@ -372,7 +374,17 @@ class _HeaderRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 5,
+            flex: 3,
+            child: Text(
+              'QR Code',
+              style: TextStyle(
+                color: AppColors.adminTextMuted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 4,
             child: Text(
               'Actions',
               style: TextStyle(
@@ -417,7 +429,7 @@ class _AnimalList extends StatelessWidget {
         onEdit: () => onEdit(rows[index]),
         onDelete: () => onDelete(rows[index]),
       ),
-      separatorBuilder: (_, __) => const SizedBox(height: 4),
+      separatorBuilder: (_, _) => const SizedBox(height: 4),
     );
   }
 }
@@ -456,12 +468,12 @@ class _AnimalRow extends StatelessWidget {
                     width: 56,
                     height: 42,
                     fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(
+                    placeholder: (_, _) => Container(
                       width: 56,
                       height: 42,
                       color: AppColors.adminBorderLight,
                     ),
-                    errorWidget: (_, __, ___) => Container(
+                    errorWidget: (_, _, _) => Container(
                       width: 56,
                       height: 42,
                       color: AppColors.adminBorderLight,
@@ -470,25 +482,29 @@ class _AnimalRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  item.animalName,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
+                Flexible(
+                  child: Text(
+                    item.animalName,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
           ),
           Expanded(
-            flex: 4,
+            flex: 3,
             child: Text(
               item.zoneName,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
             ),
           ),
+          Expanded(flex: 3, child: _QrCell(item: item)),
           Expanded(
-            flex: 5,
+            flex: 4,
             child: Row(
               children: [
                 _ActionButton(
@@ -506,6 +522,262 @@ class _AnimalRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QrCell extends StatelessWidget {
+  const _QrCell({required this.item});
+
+  final AnimalAdminModel item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: () => showDialog(
+            context: context,
+            builder: (_) => _QrDialog(animal: item),
+          ),
+          child: Container(
+            width: 48,
+            height: 48,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.adminBorderLight),
+            ),
+            child: QrImageView(
+              data: item.id,
+              version: QrVersions.auto,
+              backgroundColor: Colors.white,
+              padding: EdgeInsets.zero,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        _QrDownloadButton(animal: item),
+      ],
+    );
+  }
+}
+
+class _QrDownloadButton extends StatefulWidget {
+  const _QrDownloadButton({required this.animal});
+  final AnimalAdminModel animal;
+
+  @override
+  State<_QrDownloadButton> createState() => _QrDownloadButtonState();
+}
+
+class _QrDownloadButtonState extends State<_QrDownloadButton> {
+  bool _loading = false;
+
+  Future<void> _download() async {
+    if (_loading) return;
+    setState(() => _loading = true);
+    try {
+      final painter = QrPainter(
+        data: widget.animal.id,
+        version: QrVersions.auto,
+        gapless: false,
+        eyeStyle: const QrEyeStyle(
+          eyeShape: QrEyeShape.square,
+          color: Color(0xFF000000),
+        ),
+        dataModuleStyle: const QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.square,
+          color: Color(0xFF000000),
+        ),
+      );
+      final byteData = await painter.toImageData(512);
+      if (byteData == null) return;
+      final filename =
+          '${widget.animal.animalName.replaceAll(' ', '_')}_QR.png';
+      await downloadQrCode(byteData.buffer.asUint8List(), filename);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Download QR',
+      child: IconButton(
+        onPressed: _loading ? null : _download,
+        visualDensity: VisualDensity.compact,
+        icon: _loading
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 1.5),
+              )
+            : const Icon(
+                Icons.download_for_offline_outlined,
+                size: 20,
+                color: AppColors.adminTextMuted,
+              ),
+      ),
+    );
+  }
+}
+
+class _QrDialog extends StatefulWidget {
+  const _QrDialog({required this.animal});
+
+  final AnimalAdminModel animal;
+
+  @override
+  State<_QrDialog> createState() => _QrDialogState();
+}
+
+class _QrDialogState extends State<_QrDialog> {
+  final _qrKey = GlobalKey();
+  bool _isDownloading = false;
+
+  Future<void> _handleDownload() async {
+    if (_isDownloading) return;
+    setState(() => _isDownloading = true);
+    try {
+      final qrPainter = QrPainter(
+        data: widget.animal.id,
+        version: QrVersions.auto,
+        gapless: false,
+        eyeStyle: const QrEyeStyle(
+          eyeShape: QrEyeShape.square,
+          color: Color(0xFF000000),
+        ),
+        dataModuleStyle: const QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.square,
+          color: Color(0xFF000000),
+        ),
+      );
+      final byteData = await qrPainter.toImageData(512);
+      if (byteData == null) return;
+      final bytes = byteData.buffer.asUint8List();
+      final filename =
+          '${widget.animal.animalName.replaceAll(' ', '_')}_QR.png';
+      await downloadQrCode(bytes, filename);
+    } finally {
+      if (mounted) setState(() => _isDownloading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: SizedBox(
+        width: 320,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.animal.animalName,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.adminTextDark,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              RepaintBoundary(
+                key: _qrKey,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.adminBorderLight,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: QrImageView(
+                    data: widget.animal.id,
+                    version: QrVersions.auto,
+                    size: 160,
+                    backgroundColor: Colors.white,
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.animal.id,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.adminTextMuted,
+                  fontFamily: 'monospace',
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.adminTextDark,
+                      side: const BorderSide(
+                        color: AppColors.adminBorderMedium,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      textStyle: const TextStyle(fontSize: 13),
+                    ),
+                    child: const Text('Close'),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton.icon(
+                    onPressed: _isDownloading ? null : _handleDownload,
+                    icon: _isDownloading
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.download_for_offline_outlined,
+                            size: 16,
+                          ),
+                    label: Text(_isDownloading ? 'Saving...' : 'Download PNG'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.adminPrimary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      textStyle: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
