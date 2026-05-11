@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -68,14 +69,16 @@ class MapUploadedService {
       final lx = data['location_x'];
       final ly = data['location_y'];
       if (lx == null || ly == null) continue;
-      pins.add(MapPinModel(
-        itemId: doc.id,
-        isAnimal: true,
-        name: data['animalName']?.toString() ?? '',
-        x: (lx as num).toInt(),
-        y: (ly as num).toInt(),
-        pictureUrl: data['animalPicture'] as String?,
-      ));
+      pins.add(
+        MapPinModel(
+          itemId: doc.id,
+          isAnimal: true,
+          name: data['animalName']?.toString() ?? '',
+          x: (lx as num).toInt(),
+          y: (ly as num).toInt(),
+          pictureUrl: data['animalPicture'] as String?,
+        ),
+      );
     }
 
     for (final doc in results[1].docs) {
@@ -83,14 +86,16 @@ class MapUploadedService {
       final lx = data['location_x'];
       final ly = data['location_y'];
       if (lx == null || ly == null) continue;
-      pins.add(MapPinModel(
-        itemId: doc.id,
-        isAnimal: false,
-        name: data['eventName']?.toString() ?? '',
-        x: (lx as num).toInt(),
-        y: (ly as num).toInt(),
-        pictureUrl: data['eventPicture'] as String?,
-      ));
+      pins.add(
+        MapPinModel(
+          itemId: doc.id,
+          isAnimal: false,
+          name: data['eventName']?.toString() ?? '',
+          x: (lx as num).toInt(),
+          y: (ly as num).toInt(),
+          pictureUrl: data['eventPicture'] as String?,
+        ),
+      );
     }
 
     return pins;
@@ -109,7 +114,10 @@ class MapUploadedService {
 
   Future<void> updateLocation(String id, bool isAnimal, int x, int y) async {
     final col = isAnimal ? 'animal' : 'event';
-    await _db.collection(col).doc(id).update({'location_x': x, 'location_y': y});
+    await _db.collection(col).doc(id).update({
+      'location_x': x,
+      'location_y': y,
+    });
   }
 }
 
@@ -197,7 +205,8 @@ class MapUploadedAdminScreen extends ConsumerStatefulWidget {
       _MapUploadedAdminScreenState();
 }
 
-class _MapUploadedAdminScreenState extends ConsumerState<MapUploadedAdminScreen> {
+class _MapUploadedAdminScreenState
+    extends ConsumerState<MapUploadedAdminScreen> {
   MapPinModel? _selectedPin;
 
   Future<void> _pickAndUpload() async {
@@ -293,8 +302,9 @@ class _MapUploadedAdminScreenState extends ConsumerState<MapUploadedAdminScreen>
                                               onClose: () => setState(
                                                 () => _selectedPin = null,
                                               ),
-                                              onEditTap: () =>
-                                                  _navigateToEdit(_selectedPin!),
+                                              onEditTap: () => _navigateToEdit(
+                                                _selectedPin!,
+                                              ),
                                             ),
                                           ),
                                       ],
@@ -314,10 +324,11 @@ class _MapUploadedAdminScreenState extends ConsumerState<MapUploadedAdminScreen>
                                             ? const SizedBox(
                                                 width: 18,
                                                 height: 18,
-                                                child: CircularProgressIndicator(
-                                                  color: Colors.white,
-                                                  strokeWidth: 2,
-                                                ),
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: Colors.white,
+                                                      strokeWidth: 2,
+                                                    ),
                                               )
                                             : const Icon(
                                                 Icons.upload_outlined,
@@ -379,13 +390,90 @@ class _MapCanvas extends StatefulWidget {
   State<_MapCanvas> createState() => _MapCanvasState();
 }
 
-class _MapCanvasState extends State<_MapCanvas> {
+class _MapCanvasState extends State<_MapCanvas> with TickerProviderStateMixin {
   final _controller = TransformationController();
+  late final AnimationController _animController;
+  Animation<Matrix4>? _animMatrix;
+  Size? _canvasSize;
+  bool _hasAnimated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 1200),
+        )..addListener(() {
+          if (_animMatrix != null) {
+            _controller.value = _animMatrix!.value;
+          }
+        });
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _animController.dispose();
     super.dispose();
+  }
+
+  Future<void> _zoomToCenter() async {
+    final url = widget.mapUrl;
+    if (url == null || _canvasSize == null) return;
+
+    Size imageSize = Size.zero;
+    try {
+      final completer = Completer<Size>();
+      NetworkImage(url)
+          .resolve(ImageConfiguration.empty)
+          .addListener(
+            ImageStreamListener(
+              (info, _) {
+                if (!completer.isCompleted) {
+                  completer.complete(
+                    Size(
+                      info.image.width.toDouble(),
+                      info.image.height.toDouble(),
+                    ),
+                  );
+                }
+              },
+              onError: (_, _) {
+                if (!completer.isCompleted) completer.complete(Size.zero);
+              },
+            ),
+          );
+      imageSize = await completer.future.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => Size.zero,
+      );
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    final Matrix4 target;
+    if (imageSize.width > 0 && imageSize.height > 0) {
+      final s =
+          min(
+            _canvasSize!.width / imageSize.width,
+            _canvasSize!.height / imageSize.height,
+          ) *
+          0.85;
+      final tx = _canvasSize!.width / 2 - s * imageSize.width / 2;
+      final ty = _canvasSize!.height / 2 - s * imageSize.height / 2;
+      target = Matrix4.identity()
+        ..translate(tx, ty)
+        ..scale(s);
+    } else {
+      target = Matrix4.identity();
+    }
+
+    final initial = Matrix4.identity()..scale(2.0);
+    _animMatrix = Matrix4Tween(begin: initial, end: target).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOutQuart),
+    );
+    _animController.forward(from: 0);
   }
 
   @override
@@ -399,55 +487,66 @@ class _MapCanvasState extends State<_MapCanvas> {
       );
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: InteractiveViewer(
-        transformationController: _controller,
-        constrained: false,
-        minScale: 0.1,
-        maxScale: 5.0,
-        boundaryMargin: const EdgeInsets.all(2000),
-        child: Stack(
-          children: [
-            CachedNetworkImage(
-              imageUrl: widget.mapUrl!,
-              placeholder: (_, __) =>
-                  const Center(child: CircularProgressIndicator()),
-              errorWidget: (_, __, ___) => const Center(
-                child: Icon(
-                  Icons.broken_image_outlined,
-                  size: 64,
-                  color: AppColors.adminTextMuted,
-                ),
-              ),
-            ),
-            ...widget.pins.map(
-              (pin) => Positioned(
-                left: pin.x.toDouble() - 20,
-                top: pin.y.toDouble() - 20,
-                child: GestureDetector(
-                  onTap: () => widget.onPinTap(pin),
-                  child: Tooltip(
-                    message: pin.name,
-                    child: AnimatedBuilder(
-                      animation: _controller,
-                      builder: (_, __) {
-                        final scale = _controller.value.getMaxScaleOnAxis();
-                        final r = (20.0 / sqrt(scale)).clamp(6.0, 36.0);
-                        return MapAdminPinAvatar(
-                          pictureUrl: pin.pictureUrl,
-                          highlighted: false,
-                          radius: r,
-                        );
-                      },
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _canvasSize = Size(constraints.maxWidth, constraints.maxHeight);
+        if (!_hasAnimated) {
+          _hasAnimated = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _zoomToCenter();
+          });
+        }
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: InteractiveViewer(
+            transformationController: _controller,
+            constrained: false,
+            minScale: 0.1,
+            maxScale: 5.0,
+            boundaryMargin: const EdgeInsets.all(2000),
+            child: Stack(
+              children: [
+                CachedNetworkImage(
+                  imageUrl: widget.mapUrl!,
+                  placeholder: (_, _) =>
+                      const Center(child: CircularProgressIndicator()),
+                  errorWidget: (_, _, _) => const Center(
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      size: 64,
+                      color: AppColors.adminTextMuted,
                     ),
                   ),
                 ),
-              ),
+                ...widget.pins.map(
+                  (pin) => Positioned(
+                    left: pin.x.toDouble() - 20,
+                    top: pin.y.toDouble() - 20,
+                    child: GestureDetector(
+                      onTap: () => widget.onPinTap(pin),
+                      child: Tooltip(
+                        message: pin.name,
+                        child: AnimatedBuilder(
+                          animation: _controller,
+                          builder: (_, _) {
+                            final scale = _controller.value.getMaxScaleOnAxis();
+                            final r = (25.0 / sqrt(scale)).clamp(6.0, 50.0);
+                            return MapAdminPinAvatar(
+                              pictureUrl: pin.pictureUrl,
+                              highlighted: false,
+                              radius: r,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -487,10 +586,9 @@ class MapAdminPinAvatar extends StatelessWidget {
       child: CircleAvatar(
         radius: radius,
         backgroundColor: Colors.grey.shade200,
-        backgroundImage:
-            (pictureUrl != null && pictureUrl!.isNotEmpty)
-                ? NetworkImage(pictureUrl!)
-                : null,
+        backgroundImage: (pictureUrl != null && pictureUrl!.isNotEmpty)
+            ? NetworkImage(pictureUrl!)
+            : null,
         child: (pictureUrl == null || pictureUrl!.isEmpty)
             ? Icon(Icons.pets, size: radius * 0.9, color: Colors.grey)
             : null,
@@ -507,10 +605,12 @@ class MapLocationPickerDialog extends ConsumerStatefulWidget {
     super.key,
     required this.initialX,
     required this.initialY,
+    this.pictureUrl,
   });
 
   final int initialX;
   final int initialY;
+  final String? pictureUrl;
 
   @override
   ConsumerState<MapLocationPickerDialog> createState() =>
@@ -518,7 +618,13 @@ class MapLocationPickerDialog extends ConsumerStatefulWidget {
 }
 
 class _MapLocationPickerDialogState
-    extends ConsumerState<MapLocationPickerDialog> {
+    extends ConsumerState<MapLocationPickerDialog>
+    with TickerProviderStateMixin {
+  final _controller = TransformationController();
+  late final AnimationController _animController;
+  Animation<Matrix4>? _animMatrix;
+  Size? _canvasSize;
+
   String? _mapUrl;
   bool _loading = true;
   late int _x;
@@ -529,7 +635,23 @@ class _MapLocationPickerDialogState
     super.initState();
     _x = widget.initialX;
     _y = widget.initialY;
+    _animController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 900),
+        )..addListener(() {
+          if (_animMatrix != null) {
+            _controller.value = _animMatrix!.value;
+          }
+        });
     _loadMap();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _animController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadMap() async {
@@ -539,7 +661,93 @@ class _MapLocationPickerDialogState
         _mapUrl = url;
         _loading = false;
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _zoomOnOpen();
+      });
     }
+  }
+
+  void _zoomOnOpen() {
+    if (_mapUrl == null || _canvasSize == null) return;
+    if (widget.initialX > 0 || widget.initialY > 0) {
+      _zoomToPin(widget.initialX.toDouble(), widget.initialY.toDouble());
+    } else {
+      _zoomToCenter();
+    }
+  }
+
+  void _zoomToPin(double px, double py) {
+    if (_canvasSize == null) return;
+    const scale = 2.5;
+    final tx = _canvasSize!.width / 2 - scale * px;
+    final ty = _canvasSize!.height / 2 - scale * py;
+    final target = Matrix4.identity()
+      ..translate(tx, ty)
+      ..scale(scale);
+    _animController.duration = const Duration(milliseconds: 800);
+    _animMatrix = Matrix4Tween(begin: Matrix4.identity(), end: target).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOutCubic),
+    );
+    _animController.forward(from: 0);
+  }
+
+  Future<void> _zoomToCenter() async {
+    final url = _mapUrl;
+    if (url == null || _canvasSize == null) return;
+
+    Size imageSize = Size.zero;
+    try {
+      final completer = Completer<Size>();
+      NetworkImage(url)
+          .resolve(ImageConfiguration.empty)
+          .addListener(
+            ImageStreamListener(
+              (info, _) {
+                if (!completer.isCompleted) {
+                  completer.complete(
+                    Size(
+                      info.image.width.toDouble(),
+                      info.image.height.toDouble(),
+                    ),
+                  );
+                }
+              },
+              onError: (_, _) {
+                if (!completer.isCompleted) completer.complete(Size.zero);
+              },
+            ),
+          );
+      imageSize = await completer.future.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => Size.zero,
+      );
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    final Matrix4 target;
+    if (imageSize.width > 0 && imageSize.height > 0) {
+      final s =
+          min(
+            _canvasSize!.width / imageSize.width,
+            _canvasSize!.height / imageSize.height,
+          ) *
+          0.85;
+      final tx = _canvasSize!.width / 2 - s * imageSize.width / 2;
+      final ty = _canvasSize!.height / 2 - s * imageSize.height / 2;
+      target = Matrix4.identity()
+        ..translate(tx, ty)
+        ..scale(s);
+    } else {
+      target = Matrix4.identity();
+    }
+
+    final initial = Matrix4.identity()..scale(2.0);
+    _animController.duration = const Duration(milliseconds: 1200);
+    _animMatrix = Matrix4Tween(begin: initial, end: target).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOutQuart),
+    );
+    _animController.forward(from: 0);
   }
 
   void _onTap(Offset local) {
@@ -585,42 +793,63 @@ class _MapLocationPickerDialogState
                           style: TextStyle(color: AppColors.adminTextMuted),
                         ),
                       )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: InteractiveViewer(
-                          constrained: false,
-                          minScale: 0.1,
-                          maxScale: 5.0,
-                          boundaryMargin: const EdgeInsets.all(2000),
-                          child: GestureDetector(
-                            onTapDown: (d) => _onTap(d.localPosition),
-                            child: Stack(
-                              children: [
-                                CachedNetworkImage(
-                                  imageUrl: _mapUrl!,
-                                  placeholder: (_, __) => const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                  errorWidget: (_, __, ___) => const Center(
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      size: 64,
-                                      color: AppColors.adminTextMuted,
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          _canvasSize = Size(
+                            constraints.maxWidth,
+                            constraints.maxHeight,
+                          );
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: InteractiveViewer(
+                              transformationController: _controller,
+                              constrained: false,
+                              minScale: 0.1,
+                              maxScale: 5.0,
+                              boundaryMargin: const EdgeInsets.all(2000),
+                              child: GestureDetector(
+                                onTapDown: (d) => _onTap(d.localPosition),
+                                child: Stack(
+                                  children: [
+                                    CachedNetworkImage(
+                                      imageUrl: _mapUrl!,
+                                      placeholder: (_, _) => const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                      errorWidget: (_, _, _) => const Center(
+                                        child: Icon(
+                                          Icons.broken_image_outlined,
+                                          size: 64,
+                                          color: AppColors.adminTextMuted,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    Positioned(
+                                      left: _x.toDouble() - 20,
+                                      top: _y.toDouble() - 20,
+                                      child: IgnorePointer(
+                                        child: AnimatedBuilder(
+                                          animation: _controller,
+                                          builder: (_, _) {
+                                            final scale = _controller.value
+                                                .getMaxScaleOnAxis();
+                                            final r = (20.0 / sqrt(scale))
+                                                .clamp(6.0, 36.0);
+                                            return MapAdminPinAvatar(
+                                              pictureUrl: widget.pictureUrl,
+                                              highlighted: true,
+                                              radius: r,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Positioned(
-                                  left: _x.toDouble() - 14,
-                                  top: _y.toDouble() - 14,
-                                  child: MapAdminPinAvatar(
-                                    pictureUrl: null,
-                                    highlighted: true,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
               ),
               const SizedBox(height: 16),
@@ -724,10 +953,7 @@ class _MapPinInfoCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     pin.isAnimal ? 'Animal' : 'Event',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                   ),
                 ],
               ),

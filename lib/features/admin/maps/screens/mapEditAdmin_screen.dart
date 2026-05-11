@@ -61,14 +61,15 @@ class _MapEditAdminScreenState extends ConsumerState<MapEditAdminScreen>
     _editX = widget.args.x;
     _editY = widget.args.y;
     _transformController = TransformationController();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..addListener(() {
-        if (_animMatrix != null) {
-          _transformController.value = _animMatrix!.value;
-        }
-      });
+    _animController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 800),
+        )..addListener(() {
+          if (_animMatrix != null) {
+            _transformController.value = _animMatrix!.value;
+          }
+        });
     _loadData();
   }
 
@@ -85,12 +86,9 @@ class _MapEditAdminScreenState extends ConsumerState<MapEditAdminScreen>
     final tx = _canvasSize!.width / 2 - scale * widget.args.x;
     final ty = _canvasSize!.height / 2 - scale * widget.args.y;
     final target = Matrix4.identity()
-      ..translateByDouble(tx, ty, 0, 1)
-      ..scaleByDouble(scale, scale, 1, 1);
-    _animMatrix = Matrix4Tween(
-      begin: Matrix4.identity(),
-      end: target,
-    ).animate(
+      ..translate(tx, ty)
+      ..scale(scale);
+    _animMatrix = Matrix4Tween(begin: Matrix4.identity(), end: target).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeInOutCubic),
     );
     _animController.forward(from: 0);
@@ -212,7 +210,8 @@ class _MapEditAdminScreenState extends ConsumerState<MapEditAdminScreen>
                                           otherPins: _otherPins,
                                           editX: _editX,
                                           editY: _editY,
-                                          editPictureUrl: widget.args.pictureUrl,
+                                          editPictureUrl:
+                                              widget.args.pictureUrl,
                                           isSaving: _isSaving,
                                           onTap: _onMapTap,
                                         );
@@ -329,7 +328,7 @@ class _MapEditCanvas extends StatelessWidget {
                       animation: controller,
                       builder: (_, _) {
                         final scale = controller.value.getMaxScaleOnAxis();
-                        final r = (20.0 / sqrt(scale)).clamp(6.0, 36.0);
+                        final r = (25.0 / sqrt(scale)).clamp(6.0, 50.0);
                         return MapAdminPinAvatar(
                           pictureUrl: pin.pictureUrl,
                           highlighted: false,
@@ -351,7 +350,7 @@ class _MapEditCanvas extends StatelessWidget {
                       animation: controller,
                       builder: (_, _) {
                         final scale = controller.value.getMaxScaleOnAxis();
-                        final r = (20.0 / sqrt(scale)).clamp(6.0, 36.0);
+                        final r = (25.0 / sqrt(scale)).clamp(6.0, 50.0);
                         return MapAdminPinAvatar(
                           pictureUrl: editPictureUrl,
                           highlighted: true,

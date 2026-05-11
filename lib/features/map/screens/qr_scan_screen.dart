@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 
@@ -29,17 +28,6 @@ class _QrScanScreenState extends State<QrScanScreen> {
     _controller.stop();
 
     Navigator.pop(context, barcode!.rawValue);
-  }
-
-  Future<void> _pickFromGallery() async {
-    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (image == null || !mounted) return;
-    final result = await _controller.analyzeImage(image.path);
-    if (result == null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No QR Code found in this image')),
-      );
-    }
   }
 
   @override
@@ -73,13 +61,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => _controller.toggleTorch(),
-                    icon: const Icon(
-                      Icons.flash_on_outlined,
-                      color: Colors.white,
-                    ),
-                  ),
+                  const SizedBox(width: 48),
                 ],
               ),
             ),
@@ -91,52 +73,13 @@ class _QrScanScreenState extends State<QrScanScreen> {
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Align QR code within the frame',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: _pickFromGallery,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.photo_library_outlined,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Choose from Gallery',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Align QR code within the frame',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),

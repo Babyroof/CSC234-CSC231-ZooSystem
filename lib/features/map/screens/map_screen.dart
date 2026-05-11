@@ -49,30 +49,29 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           }
         });
 
-    _mapSub = FirebaseFirestore.instance
-        .collection('map')
-        .snapshots()
-        .listen((snap) {
-          if (!mounted) return;
-          if (snap.docs.isEmpty) return;
-          final data = snap.docs.first.data();
-          final url = data['mapPicture'] as String?;
-          if (url != null && url.isNotEmpty) {
-            final isFirstUrl = _mapUrl == null;
-            setState(() => _mapUrl = url);
-            if (isFirstUrl && _isFirstLoad == false) {
-              if (_selectedAnimal == null && _selectedEvent == null) {
-                _startZoomOutAnimation();
-              } else {
-                final lx = (_selectedAnimal ?? _selectedEvent)?['locationX'];
-                final ly = (_selectedAnimal ?? _selectedEvent)?['locationY'];
-                if (lx != null && ly != null) {
-                  _zoomToLocation((lx as num).toDouble(), (ly as num).toDouble());
-                }
-              }
+    _mapSub = FirebaseFirestore.instance.collection('map').snapshots().listen((
+      snap,
+    ) {
+      if (!mounted) return;
+      if (snap.docs.isEmpty) return;
+      final data = snap.docs.first.data();
+      final url = data['mapPicture'] as String?;
+      if (url != null && url.isNotEmpty) {
+        final isFirstUrl = _mapUrl == null;
+        setState(() => _mapUrl = url);
+        if (isFirstUrl && _isFirstLoad == false) {
+          if (_selectedAnimal == null && _selectedEvent == null) {
+            _startZoomOutAnimation();
+          } else {
+            final lx = (_selectedAnimal ?? _selectedEvent)?['locationX'];
+            final ly = (_selectedAnimal ?? _selectedEvent)?['locationY'];
+            if (lx != null && ly != null) {
+              _zoomToLocation((lx as num).toDouble(), (ly as num).toDouble());
             }
           }
-        }, onError: (e) => debugPrint('map stream: $e'));
+        }
+      }
+    }, onError: (e) => debugPrint('map stream: $e'));
 
     _animalSub = FirebaseFirestore.instance
         .collection('animal')
