@@ -179,7 +179,9 @@ class _BookingAdminScreenState extends ConsumerState<BookingAdminScreen> {
             child: const Text('Cancelled'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppColors.adminDanger),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.adminTextDark,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete'),
           ),
@@ -363,7 +365,7 @@ class _HeaderRow extends StatelessWidget {
           const Expanded(flex: 3, child: Text('Add-ons', style: style)),
           const Expanded(flex: 2, child: Text('Total (฿)', style: style)),
           const Expanded(flex: 2, child: Text('Status', style: style)),
-          const Expanded(flex: 2, child: Text('Actions', style: style)),
+          const Expanded(flex: 3, child: Text('Actions', style: style)),
         ],
       ),
     );
@@ -513,22 +515,25 @@ class _BookingRow extends StatelessWidget {
           ),
           Expanded(flex: 2, child: _StatusBadge(status: item.status)),
           Expanded(
-            flex: 2,
+            flex: 3,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                _ActionIconButton(
-                  icon: Icons.edit_outlined,
-                  color: AppColors.adminPrimaryDark,
-                  tooltip: 'Edit',
-                  onTap: onEdit,
+                Expanded(
+                  child: _ActionIconButton(
+                    icon: Icons.edit_outlined,
+                    color: AppColors.black,
+                    tooltip: 'Edit',
+                    onTap: onEdit,
+                  ),
                 ),
-                const SizedBox(width: 4),
-                _ActionIconButton(
-                  icon: Icons.delete_outline,
-                  color: AppColors.adminDanger,
-                  tooltip: 'Delete',
-                  onTap: onDelete,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _ActionIconButton(
+                    icon: Icons.delete_outline,
+                    color: AppColors.black,
+                    tooltip: 'Delete',
+                    onTap: onDelete,
+                  ),
                 ),
               ],
             ),
@@ -614,15 +619,22 @@ class _StatusBadge extends StatelessWidget {
       _ => (const Color(0xFFFEF3C7), const Color(0xFF92400E)),
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          status,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: fg,
+          ),
+        ),
       ),
     );
   }
@@ -644,14 +656,20 @@ class _ActionIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: Icon(icon, size: 18, color: color),
+    return SizedBox(
+      height: 34,
+      child: OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 15),
+        label: Text(tooltip),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: color,
+          side: BorderSide(color: color.withValues(alpha: 0.5)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
         ),
       ),
     );
