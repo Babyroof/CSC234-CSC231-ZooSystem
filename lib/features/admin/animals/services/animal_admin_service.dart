@@ -1,55 +1,55 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/animal_admin_model.dart';
 
 class AnimalAdminService {
-  // TODO: Inject FirebaseFirestore — replace all methods with real Firestore calls
-  final List<AnimalAdminModel> _animals = [
-    const AnimalAdminModel(
-      id: 'mock_1',
-      animalName: 'Scarlet Macaw',
-      animalDetail: 'Native to South America with vibrant red plumage.',
-      animalPicture: '',
-      zoneId: 'zone_1',
-      zoneName: 'Bird Zone',
-      locationX: 200,
-      locationY: 150,
-    ),
-    const AnimalAdminModel(
-      id: 'mock_2',
-      animalName: 'African Elephant',
-      animalDetail: 'Largest land animal on Earth.',
-      animalPicture: '',
-      zoneId: 'zone_2',
-      zoneName: 'Savanna Zone',
-      locationX: 500,
-      locationY: 300,
-    ),
-    const AnimalAdminModel(
-      id: 'mock_3',
-      animalName: 'Bottlenose Dolphin',
-      animalDetail: 'Highly intelligent marine mammal.',
-      animalPicture: '',
-      zoneId: 'zone_3',
-      zoneName: 'Aquatic Zone',
-      locationX: 700,
-      locationY: 600,
-    ),
-  ];
+  final FirebaseFirestore _db;
+  final FirebaseStorage _storage;
 
-  int _nextId = 4;
+  AnimalAdminService({FirebaseFirestore? db, FirebaseStorage? storage})
+      : _db = db ?? FirebaseFirestore.instance,
+        _storage = storage ?? FirebaseStorage.instance;
 
-  Future<List<AnimalAdminModel>> getAnimals() async {
-    // TODO: Query 'animal' collection and join 'zone' collection for zoneName
-    return List.from(_animals);
+  /// Returns a real-time stream of all animals, with zone names resolved.
+  Stream<List<AnimalAdminModel>> getAnimals() {
+    return _db.collection('zone').snapshots().asyncExpand((zoneSnap) {
+      final zoneMap = {
+        for (final doc in zoneSnap.docs)
+          doc.id: (doc.data()['zoneName'] as String? ?? ''),
+      };
+      return _db
+          .collection('animal')
+          .snapshots()
+          .map(
+            (animalSnap) => animalSnap.docs
+                .map((doc) => AnimalAdminModel.fromFirestore(doc, zoneMap))
+                .toList(),
+          )
+          .handleError((Object e) {
+            debugPrint('[AnimalAdminService] animal stream error: $e');
+            throw e;
+          });
+    }).handleError((Object e) {
+      debugPrint('[AnimalAdminService] zone stream error: $e');
+      throw e;
+    });
   }
 
   Future<List<Map<String, String>>> getZones() async {
-    // TODO: Query 'zone' collection
-    return [
-      {'id': 'zone_1', 'name': 'Bird Zone'},
-      {'id': 'zone_2', 'name': 'Savanna Zone'},
-      {'id': 'zone_3', 'name': 'Aquatic Zone'},
-    ];
+    try {
+      final snap = await _db.collection('zone').get();
+      return snap.docs
+          .map((doc) => {
+                'id': doc.id,
+                'name': (doc.data()['zoneName'] as String? ?? ''),
+              })
+          .toList();
+    } catch (e) {
+      debugPrint('[AnimalAdminService] getZones error: $e');
+      rethrow;
+    }
   }
 
   Future<void> addAnimal({
@@ -57,22 +57,20 @@ class AnimalAdminService {
     required String animalDetail,
     required String animalPicture,
     required String zoneId,
-    required int locationX,
-    required int locationY,
+    int locationX = 0,
+    int locationY = 0,
   }) async {
-    // TODO: _db.collection('animal').add({...}), zoneId as DocumentReference: _db.doc('zone/$zoneId')
-    _animals.add(
-      AnimalAdminModel(
-        id: 'mock_${_nextId++}',
-        animalName: animalName,
-        animalDetail: animalDetail,
-        animalPicture: animalPicture,
-        zoneId: zoneId,
-        zoneName: zoneId,
-        locationX: locationX,
-        locationY: locationY,
-      ),
-    );
+    try {
+      await _db.collection('animal').add({
+        'animalName': animalName,
+        'animalDetail': animalDetail,
+        'animalPicture': animalPicture,
+        'zoneId': _db.doc('/zone/$zoneId'),
+      });
+    } catch (e) {
+      debugPrint('[AnimalAdminService] addAnimal error: $e');
+      rethrow;
+    }
   }
 
   Future<void> updateAnimal(
@@ -84,30 +82,41 @@ class AnimalAdminService {
     int? locationX,
     int? locationY,
   }) async {
-    // TODO: _db.collection('animal').doc(id).update({...})
-    final index = _animals.indexWhere((a) => a.id == id);
-    if (index == -1) return;
-    final old = _animals[index];
-    _animals[index] = AnimalAdminModel(
-      id: id,
-      animalName: animalName,
-      animalDetail: animalDetail,
-      animalPicture: animalPicture,
-      zoneId: zoneId,
-      zoneName: zoneId,
-      locationX: locationX ?? old.locationX,
-      locationY: locationY ?? old.locationY,
-    );
+    try {
+      await _db.collection('animal').doc(id).update({
+        'animalName': animalName,
+        'animalDetail': animalDetail,
+        'animalPicture': animalPicture,
+        'zoneId': _db.doc('/zone/$zoneId'),
+      });
+    } catch (e) {
+      debugPrint('[AnimalAdminService] updateAnimal error: $e');
+      rethrow;
+    }
   }
 
   Future<void> deleteAnimal(String id) async {
-    // TODO: _db.collection('animal').doc(id).delete()
-    _animals.removeWhere((a) => a.id == id);
+    try {
+      await _db.collection('animal').doc(id).delete();
+    } catch (e) {
+      debugPrint('[AnimalAdminService] deleteAnimal error: $e');
+      rethrow;
+    }
   }
 
   Future<String> uploadImage(List<int> bytes, String extension) async {
-    // TODO: Upload to Firebase Storage at 'animals/<timestamp>.<ext>', return download URL
-    return '';
+    try {
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$extension';
+      final ref = _storage.ref().child('animals/$fileName');
+      final uploadTask = await ref.putData(
+        Uint8List.fromList(bytes),
+        SettableMetadata(contentType: 'image/$extension'),
+      );
+      return await uploadTask.ref.getDownloadURL();
+    } catch (e) {
+      debugPrint('[AnimalAdminService] uploadImage error: $e');
+      rethrow;
+    }
   }
 }
 

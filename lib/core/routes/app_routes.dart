@@ -28,6 +28,8 @@ import '../../features/admin/zones/screens/zoneAdmin_screen.dart';
 import '../../features/admin/profile/profileAdmin_screen.dart';
 import '../../features/admin/profile/editProfileAdmin_screen.dart';
 import '../../features/admin/profile/models/profile_admin_model.dart';
+import '../../features/admin/add_ons/screens/add_ons_admin_screen.dart';
+import '../../features/admin/pricing/screens/pricing_admin_screen.dart';
 
 class AppRoute {
   static const String root = '/';
@@ -58,6 +60,8 @@ class AppRoute {
   static const String adminLogin = '/admin/login';
   static const String adminRegister = '/admin/register';
   static const String adminHome = '/admin/home';
+  static const String adminAddOns = '/admin/add_ons';
+  static const String adminPricing = '/admin/pricing';
   static const String qrScan = '/qr_scan';
 
   static Map<String, WidgetBuilder> getRoutes() {
@@ -109,6 +113,8 @@ class AppRoute {
       adminLogin: (context) => const AdminLoginScreen(),
       adminRegister: (context) => const AdminRegisterScreen(),
       adminHome: (context) => const AdminHomeScreen(),
+      adminAddOns: (context) => const AddOnsAdminScreen(),
+      adminPricing: (context) => const PricingAdminScreen(),
       qrScan: (context) => const QrScanScreen(),
     };
   }

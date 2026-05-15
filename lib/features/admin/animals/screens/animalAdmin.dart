@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,16 +80,37 @@ class AnimalAdminState {
 
 class AnimalAdminNotifier extends StateNotifier<AnimalAdminState> {
   AnimalAdminNotifier(this._service) : super(const AnimalAdminState()) {
-    loadAnimals();
+    _subscribe();
   }
 
   final AnimalAdminService _service;
+  StreamSubscription<List<AnimalAdminModel>>? _subscription;
+
+  void _subscribe() {
+    state = state.copyWith(isLoading: true);
+    _subscription = _service.getAnimals().listen(
+      (animals) {
+        if (mounted) {
+          state = state.copyWith(isLoading: false, items: animals);
+          _guardCurrentPage();
+        }
+      },
+      onError: (Object e) {
+        if (mounted) state = state.copyWith(isLoading: false);
+      },
+    );
+  }
 
   Future<void> loadAnimals() async {
-    state = state.copyWith(isLoading: true);
-    final animals = await _service.getAnimals();
-    state = state.copyWith(isLoading: false, items: animals);
-    _guardCurrentPage();
+    // Re-subscribe to pick up the latest data (used after mutations).
+    await _subscription?.cancel();
+    _subscribe();
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   void setSearchText(String value) {
