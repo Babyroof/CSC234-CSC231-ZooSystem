@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/zoo_bottom_nav.dart';
 import '../constants/booking_pricing.dart';
 import '../models/booking_model.dart';
+import '../models/selected_add_on_model.dart';
 import '../services/booking_service.dart';
 import 'ticket_history_screen.dart';
 
@@ -125,9 +126,7 @@ class TicketScreen extends ConsumerWidget {
                 kidUnit: BookingPricing.kidPrice,
                 elderUnit: BookingPricing.elderPrice,
                 totalAmount: booking.totalPrice ?? booking.totalAmount,
-                buffetFood: booking.buffetFood,
-                tourGuide: booking.guidTour,
-                golfCar: booking.golfCar,
+                selectedAddOns: booking.selectedAddOns,
                 onQrTap: () => _showQrSheet(context, ticketId),
               );
             },
@@ -151,9 +150,7 @@ class _TicketCard extends StatelessWidget {
   final int kidUnit;
   final int elderUnit;
   final int totalAmount;
-  final bool buffetFood;
-  final bool tourGuide;
-  final bool golfCar;
+  final List<SelectedAddOnModel> selectedAddOns;
   final VoidCallback onQrTap;
 
   const _TicketCard({
@@ -166,9 +163,7 @@ class _TicketCard extends StatelessWidget {
     required this.kidUnit,
     required this.elderUnit,
     required this.totalAmount,
-    required this.buffetFood,
-    required this.tourGuide,
-    required this.golfCar,
+    required this.selectedAddOns,
     required this.onQrTap,
   });
 
@@ -276,7 +271,7 @@ class _TicketCard extends StatelessWidget {
             ),
 
           // Add-ons section
-          if (buffetFood || tourGuide || golfCar) ...[
+          if (selectedAddOns.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
               child: Divider(
@@ -296,12 +291,9 @@ class _TicketCard extends StatelessWidget {
                 ),
               ),
             ),
-            if (buffetFood)
-              _AddonItem(icon: Icons.restaurant, label: 'Buffet Food'),
-            if (tourGuide)
-              _AddonItem(icon: Icons.record_voice_over, label: 'Tour Guide'),
-            if (golfCar)
-              _AddonItem(icon: Icons.directions_car, label: 'Golf Car'),
+            ...selectedAddOns.map(
+              (a) => _AddonItem(icon: Icons.add_circle_outline, label: a.name),
+            ),
           ],
 
           // Divider

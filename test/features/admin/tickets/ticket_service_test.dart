@@ -28,9 +28,7 @@ void main() {
   Future<void> seedTicket({
     required String docId,
     String userId = 'user123',
-    bool buffetFood = true,
-    bool golfCar = false,
-    bool guidTour = true,
+    List<Map<String, dynamic>>? selectedAddOns,
     int adultTotal = 2,
     int childTotal = 1,
     int elderTotal = 0,
@@ -39,9 +37,9 @@ void main() {
   }) async {
     final userRef = fakeFirestore.collection('user').doc(userId);
     await fakeFirestore.collection('booking').doc(docId).set({
-      'BuffetFood': buffetFood,
-      'GolfCar': golfCar,
-      'GuidTour': guidTour,
+      'selectedAddOns': selectedAddOns ?? [
+        {'addOnId': 'addon1', 'name': 'Golf Car', 'price': 500, 'priceType': 'per_booking'},
+      ],
       'adultTotal': adultTotal,
       'childTotal': childTotal,
       'elderTotal': elderTotal,
@@ -104,9 +102,9 @@ void main() {
       await seedTicket(
         docId: 'tk1',
         userId: 'user123',
-        buffetFood: true,
-        golfCar: false,
-        guidTour: true,
+        selectedAddOns: [
+          {'addOnId': 'addon1', 'name': 'Golf Car', 'price': 500, 'priceType': 'per_booking'},
+        ],
         adultTotal: 2,
         childTotal: 1,
         elderTotal: 0,
@@ -120,9 +118,9 @@ void main() {
       // Assert
       expect(result, isNotNull);
       expect(result!.id, 'tk1');
-      expect(result.buffetFood, true);
-      expect(result.golfCar, false);
-      expect(result.guidTour, true);
+      expect(result.selectedAddOns, hasLength(1));
+      expect(result.selectedAddOns.first.addOnId, 'addon1');
+      expect(result.selectedAddOns.first.name, 'Golf Car');
       expect(result.adultTotal, 2);
       expect(result.childTotal, 1);
       expect(result.elderTotal, 0);
@@ -159,9 +157,6 @@ void main() {
       // Act
       await service.updateTicket(
         ticketId: 'tk1',
-        buffetFood: false,
-        golfCar: true,
-        guidTour: false,
         adultTotal: 4,
         childTotal: 2,
         elderTotal: 1,
@@ -173,9 +168,6 @@ void main() {
       // Assert
       final data = (await fakeFirestore.collection('booking').doc('tk1').get())
           .data()!;
-      expect(data['BuffetFood'], false);
-      expect(data['GolfCar'], true);
-      expect(data['GuidTour'], false);
       expect(data['adultTotal'], 4);
       expect(data['childTotal'], 2);
       expect(data['elderTotal'], 1);
@@ -192,9 +184,6 @@ void main() {
       // Act
       await service.updateTicket(
         ticketId: 'tk1',
-        buffetFood: true,
-        golfCar: false,
-        guidTour: true,
         adultTotal: 2,
         childTotal: 1,
         elderTotal: 0,
@@ -218,9 +207,6 @@ void main() {
       // Act — update only tk1
       await service.updateTicket(
         ticketId: 'tk1',
-        buffetFood: false,
-        golfCar: false,
-        guidTour: false,
         adultTotal: 1,
         childTotal: 0,
         elderTotal: 0,
@@ -241,9 +227,6 @@ void main() {
       expect(
         () => errorService.updateTicket(
           ticketId: 'any',
-          buffetFood: false,
-          golfCar: false,
-          guidTour: false,
           adultTotal: 1,
           childTotal: 0,
           elderTotal: 0,

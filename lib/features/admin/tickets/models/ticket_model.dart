@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
 
 class TicketModel {
   final String id;
-  final bool buffetFood;
-  final bool golfCar;
-  final bool guidTour;
+  final List<SelectedAddOnModel> selectedAddOns;
   final int adultTotal;
   final int childTotal;
   final int elderTotal;
@@ -14,9 +13,7 @@ class TicketModel {
 
   const TicketModel({
     required this.id,
-    required this.buffetFood,
-    required this.golfCar,
-    required this.guidTour,
+    required this.selectedAddOns,
     required this.adultTotal,
     required this.childTotal,
     required this.elderTotal,
@@ -34,11 +31,19 @@ class TicketModel {
       resolvedDate = rawDate.toDate();
     }
 
+    final rawAddOns = data['selectedAddOns'];
+    final addOns = <SelectedAddOnModel>[];
+    if (rawAddOns is List) {
+      for (final item in rawAddOns) {
+        if (item is Map<String, dynamic>) {
+          addOns.add(SelectedAddOnModel.fromMap(item));
+        }
+      }
+    }
+
     return TicketModel(
       id: doc.id,
-      buffetFood: data['BuffetFood'] == true,
-      golfCar: data['GolfCar'] == true,
-      guidTour: data['GuidTour'] == true,
+      selectedAddOns: addOns,
       adultTotal: (data['adultTotal'] as num? ?? 0).toInt(),
       childTotal: (data['childTotal'] as num? ?? 0).toInt(),
       elderTotal: (data['elderTotal'] as num? ?? 0).toInt(),
@@ -49,9 +54,7 @@ class TicketModel {
   }
 
   Map<String, dynamic> toMap() => {
-    'BuffetFood': buffetFood,
-    'GolfCar': golfCar,
-    'GuidTour': guidTour,
+    'selectedAddOns': selectedAddOns.map((a) => a.toMap()).toList(),
     'adultTotal': adultTotal,
     'childTotal': childTotal,
     'elderTotal': elderTotal,
@@ -62,9 +65,7 @@ class TicketModel {
 
   TicketModel copyWith({
     String? id,
-    bool? buffetFood,
-    bool? golfCar,
-    bool? guidTour,
+    List<SelectedAddOnModel>? selectedAddOns,
     int? adultTotal,
     int? childTotal,
     int? elderTotal,
@@ -73,9 +74,7 @@ class TicketModel {
     DocumentReference? userId,
   }) => TicketModel(
     id: id ?? this.id,
-    buffetFood: buffetFood ?? this.buffetFood,
-    golfCar: golfCar ?? this.golfCar,
-    guidTour: guidTour ?? this.guidTour,
+    selectedAddOns: selectedAddOns ?? this.selectedAddOns,
     adultTotal: adultTotal ?? this.adultTotal,
     childTotal: childTotal ?? this.childTotal,
     elderTotal: elderTotal ?? this.elderTotal,

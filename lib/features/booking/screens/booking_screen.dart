@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../constants/booking_pricing.dart';
+import '../models/add_on_model.dart';
 import '../models/booking_model.dart';
+import '../models/selected_add_on_model.dart';
+import '../services/add_on_service.dart';
 import '../services/booking_service.dart';
 
 // ── Prices sourced from canonical BookingPricing constants ────────────────
 const _kPriceAdult = BookingPricing.adultPrice;
 const _kPriceKid = BookingPricing.kidPrice;
 const _kPriceElder = BookingPricing.elderPrice;
-const _kPriceBuffet = BookingPricing.buffetFoodPrice; // per booking
-const _kPriceTourGuide = BookingPricing.guidTourPrice; // per booking
-const _kPriceGolfCar = BookingPricing.golfCarPrice; // per booking
 
 // ── Local state ───────────────────────────────────────────────────────────
 class _BookingState {
@@ -20,51 +20,44 @@ class _BookingState {
   final int adultCount;
   final int kidCount;
   final int elderCount;
-  final bool buffetFood;
-  final bool tourGuide;
-  final bool golfCar;
+  final Set<String> selectedAddOnIds;
+  final List<AddOnModel> loadedAddOns;
 
   const _BookingState({
     this.selectedDate,
     this.adultCount = 0,
     this.kidCount = 0,
     this.elderCount = 0,
-    this.buffetFood = false,
-    this.tourGuide = false,
-    this.golfCar = false,
+    this.selectedAddOnIds = const {},
+    this.loadedAddOns = const [],
   });
 
   int get totalPeople => adultCount + kidCount + elderCount;
 
-  int get totalAmount {
-    final tickets =
-        adultCount * _kPriceAdult +
-        kidCount * _kPriceKid +
-        elderCount * _kPriceElder;
-    // Buffet is a flat per-booking fee (matches BookingModel.totalAmount)
-    final buffet = buffetFood ? _kPriceBuffet : 0;
-    final guide = tourGuide ? _kPriceTourGuide : 0;
-    final golf = golfCar ? _kPriceGolfCar : 0;
-    return tickets + buffet + guide + golf;
-  }
+  int get ticketTotal =>
+      adultCount * _kPriceAdult +
+      kidCount * _kPriceKid +
+      elderCount * _kPriceElder;
+
+  int get addOnTotal => loadedAddOns
+      .where((a) => selectedAddOnIds.contains(a.id))
+      .fold(0, (acc, a) => acc + a.calculatePrice(totalPeople));
 
   _BookingState copyWith({
     DateTime? selectedDate,
     int? adultCount,
     int? kidCount,
     int? elderCount,
-    bool? buffetFood,
-    bool? tourGuide,
-    bool? golfCar,
+    Set<String>? selectedAddOnIds,
+    List<AddOnModel>? loadedAddOns,
   }) {
     return _BookingState(
       selectedDate: selectedDate ?? this.selectedDate,
       adultCount: adultCount ?? this.adultCount,
       kidCount: kidCount ?? this.kidCount,
       elderCount: elderCount ?? this.elderCount,
-      buffetFood: buffetFood ?? this.buffetFood,
-      tourGuide: tourGuide ?? this.tourGuide,
-      golfCar: golfCar ?? this.golfCar,
+      selectedAddOnIds: selectedAddOnIds ?? this.selectedAddOnIds,
+      loadedAddOns: loadedAddOns ?? this.loadedAddOns,
     );
   }
 }
@@ -97,10 +90,18 @@ class _BookingNotifier extends StateNotifier<_BookingState> {
     }
   }
 
-  void toggleBuffetFood() =>
-      state = state.copyWith(buffetFood: !state.buffetFood);
-  void toggleTourGuide() => state = state.copyWith(tourGuide: !state.tourGuide);
-  void toggleGolfCar() => state = state.copyWith(golfCar: !state.golfCar);
+  void toggleAddOn(String addOnId) {
+    final current = Set<String>.from(state.selectedAddOnIds);
+    if (current.contains(addOnId)) {
+      current.remove(addOnId);
+    } else {
+      current.add(addOnId);
+    }
+    state = state.copyWith(selectedAddOnIds: current);
+  }
+
+  void setLoadedAddOns(List<AddOnModel> addOns) =>
+      state = state.copyWith(loadedAddOns: addOns);
 }
 
 final _bookingProvider =
@@ -124,100 +125,114 @@ class BookingScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            _AppBar(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionTitle('Date'),
-                    const SizedBox(height: 8),
-                    _DatePickerRow(
-                      selectedDate: state.selectedDate,
-                      onDateSelected: notifier.setDate,
-                    ),
-                    const SizedBox(height: 20),
-                    _sectionTitle('Ticket Types'),
-                    const SizedBox(height: 8),
-                    _card(
+        child: StreamBuilder<List<AddOnModel>>(
+          stream: AddOnService().getActiveAddOns(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              debugPrint('AddOns loaded: ${snapshot.data!.length}');
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                notifier.setLoadedAddOns(snapshot.data!);
+              });
+            }
+            if (snapshot.hasError) {
+              debugPrint('AddOns error: ${snapshot.error}');
+            }
+            final loadedAddOns = snapshot.data ?? const [];
+
+            return Column(
+              children: [
+                _AppBar(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _TicketRow(
-                          icon: Icons.person_outline,
-                          label: 'Adult',
-                          price: _kPriceAdult,
-                          ageRange: 'Age 9 - 59',
-                          count: state.adultCount,
-                          onIncrement: notifier.incrementAdult,
-                          onDecrement: state.adultCount > 0
-                              ? notifier.decrementAdult
-                              : null,
+                        _sectionTitle('Date'),
+                        const SizedBox(height: 8),
+                        _DatePickerRow(
+                          selectedDate: state.selectedDate,
+                          onDateSelected: notifier.setDate,
                         ),
-                        _divider(),
-                        _TicketRow(
-                          icon: Icons.child_care,
-                          label: 'Kid',
-                          price: _kPriceKid,
-                          ageRange: 'Age 1 - 8',
-                          count: state.kidCount,
-                          onIncrement: notifier.incrementKid,
-                          onDecrement: state.kidCount > 0
-                              ? notifier.decrementKid
-                              : null,
+                        const SizedBox(height: 20),
+                        _sectionTitle('Ticket Types'),
+                        const SizedBox(height: 8),
+                        _card(
+                          children: [
+                            _TicketRow(
+                              icon: Icons.person_outline,
+                              label: 'Adult',
+                              price: _kPriceAdult,
+                              ageRange: 'Age 9 - 59',
+                              count: state.adultCount,
+                              onIncrement: notifier.incrementAdult,
+                              onDecrement: state.adultCount > 0
+                                  ? notifier.decrementAdult
+                                  : null,
+                            ),
+                            _divider(),
+                            _TicketRow(
+                              icon: Icons.child_care,
+                              label: 'Kid',
+                              price: _kPriceKid,
+                              ageRange: 'Age 1 - 8',
+                              count: state.kidCount,
+                              onIncrement: notifier.incrementKid,
+                              onDecrement: state.kidCount > 0
+                                  ? notifier.decrementKid
+                                  : null,
+                            ),
+                            _divider(),
+                            _TicketRow(
+                              icon: Icons.elderly,
+                              label: 'Elder',
+                              price: _kPriceElder,
+                              ageRange: 'Age 60+',
+                              count: state.elderCount,
+                              onIncrement: notifier.incrementElder,
+                              onDecrement: state.elderCount > 0
+                                  ? notifier.decrementElder
+                                  : null,
+                            ),
+                          ],
                         ),
-                        _divider(),
-                        _TicketRow(
-                          icon: Icons.elderly,
-                          label: 'Elder',
-                          price: _kPriceElder,
-                          ageRange: 'Age 60+',
-                          count: state.elderCount,
-                          onIncrement: notifier.incrementElder,
-                          onDecrement: state.elderCount > 0
-                              ? notifier.decrementElder
-                              : null,
-                        ),
+                        const SizedBox(height: 20),
+                        _sectionTitle('Add-ons'),
+                        const SizedBox(height: 8),
+                        if (snapshot.connectionState == ConnectionState.waiting && loadedAddOns.isEmpty)
+                          const Center(child: CircularProgressIndicator())
+                        else if (snapshot.hasError)
+                          Text('Error loading add-ons: ${snapshot.error}',
+                              style: const TextStyle(color: Colors.red, fontSize: 12))
+                        else if (loadedAddOns.isEmpty)
+                          const Text('No add-ons available',
+                              style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.grey))
+                        else
+                          _card(
+                            children: [
+                              for (int i = 0; i < loadedAddOns.length; i++) ...[
+                                if (i > 0) _divider(),
+                                _AddonRow(
+                                  icon: Icons.add_circle_outline,
+                                  label: loadedAddOns[i].name,
+                                  priceLabel: loadedAddOns[i].priceType == 'per_person'
+                                      ? '${loadedAddOns[i].price} ฿ / person'
+                                      : '${loadedAddOns[i].price} ฿ / booking',
+                                  isSelected: state.selectedAddOnIds.contains(loadedAddOns[i].id),
+                                  onToggle: () => notifier.toggleAddOn(loadedAddOns[i].id),
+                                  isRecommended: false,
+                                ),
+                              ],
+                            ],
+                          ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    _sectionTitle('Add-ons'),
-                    const SizedBox(height: 8),
-                    _card(
-                      children: [
-                        _AddonRow(
-                          icon: Icons.restaurant,
-                          label: 'Buffet Food',
-                          priceLabel: '$_kPriceBuffet ฿ / booking',
-                          isSelected: state.buffetFood,
-                          onToggle: notifier.toggleBuffetFood,
-                        ),
-                        _divider(),
-                        _AddonRow(
-                          icon: Icons.record_voice_over,
-                          label: 'Tour Guide',
-                          priceLabel: '$_kPriceTourGuide ฿ / booking',
-                          isSelected: state.tourGuide,
-                          onToggle: notifier.toggleTourGuide,
-                          isRecommended: true,
-                        ),
-                        _divider(),
-                        _AddonRow(
-                          icon: Icons.directions_car,
-                          label: 'Golf Car',
-                          priceLabel: '$_kPriceGolfCar ฿ / booking',
-                          isSelected: state.golfCar,
-                          onToggle: notifier.toggleGolfCar,
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            _BottomBar(state: state),
-          ],
+                _BottomBar(state: state, loadedAddOns: loadedAddOns),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -640,8 +655,9 @@ Widget _iconBox(IconData icon) => Container(
 // ── Bottom Bar ────────────────────────────────────────────────────────────
 class _BottomBar extends ConsumerWidget {
   final _BookingState state;
+  final List<AddOnModel> loadedAddOns;
 
-  const _BottomBar({required this.state});
+  const _BottomBar({required this.state, required this.loadedAddOns});
 
   String _formatDate(DateTime d) {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -662,6 +678,20 @@ class _BottomBar extends ConsumerWidget {
     ref.read(_checkoutLoadingProvider.notifier).state = true;
 
     try {
+      final addOns = loadedAddOns
+          .where((a) => state.selectedAddOnIds.contains(a.id))
+          .map(
+            (a) => SelectedAddOnModel(
+              addOnId: a.id,
+              name: a.name,
+              price: a.price,
+              priceType: a.priceType,
+            ),
+          )
+          .toList();
+
+      final total = state.ticketTotal + state.addOnTotal;
+
       final booking = BookingModel(
         id: '',
         userId: uid,
@@ -669,9 +699,7 @@ class _BottomBar extends ConsumerWidget {
         childTotal: state.kidCount,
         elderTotal: state.elderCount,
         date: state.selectedDate!,
-        buffetFood: state.buffetFood,
-        golfCar: state.golfCar,
-        guidTour: state.tourGuide,
+        selectedAddOns: addOns,
         status: 'pending',
       );
 
@@ -684,16 +712,13 @@ class _BottomBar extends ConsumerWidget {
         '/payment',
         arguments: {
           'bookingId': bookingId,
-          'totalAmount': state.totalAmount,
+          'totalAmount': total,
           'adultCount': state.adultCount,
           'kidCount': state.kidCount,
           'elderCount': state.elderCount,
           'adultUnitPrice': _kPriceAdult,
           'kidUnitPrice': _kPriceKid,
           'elderUnitPrice': _kPriceElder,
-          'buffetFood': state.buffetFood,
-          'tourGuide': state.tourGuide,
-          'golfCar': state.golfCar,
           'dateMs': state.selectedDate?.millisecondsSinceEpoch,
         },
       );
@@ -714,6 +739,7 @@ class _BottomBar extends ConsumerWidget {
     final canCheckout = state.totalPeople > 0 && state.selectedDate != null;
     final isLoading = ref.watch(_checkoutLoadingProvider);
     final bottomPad = MediaQuery.of(context).padding.bottom;
+    final displayTotal = state.ticketTotal + state.addOnTotal;
 
     return Container(
       padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPad + 16),
@@ -771,7 +797,7 @@ class _BottomBar extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${state.totalAmount} ฿',
+                    '$displayTotal ฿',
                     style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 20,

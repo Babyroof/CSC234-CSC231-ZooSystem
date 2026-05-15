@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zoopernova_zoo_system/features/booking/models/booking_model.dart';
+import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
@@ -13,26 +14,22 @@ void main() {
   // ── Helper ──────────────────────────────────────────────────────────────
   BookingModel baseModel({
     String id = 'bk1',
-    bool buffetFood = true,
-    bool golfCar = false,
-    bool guidTour = true,
     int adultTotal = 2,
     int childTotal = 1,
     int elderTotal = 0,
     DateTime? date,
     String status = 'pending',
     String userId = 'user123',
+    List<SelectedAddOnModel> selectedAddOns = const [],
   }) => BookingModel(
     id: id,
-    buffetFood: buffetFood,
-    golfCar: golfCar,
-    guidTour: guidTour,
     adultTotal: adultTotal,
     childTotal: childTotal,
     elderTotal: elderTotal,
     date: date ?? DateTime(2026, 5, 10),
     status: status,
     userId: userId,
+    selectedAddOns: selectedAddOns,
   );
 
   // ── fromFirestore ────────────────────────────────────────────────────────
@@ -43,15 +40,13 @@ void main() {
         // Arrange
         final userRef = fakeFirestore.collection('user').doc('user123');
         await fakeFirestore.collection('booking').doc('bk1').set({
-          'BuffetFood': true,
-          'GolfCar': false,
-          'GuideTour': true,
           'adultTotal': 2,
           'childTotal': 1,
           'elderTotal': 0,
           'date': Timestamp.fromDate(DateTime(2026, 5, 10)),
           'status': 'pending',
           'userId': userRef,
+          'selectedAddOns': [],
         });
         final doc = await fakeFirestore.collection('booking').doc('bk1').get();
 
@@ -60,9 +55,6 @@ void main() {
 
         // Assert
         expect(model.id, 'bk1');
-        expect(model.buffetFood, true);
-        expect(model.golfCar, false);
-        expect(model.guidTour, true);
         expect(model.adultTotal, 2);
         expect(model.childTotal, 1);
         expect(model.elderTotal, 0);
@@ -73,30 +65,29 @@ void main() {
     );
 
     test('handles userId stored as plain String', () async {
+      // Arrange
       await fakeFirestore.collection('booking').doc('bk2').set({
-        'BuffetFood': false,
-        'GolfCar': false,
-        'GuideTour': false,
         'adultTotal': 1,
         'childTotal': 0,
         'elderTotal': 0,
         'date': Timestamp.fromDate(DateTime(2026, 6, 1)),
         'status': 'Done',
         'userId': 'plainStringUid',
+        'selectedAddOns': [],
       });
       final doc = await fakeFirestore.collection('booking').doc('bk2').get();
 
+      // Act
       final model = BookingModel.fromFirestore(doc);
 
+      // Assert
       expect(model.userId, 'plainStringUid');
       expect(model.status, 'Done');
     });
 
     test('falls back to epoch when date field is missing', () async {
+      // Arrange
       await fakeFirestore.collection('booking').doc('bk3').set({
-        'BuffetFood': false,
-        'GolfCar': false,
-        'GuideTour': false,
         'adultTotal': 0,
         'childTotal': 0,
         'elderTotal': 0,
@@ -105,30 +96,33 @@ void main() {
       });
       final doc = await fakeFirestore.collection('booking').doc('bk3').get();
 
+      // Act
       final model = BookingModel.fromFirestore(doc);
 
+      // Assert
       expect(model.date, DateTime.fromMillisecondsSinceEpoch(0));
     });
 
     test('defaults numeric fields to 0 when missing', () async {
+      // Arrange
       await fakeFirestore.collection('booking').doc('bk4').set({
-        'BuffetFood': false,
-        'GolfCar': false,
-        'GuideTour': false,
         'date': Timestamp.fromDate(DateTime(2026, 1, 1)),
         'status': 'pending',
         'userId': 'uid',
       });
       final doc = await fakeFirestore.collection('booking').doc('bk4').get();
 
+      // Act
       final model = BookingModel.fromFirestore(doc);
 
+      // Assert
       expect(model.adultTotal, 0);
       expect(model.childTotal, 0);
       expect(model.elderTotal, 0);
     });
 
-    test('boolean fields default to false when missing', () async {
+    test('selectedAddOns defaults to empty list when field is absent', () async {
+      // Arrange
       await fakeFirestore.collection('booking').doc('bk5').set({
         'adultTotal': 1,
         'childTotal': 0,
@@ -139,11 +133,11 @@ void main() {
       });
       final doc = await fakeFirestore.collection('booking').doc('bk5').get();
 
+      // Act
       final model = BookingModel.fromFirestore(doc);
 
-      expect(model.buffetFood, false);
-      expect(model.golfCar, false);
-      expect(model.guidTour, false);
+      // Assert
+      expect(model.selectedAddOns, isEmpty);
     });
   });
 
@@ -158,9 +152,6 @@ void main() {
       final map = model.toMap();
 
       // Assert
-      expect(map['BuffetFood'], true);
-      expect(map['GolfCar'], false);
-      expect(map['GuideTour'], true);
       expect(map['adultTotal'], 2);
       expect(map['childTotal'], 1);
       expect(map['elderTotal'], 0);
@@ -169,45 +160,45 @@ void main() {
       expect(map['userId'], 'user123');
     });
 
-    test('boolean fields are bool not String', () {
-      final map = baseModel(
-        buffetFood: true,
-        golfCar: true,
-        guidTour: false,
-      ).toMap();
-
-      expect(map['BuffetFood'], isA<bool>());
-      expect(map['GolfCar'], isA<bool>());
-      expect(map['GuideTour'], isA<bool>());
-    });
-
     test('numeric fields are int not String', () {
-      final map = baseModel(
-        adultTotal: 3,
-        childTotal: 2,
-        elderTotal: 1,
-      ).toMap();
+      // Arrange/Act
+      final map = baseModel(adultTotal: 3, childTotal: 2, elderTotal: 1).toMap();
 
+      // Assert
       expect(map['adultTotal'], isA<int>());
       expect(map['childTotal'], isA<int>());
       expect(map['elderTotal'], isA<int>());
     });
 
     test('date field is Timestamp not String', () {
+      // Arrange/Act
       final map = baseModel().toMap();
 
+      // Assert
       expect(map['date'], isA<Timestamp>());
     });
 
     test(
       'userId in toMap is a plain String (service converts to DocumentReference)',
       () {
+        // Arrange/Act
         final map = baseModel(userId: 'user123').toMap();
 
+        // Assert
         expect(map['userId'], isA<String>());
         expect(map['userId'], 'user123');
       },
     );
+
+    test('does not contain legacy boolean add-on keys', () {
+      // Arrange/Act
+      final map = baseModel().toMap();
+
+      // Assert — old fields must not exist
+      expect(map.containsKey('buffetFood'), false);
+      expect(map.containsKey('golfCar'), false);
+      expect(map.containsKey('guidTour'), false);
+    });
   });
 
   // ── copyWith ─────────────────────────────────────────────────────────────
@@ -217,30 +208,28 @@ void main() {
       final original = baseModel();
 
       // Act
-      final updated = original.copyWith(adultTotal: 5, buffetFood: false);
+      final updated = original.copyWith(adultTotal: 5, status: 'Done');
 
       // Assert — changed
       expect(updated.adultTotal, 5);
-      expect(updated.buffetFood, false);
+      expect(updated.status, 'Done');
       // Assert — unchanged
       expect(updated.id, original.id);
       expect(updated.childTotal, original.childTotal);
       expect(updated.elderTotal, original.elderTotal);
-      expect(updated.golfCar, original.golfCar);
-      expect(updated.guidTour, original.guidTour);
       expect(updated.date, original.date);
-      expect(updated.status, original.status);
       expect(updated.userId, original.userId);
     });
 
     test('returns equivalent object when no fields are changed', () {
+      // Arrange
       final original = baseModel();
+
+      // Act
       final copy = original.copyWith();
 
+      // Assert
       expect(copy.id, original.id);
-      expect(copy.buffetFood, original.buffetFood);
-      expect(copy.golfCar, original.golfCar);
-      expect(copy.guidTour, original.guidTour);
       expect(copy.adultTotal, original.adultTotal);
       expect(copy.childTotal, original.childTotal);
       expect(copy.elderTotal, original.elderTotal);
@@ -250,7 +239,10 @@ void main() {
     });
 
     test('can update status to Done', () {
+      // Arrange/Act
       final updated = baseModel().copyWith(status: 'Done');
+
+      // Assert
       expect(updated.status, 'Done');
     });
   });
