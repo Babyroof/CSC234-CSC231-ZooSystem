@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
 import '../models/booking_admin_model.dart';
 
 class BookingAdminService {
@@ -23,6 +24,17 @@ class BookingAdminService {
     final results = <BookingAdminModel>[];
     for (final doc in snap.docs) {
       final data = doc.data() as Map<String, dynamic>;
+
+      final rawAddOns = data['selectedAddOns'];
+      final addOns = <SelectedAddOnModel>[];
+      if (rawAddOns is List) {
+        for (final item in rawAddOns) {
+          if (item is Map<String, dynamic>) {
+            addOns.add(SelectedAddOnModel.fromMap(item));
+          }
+        }
+      }
+
       results.add(
         BookingAdminModel(
           id: doc.id,
@@ -32,9 +44,7 @@ class BookingAdminService {
           childTotal: (data['childTotal'] as num? ?? 0).toInt(),
           elderTotal: (data['elderTotal'] as num? ?? 0).toInt(),
           date: _toDate(data['date']),
-          buffetFood: data['BuffetFood'] == true,
-          guideTour: data['GuideTour'] == true,
-          golfCar: data['GolfCar'] == true,
+          selectedAddOns: addOns,
           status: _normalizeStatus(data['status'] as String? ?? 'pending'),
         ),
       );

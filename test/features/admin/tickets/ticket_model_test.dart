@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zoopernova_zoo_system/features/admin/tickets/models/ticket_model.dart';
+import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
@@ -13,9 +14,7 @@ void main() {
   // ── Helper ──────────────────────────────────────────────────────────────
   TicketModel baseModel({
     String id = 'tk1',
-    bool buffetFood = true,
-    bool golfCar = false,
-    bool guidTour = true,
+    List<SelectedAddOnModel>? selectedAddOns,
     int adultTotal = 2,
     int childTotal = 1,
     int elderTotal = 0,
@@ -26,9 +25,16 @@ void main() {
     final ref = fakeFirestore.collection('user').doc('user123');
     return TicketModel(
       id: id,
-      buffetFood: buffetFood,
-      golfCar: golfCar,
-      guidTour: guidTour,
+      selectedAddOns:
+          selectedAddOns ??
+          [
+            const SelectedAddOnModel(
+              addOnId: 'addon1',
+              name: 'Golf Car',
+              price: 500,
+              priceType: 'per_booking',
+            ),
+          ],
       adultTotal: adultTotal,
       childTotal: childTotal,
       elderTotal: elderTotal,
@@ -44,9 +50,14 @@ void main() {
       // Arrange
       final userRef = fakeFirestore.collection('user').doc('user123');
       await fakeFirestore.collection('booking').doc('tk1').set({
-        'BuffetFood': true,
-        'GolfCar': false,
-        'GuidTour': true,
+        'selectedAddOns': [
+          {
+            'addOnId': 'addon1',
+            'name': 'Golf Car',
+            'price': 500,
+            'priceType': 'per_booking',
+          },
+        ],
         'adultTotal': 2,
         'childTotal': 1,
         'elderTotal': 0,
@@ -61,9 +72,9 @@ void main() {
 
       // Assert
       expect(model.id, 'tk1');
-      expect(model.buffetFood, true);
-      expect(model.golfCar, false);
-      expect(model.guidTour, true);
+      expect(model.selectedAddOns, hasLength(1));
+      expect(model.selectedAddOns.first.addOnId, 'addon1');
+      expect(model.selectedAddOns.first.name, 'Golf Car');
       expect(model.adultTotal, 2);
       expect(model.childTotal, 1);
       expect(model.elderTotal, 0);
@@ -90,18 +101,14 @@ void main() {
       final model = TicketModel.fromFirestore(doc);
 
       // Assert
-      expect(model.buffetFood, false);
-      expect(model.golfCar, false);
-      expect(model.guidTour, false);
+      expect(model.selectedAddOns, isEmpty);
     });
 
     test('falls back to epoch when date field is missing', () async {
       // Arrange
       final userRef = fakeFirestore.collection('user').doc('uid');
       await fakeFirestore.collection('booking').doc('tk3').set({
-        'BuffetFood': false,
-        'GolfCar': false,
-        'GuidTour': false,
+        'selectedAddOns': <Map<String, dynamic>>[],
         'adultTotal': 0,
         'childTotal': 0,
         'elderTotal': 0,
@@ -121,9 +128,7 @@ void main() {
       // Arrange
       final userRef = fakeFirestore.collection('user').doc('uid');
       await fakeFirestore.collection('booking').doc('tk4').set({
-        'BuffetFood': false,
-        'GolfCar': false,
-        'GuidTour': false,
+        'selectedAddOns': <Map<String, dynamic>>[],
         'date': Timestamp.fromDate(DateTime(2026, 1, 1)),
         'status': 'pending',
         'userId': userRef,
@@ -151,9 +156,7 @@ void main() {
       final map = model.toMap();
 
       // Assert
-      expect(map['BuffetFood'], true);
-      expect(map['GolfCar'], false);
-      expect(map['GuidTour'], true);
+      expect(map['selectedAddOns'], isA<List>());
       expect(map['adultTotal'], 2);
       expect(map['childTotal'], 1);
       expect(map['elderTotal'], 0);
@@ -163,15 +166,27 @@ void main() {
     });
 
     test('boolean fields are bool not String', () {
-      final map = baseModel(
-        buffetFood: true,
-        golfCar: true,
-        guidTour: false,
-      ).toMap();
+      final model = baseModel(
+        selectedAddOns: [
+          const SelectedAddOnModel(
+            addOnId: 'addon1',
+            name: 'Buffet Food',
+            price: 200,
+            priceType: 'per_person',
+          ),
+          const SelectedAddOnModel(
+            addOnId: 'addon2',
+            name: 'Golf Car',
+            price: 500,
+            priceType: 'per_booking',
+          ),
+        ],
+      );
+      final map = model.toMap();
 
-      expect(map['BuffetFood'], isA<bool>());
-      expect(map['GolfCar'], isA<bool>());
-      expect(map['GuidTour'], isA<bool>());
+      expect(map['selectedAddOns'], isA<List>());
+      final addOns = map['selectedAddOns'] as List;
+      expect(addOns.first['addOnId'], isA<String>());
     });
 
     test('numeric fields are int not String', () {
@@ -212,9 +227,7 @@ void main() {
       expect(updated.adultTotal, 5);
       // Assert — unchanged
       expect(updated.id, original.id);
-      expect(updated.buffetFood, original.buffetFood);
-      expect(updated.golfCar, original.golfCar);
-      expect(updated.guidTour, original.guidTour);
+      expect(updated.selectedAddOns, original.selectedAddOns);
       expect(updated.childTotal, original.childTotal);
       expect(updated.elderTotal, original.elderTotal);
       expect(updated.date, original.date);
@@ -226,9 +239,7 @@ void main() {
       final copy = original.copyWith();
 
       expect(copy.id, original.id);
-      expect(copy.buffetFood, original.buffetFood);
-      expect(copy.golfCar, original.golfCar);
-      expect(copy.guidTour, original.guidTour);
+      expect(copy.selectedAddOns, original.selectedAddOns);
       expect(copy.adultTotal, original.adultTotal);
       expect(copy.childTotal, original.childTotal);
       expect(copy.elderTotal, original.elderTotal);
