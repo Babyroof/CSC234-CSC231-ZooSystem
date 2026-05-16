@@ -114,7 +114,7 @@ class AppRoute {
       },
       adminLogin: (context) => const AdminLoginScreen(),
       adminRegister: (context) => const AdminRegisterScreen(),
-      adminHome: (context) => const AdminHomeScreen(),
+      adminHome: (context) => const AdminGuard(child: AnimalAdminScreen()),
       adminAddOns: (context) => const AddOnsAdminScreen(),
       adminPricing: (context) => const PricingAdminScreen(),
       qrScan: (context) => const QrScanScreen(),

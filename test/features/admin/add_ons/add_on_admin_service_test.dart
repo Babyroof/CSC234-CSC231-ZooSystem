@@ -103,7 +103,6 @@ void main() {
         name: 'Buffet Food',
         price: 350,
         priceType: 'per_person',
-        order: 2,
       );
 
       // Assert
@@ -113,7 +112,7 @@ void main() {
       expect(data['name'], 'Buffet Food');
       expect(data['price'], 350);
       expect(data['priceType'], 'per_person');
-      expect(data['order'], 2);
+      expect(data['order'], 1); // auto-assigned: maxOrder(0) + 1
     });
 
     test('isActive defaults to true when not specified', () async {
@@ -124,7 +123,6 @@ void main() {
         name: 'Guide Tour',
         price: 200,
         priceType: 'per_booking',
-        order: 1,
       );
 
       // Assert
@@ -140,7 +138,6 @@ void main() {
         name: 'Inactive Option',
         price: 100,
         priceType: 'per_booking',
-        order: 3,
         isActive: false,
       );
 
