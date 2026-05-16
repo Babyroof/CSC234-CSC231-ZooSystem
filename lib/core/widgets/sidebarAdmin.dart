@@ -14,7 +14,7 @@ class AdminSidebar extends StatelessWidget {
     (Icons.pets_outlined, 'Animals', AppRoute.adminAnimals),
     (Icons.book_outlined, 'Bookings', AppRoute.adminBookings),
     (Icons.celebration_outlined, 'Events', AppRoute.adminEvents),
-    (Icons.map_outlined, 'Map', AppRoute.adminMap),
+    (Icons.map_outlined, 'Map', AppRoute.adminMapUploaded),
     (Icons.location_on_outlined, 'Zone', AppRoute.adminZones),
     (Icons.card_giftcard_outlined, 'Add-ons', AppRoute.adminAddOns),
     (Icons.attach_money_outlined, 'Pricing', AppRoute.adminPricing),

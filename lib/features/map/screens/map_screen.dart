@@ -24,14 +24,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool _isFirstLoad = true;
   Size _screenSize = Size.zero;
 
-  String _mapUrl = 'https://i.ibb.co/nqPjNm6N/Zoopernova-Map.png';
+  String? _mapUrl;
   List<QueryDocumentSnapshot> _animalDocs = [];
   List<QueryDocumentSnapshot> _eventDocs = [];
   Map<String, String> _zoneMap = {};
   Map<String, dynamic>? _selectedAnimal;
   Map<String, dynamic>? _selectedEvent;
 
-  late final StreamSubscription<DocumentSnapshot> _mapSub;
+  late final StreamSubscription<QuerySnapshot> _mapSub;
   late final StreamSubscription<QuerySnapshot> _animalSub;
   late final StreamSubscription<QuerySnapshot> _eventSub;
 
@@ -49,17 +49,29 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           }
         });
 
-    _mapSub = FirebaseFirestore.instance
-        .collection('settings')
-        .doc('map_config')
-        .snapshots()
-        .listen((snap) {
-          if (!mounted) return;
-          final data = snap.data() as Map<String, dynamic>?;
-          if (data?['map_url'] != null) {
-            setState(() => _mapUrl = data!['map_url'] as String);
+    _mapSub = FirebaseFirestore.instance.collection('map').snapshots().listen((
+      snap,
+    ) {
+      if (!mounted) return;
+      if (snap.docs.isEmpty) return;
+      final data = snap.docs.first.data();
+      final url = data['mapPicture'] as String?;
+      if (url != null && url.isNotEmpty) {
+        final isFirstUrl = _mapUrl == null;
+        setState(() => _mapUrl = url);
+        if (isFirstUrl && _isFirstLoad == false) {
+          if (_selectedAnimal == null && _selectedEvent == null) {
+            _startZoomOutAnimation();
+          } else {
+            final lx = (_selectedAnimal ?? _selectedEvent)?['locationX'];
+            final ly = (_selectedAnimal ?? _selectedEvent)?['locationY'];
+            if (lx != null && ly != null) {
+              _zoomToLocation((lx as num).toDouble(), (ly as num).toDouble());
+            }
           }
-        }, onError: (e) => debugPrint('map_config: $e'));
+        }
+      }
+    }, onError: (e) => debugPrint('map stream: $e'));
 
     _animalSub = FirebaseFirestore.instance
         .collection('animal')
@@ -160,7 +172,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     Size imageSize = Size.zero;
     try {
       final completer = Completer<Size>();
-      NetworkImage(_mapUrl)
+      NetworkImage(_mapUrl!)
           .resolve(ImageConfiguration.empty)
           .addListener(
             ImageStreamListener(
@@ -261,6 +273,55 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
+  void _processScannedQRCode(String scannedId) {
+    try {
+      final doc = _animalDocs.firstWhere((d) => d.id == scannedId);
+      final data = doc.data() as Map<String, dynamic>;
+
+      _zoomToLocation(
+        (data['location_x'] as num).toDouble(),
+        (data['location_y'] as num).toDouble(),
+      );
+
+      setState(() {
+        _selectedEvent = null;
+        _selectedAnimal = {
+          'id': doc.id,
+          'animalName': data['animalName'] ?? '',
+          'animalDetail': data['animalDetail'] ?? '',
+          'animalPicture': data['animalPicture'] ?? '',
+          'zoneName': _resolveZoneName(data['zoneId']),
+        };
+      });
+      return;
+    } catch (_) {}
+
+    try {
+      final doc = _eventDocs.firstWhere((d) => d.id == scannedId);
+      final data = doc.data() as Map<String, dynamic>;
+
+      _zoomToLocation(
+        (data['location_x'] as num).toDouble(),
+        (data['location_y'] as num).toDouble(),
+      );
+
+      setState(() {
+        _selectedAnimal = null;
+        _selectedEvent = {
+          'id': doc.id,
+          'eventName': data['eventName'] ?? '',
+          'eventDetail': data['eventDetail'] ?? '',
+          'eventPicture': data['eventPicture'] ?? '',
+        };
+      });
+      return;
+    } catch (_) {}
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Invalid QR Code')));
+  }
+
   @override
   void dispose() {
     _mapSub.cancel();
@@ -276,6 +337,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     required double y,
     String? imageUrl,
     Color borderColor = Colors.white,
+    bool isHighlighted = false,
     VoidCallback? onTap,
   }) {
     return Positioned(
@@ -291,27 +353,53 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
             return GestureDetector(
               onTap: onTap,
-              child: Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: borderColor,
-                  shape: BoxShape.circle,
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 5,
-                      spreadRadius: 1,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(isHighlighted ? 4 : 3),
+                    decoration: BoxDecoration(
+                      color: isHighlighted ? Colors.redAccent : borderColor,
+                      shape: BoxShape.circle,
+                      boxShadow: isHighlighted
+                          ? [
+                              BoxShadow(
+                                color: Colors.redAccent.withValues(alpha: 0.6),
+                                blurRadius: 15,
+                                spreadRadius: 5,
+                              ),
+                            ]
+                          : const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 5,
+                                spreadRadius: 1,
+                              ),
+                            ],
                     ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: pinRadius,
-                  backgroundColor: Colors.grey.shade200,
-                  backgroundImage: NetworkImage(
-                    imageUrl ??
-                        'https://cdn-icons-png.flaticon.com/512/1998/1998614.png',
+                    child: CircleAvatar(
+                      radius: pinRadius,
+                      backgroundColor: Colors.grey.shade200,
+                      backgroundImage: NetworkImage(
+                        imageUrl ??
+                            'https://cdn-icons-png.flaticon.com/512/1998/1998614.png',
+                      ),
+                    ),
                   ),
-                ),
+                  if (isHighlighted)
+                    Positioned(
+                      top: -40,
+                      child: const Icon(
+                        Icons.location_on,
+                        color: Colors.redAccent,
+                        size: 40,
+                        shadows: [
+                          Shadow(color: Colors.black45, blurRadius: 10),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             );
           },
@@ -341,7 +429,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           final ly = (focusEvent['locationY'] as num).toDouble();
           _zoomToLocation(lx, ly);
           if (mounted) setState(() => _selectedEvent = focusEvent);
-        } else {
+        } else if (_mapUrl != null) {
           _startZoomOutAnimation();
         }
       });
@@ -353,7 +441,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       bottomNavigationBar: const ZooBottomNav(currentIndex: 1),
       body: Stack(
         children: [
-          // Map + pins
           SafeArea(
             child: InteractiveViewer(
               transformationController: _transformationController,
@@ -365,10 +452,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 clipBehavior: Clip.none,
                 children: [
                   GestureDetector(
-                    onTapDown: (details) {
-                      print(
-                        'location -> x: ${details.localPosition.dx}, y: ${details.localPosition.dy}',
-                      );
+                    onTapDown: (_) {
                       if (_selectedAnimal != null || _selectedEvent != null) {
                         setState(() {
                           _selectedAnimal = null;
@@ -376,7 +460,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         });
                       }
                     },
-                    child: Image.network(_mapUrl, fit: BoxFit.cover),
+                    child: _mapUrl != null
+                        ? Image.network(_mapUrl!, fit: BoxFit.cover)
+                        : const Center(child: CircularProgressIndicator()),
                   ),
 
                   ..._animalDocs.map((doc) {
@@ -385,11 +471,17 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         data['location_y'] == null) {
                       return const SizedBox.shrink();
                     }
+
+                    bool isHighlighted =
+                        _selectedAnimal != null &&
+                        _selectedAnimal!['id'] == doc.id;
+
                     return _buildPin(
                       x: (data['location_x'] as num).toDouble(),
                       y: (data['location_y'] as num).toDouble(),
                       imageUrl: data['animalPicture'],
                       borderColor: Colors.white,
+                      isHighlighted: isHighlighted,
                       onTap: () {
                         setState(() {
                           _selectedEvent = null;
@@ -411,11 +503,17 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         data['location_y'] == null) {
                       return const SizedBox.shrink();
                     }
+
+                    bool isHighlighted =
+                        _selectedEvent != null &&
+                        _selectedEvent!['id'] == doc.id;
+
                     return _buildPin(
                       x: (data['location_x'] as num).toDouble(),
                       y: (data['location_y'] as num).toDouble(),
                       imageUrl: data['eventPicture'],
                       borderColor: Colors.orangeAccent,
+                      isHighlighted: isHighlighted,
                       onTap: () {
                         setState(() {
                           _selectedAnimal = null;
@@ -434,7 +532,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // Search bar + QR button overlay
           Positioned(
             top: 0,
             left: 0,
@@ -454,8 +551,15 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(width: 10),
                     GestureDetector(
-                      onTap: () =>
-                          Navigator.pushNamed(context, AppRoute.qrScan),
+                      onTap: () async {
+                        final scannedId = await Navigator.pushNamed(
+                          context,
+                          AppRoute.qrScan,
+                        );
+                        if (scannedId != null && scannedId is String) {
+                          _processScannedQRCode(scannedId);
+                        }
+                      },
                       child: Container(
                         width: 50,
                         height: 50,
@@ -489,7 +593,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // Card overlay: animal
           if (_selectedAnimal != null)
             Positioned(
               bottom: MediaQuery.of(context).viewPadding.bottom + 104,
@@ -501,7 +604,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               ),
             ),
 
-          // Card overlay: event
           if (_selectedEvent != null)
             Positioned(
               bottom: MediaQuery.of(context).viewPadding.bottom + 104,

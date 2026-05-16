@@ -26,8 +26,8 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
 
   List<Map<String, String>> _zones = [];
   String? _selectedZoneId;
-  String _selectedZoneName = '';
   String _pictureUrl = '';
+  String _animalId = '';
   bool _isLoadingZones = false;
   bool _isSaving = false;
   bool _isUploading = false;
@@ -35,6 +35,7 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
   @override
   void initState() {
     super.initState();
+    _generateId();
     _loadZones();
     _nameController.addListener(() => setState(() {}));
   }
@@ -48,6 +49,11 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
     super.dispose();
   }
 
+  void _generateId() {
+    final id = ref.read(animalAdminServiceProvider).generateAnimalId();
+    setState(() => _animalId = id);
+  }
+
   Future<void> _loadZones() async {
     setState(() => _isLoadingZones = true);
     final zones = await ref.read(animalAdminServiceProvider).getZones();
@@ -56,16 +62,8 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
       _isLoadingZones = false;
       if (zones.isNotEmpty) {
         _selectedZoneId = zones.first['id'];
-        _selectedZoneName = zones.first['name'] ?? '';
       }
     });
-  }
-
-  String get _qrData {
-    final name = _nameController.text.trim();
-    return name.isNotEmpty || _selectedZoneName.isNotEmpty
-        ? '$name-$_selectedZoneName'
-        : 'animal';
   }
 
   Future<void> _showMapPicker() async {
@@ -74,6 +72,7 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
       builder: (_) => MapLocationPickerDialog(
         initialX: int.tryParse(_xController.text.trim()) ?? 0,
         initialY: int.tryParse(_yController.text.trim()) ?? 0,
+        pictureUrl: _pictureUrl.isNotEmpty ? _pictureUrl : null,
       ),
     );
     if (result != null) {
@@ -86,8 +85,7 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
 
   Future<void> _pickAndUpload() async {
     final picked = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['png', 'pdf'],
+      type: FileType.image,
       withData: true,
     );
     if (picked == null || picked.files.isEmpty) return;
@@ -96,15 +94,16 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
 
     setState(() => _isUploading = true);
     try {
+      final ext = file.extension ?? 'png';
       final url = await ref
           .read(animalAdminServiceProvider)
-          .uploadImage(file.bytes!, file.extension ?? 'png');
+          .uploadImage(file.bytes!, ext);
       if (mounted) setState(() => _pictureUrl = url);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error uploading image: $e')));
+        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -129,6 +128,7 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
       await ref
           .read(animalAdminServiceProvider)
           .addAnimal(
+            id: _animalId.isNotEmpty ? _animalId : null,
             animalName: name,
             animalDetail: info,
             animalPicture: _pictureUrl,
@@ -198,6 +198,7 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
                                           flex: 4,
                                           child: _PictureAndLocationPanel(
                                             pictureUrl: _pictureUrl,
+                                            isUploading: _isUploading,
                                             xController: _xController,
                                             yController: _yController,
                                             onUpload: _isUploading
@@ -220,12 +221,11 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
                                           child: _ZoneAndQrPanel(
                                             zones: _zones,
                                             selectedZoneId: _selectedZoneId,
-                                            qrData: _qrData,
-                                            onZoneChanged: (id, name) {
-                                              setState(() {
-                                                _selectedZoneId = id;
-                                                _selectedZoneName = name;
-                                              });
+                                            animalId: _animalId,
+                                            onZoneChanged: (id) {
+                                              setState(
+                                                () => _selectedZoneId = id,
+                                              );
                                             },
                                           ),
                                         ),
@@ -293,11 +293,10 @@ class _AddAnimalAdminScreenState extends ConsumerState<AddAnimalAdminScreen> {
 
 // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-
 class _PictureAndLocationPanel extends StatelessWidget {
   const _PictureAndLocationPanel({
     required this.pictureUrl,
+    required this.isUploading,
     required this.xController,
     required this.yController,
     required this.onUpload,
@@ -305,6 +304,7 @@ class _PictureAndLocationPanel extends StatelessWidget {
   });
 
   final String pictureUrl;
+  final bool isUploading;
   final TextEditingController xController;
   final TextEditingController yController;
   final VoidCallback? onUpload;
@@ -322,8 +322,16 @@ class _PictureAndLocationPanel extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const Spacer(),
-            OutlinedButton(
+            OutlinedButton.icon(
               onPressed: onUpload,
+              icon: isUploading
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.upload_outlined, size: 16),
+              label: Text(isUploading ? 'Uploading...' : 'Upload'),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppColors.adminBorderGreen),
                 foregroundColor: AppColors.adminPrimary,
@@ -331,7 +339,6 @@ class _PictureAndLocationPanel extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text('Upload'),
             ),
           ],
         ),
@@ -348,10 +355,10 @@ class _PictureAndLocationPanel extends StatelessWidget {
               ? CachedNetworkImage(
                   imageUrl: pictureUrl,
                   fit: BoxFit.cover,
-                  placeholder: (_, __) => const Center(
+                  placeholder: (_, _) => const Center(
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                  errorWidget: (_, __, ___) => const Center(
+                  errorWidget: (_, _, _) => const Center(
                     child: Icon(
                       Icons.broken_image_outlined,
                       size: 60,
@@ -447,14 +454,14 @@ class _ZoneAndQrPanel extends StatelessWidget {
   const _ZoneAndQrPanel({
     required this.zones,
     required this.selectedZoneId,
-    required this.qrData,
+    required this.animalId,
     required this.onZoneChanged,
   });
 
   final List<Map<String, String>> zones;
   final String? selectedZoneId;
-  final String qrData;
-  final void Function(String id, String name) onZoneChanged;
+  final String animalId;
+  final void Function(String id) onZoneChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -486,12 +493,7 @@ class _ZoneAndQrPanel extends StatelessWidget {
                   )
                   .toList(),
               onChanged: (value) {
-                if (value == null) return;
-                final zone = zones.firstWhere(
-                  (z) => z['id'] == value,
-                  orElse: () => {},
-                );
-                onZoneChanged(value, zone['name'] ?? '');
+                if (value != null) onZoneChanged(value);
               },
             ),
           ),
@@ -499,18 +501,48 @@ class _ZoneAndQrPanel extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         const Text(
-          'Generating QR',
+          'QR Code Preview',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'QR will encode the document ID assigned to this animal',
+          style: TextStyle(fontSize: 11, color: AppColors.adminTextMuted),
         ),
         const SizedBox(height: 8),
         _shadow(
-          height: 280,
-          child: Center(
-            child: QrImageView(
-              data: qrData,
-              version: QrVersions.auto,
-              size: 200,
-            ),
+          height: 260,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (animalId.isNotEmpty)
+                QrImageView(
+                  data: animalId,
+                  version: QrVersions.auto,
+                  size: 180,
+                  backgroundColor: Colors.white,
+                )
+              else
+                const SizedBox(
+                  width: 180,
+                  height: 180,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  animalId,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: AppColors.adminTextMuted,
+                    fontFamily: 'monospace',
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
           padding: const EdgeInsets.all(14),
         ),

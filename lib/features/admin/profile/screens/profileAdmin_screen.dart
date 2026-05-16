@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 import 'package:zoopernova_zoo_system/core/widgets/sidebarAdmin.dart';
-import 'models/profile_admin_model.dart';
-import 'services/profile_admin_service.dart';
+import 'change_password_admin_screen.dart';
+import '../models/profile_admin_model.dart';
+import '../services/profile_admin_service.dart';
 
 class ProfileAdminScreen extends ConsumerStatefulWidget {
   const ProfileAdminScreen({super.key});
@@ -69,6 +70,13 @@ class _ProfileAdminScreenState extends ConsumerState<ProfileAdminScreen> {
                                   );
                                   _loadProfile();
                                 },
+                                onChangePassword: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const ChangePasswordAdminScreen(),
+                                  ),
+                                ),
                               ),
                       ),
                     ),
@@ -84,10 +92,15 @@ class _ProfileAdminScreenState extends ConsumerState<ProfileAdminScreen> {
 }
 
 class _ProfileView extends StatelessWidget {
-  const _ProfileView({required this.profile, required this.onEdit});
+  const _ProfileView({
+    required this.profile,
+    required this.onEdit,
+    required this.onChangePassword,
+  });
 
   final ProfileAdminModel? profile;
   final VoidCallback onEdit;
+  final VoidCallback onChangePassword;
 
   @override
   Widget build(BuildContext context) {
@@ -100,97 +113,107 @@ class _ProfileView extends StatelessWidget {
         ),
         const SizedBox(height: 28),
         Row(
+          children: [
+            Expanded(
+              child: _ReadField(
+                label: 'Name',
+                value: profile?.firstname ?? '',
+                hint: 'fill name',
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _ReadField(
+                label: 'Surname',
+                value: profile?.lastname ?? '',
+                hint: 'fill surname',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _ReadField(
+          label: 'Email',
+          value: profile?.email ?? '',
+          hint: 'email@mail.com',
+        ),
+        const SizedBox(height: 20),
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const Text(
+              'Password',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            Row(
               children: [
-                const Text(
-                  'Picture',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    color: AppColors.adminImagePlaceholder,
-                    borderRadius: BorderRadius.circular(8),
+                Expanded(
+                  child: Container(
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    alignment: Alignment.centerLeft,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.adminBorderLight),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      '••••••••••',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.adminTextDark,
+                      ),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 60,
-                    color: AppColors.adminTextMuted,
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton(
+                  onPressed: onChangePassword,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    side: const BorderSide(color: AppColors.adminPrimary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Change',
+                    style: TextStyle(
+                      color: AppColors.adminPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 40),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ReadField(
-                          label: 'Name',
-                          value: profile?.firstname ?? '',
-                          hint: 'fill name',
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _ReadField(
-                          label: 'Surname',
-                          value: profile?.lastname ?? '',
-                          hint: 'fill surname',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _ReadField(
-                    label: 'Email',
-                    value: profile?.email ?? '',
-                    hint: 'email@mail.com',
-                  ),
-                  const SizedBox(height: 20),
-                  const _ReadField(
-                    label: 'Password',
-                    value: '••••••••••',
-                    hint: '',
-                  ),
-                  const SizedBox(height: 32),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: SizedBox(
-                      width: 120,
-                      height: 44,
-                      child: ElevatedButton(
-                        onPressed: onEdit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.adminPrimary,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Edit',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+          ],
+        ),
+        const SizedBox(height: 32),
+        Align(
+          alignment: Alignment.centerRight,
+          child: SizedBox(
+            width: 120,
+            height: 44,
+            child: ElevatedButton(
+              onPressed: onEdit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.adminPrimary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Edit',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
-          ],
+          ),
         ),
       ],
     );

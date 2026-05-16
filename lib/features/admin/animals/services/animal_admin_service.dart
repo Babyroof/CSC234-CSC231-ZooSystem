@@ -12,46 +12,53 @@ class AnimalAdminService {
     : _db = db ?? FirebaseFirestore.instance,
       _storage = storage ?? FirebaseStorage.instance;
 
-  /// Returns a real-time stream of all animals, with zone names resolved.
-  Stream<List<AnimalAdminModel>> getAnimals() {
-    return _db
-        .collection('zone')
-        .snapshots()
-        .asyncExpand((zoneSnap) {
-          final zoneMap = {
-            for (final doc in zoneSnap.docs)
-              doc.id: (doc.data()['zoneName'] as String? ?? ''),
-          };
-          return _db
-              .collection('animal')
-              .snapshots()
-              .map(
-                (animalSnap) => animalSnap.docs
-                    .map((doc) => AnimalAdminModel.fromFirestore(doc, zoneMap))
-                    .toList(),
-              )
-              .handleError((Object e) {
-                debugPrint('[AnimalAdminService] animal stream error: $e');
-                throw e;
-              });
-        })
-        .handleError((Object e) {
-          debugPrint('[AnimalAdminService] zone stream error: $e');
-          throw e;
-        });
+  /// Pre-generates a Firestore document ID without creating the document.
+  String generateAnimalId() => _db.collection('animal').doc().id;
+
+  Future<List<AnimalAdminModel>> getAnimals() async {
+    try {
+      final zoneSnap = await _db.collection('zone').get();
+      final zoneMap = {
+        for (final doc in zoneSnap.docs)
+          doc.id: (doc.data()['zoneName'] as String?) ?? '',
+      };
+
+      final animalSnap = await _db.collection('animal').get();
+      return animalSnap.docs.map((doc) {
+        final data = doc.data();
+
+        String zoneId = '';
+        final rawZoneId = data['zoneId'];
+        if (rawZoneId is DocumentReference) {
+          zoneId = rawZoneId.id;
+        } else if (rawZoneId is String) {
+          zoneId = rawZoneId.split('/').last;
+        }
+
+        return AnimalAdminModel(
+          id: doc.id,
+          animalName: (data['animalName'] as String?) ?? '',
+          animalDetail: (data['animalDetail'] as String?) ?? '',
+          animalPicture: (data['animalPicture'] as String?) ?? '',
+          zoneId: zoneId,
+          zoneName: zoneMap[zoneId] ?? 'Unknown',
+          locationX: (data['location_x'] as num?)?.toInt() ?? 0,
+          locationY: (data['location_y'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint('[AnimalAdminService] getAnimals error: $e');
+      rethrow;
+    }
   }
 
   Future<List<Map<String, String>>> getZones() async {
     try {
       final snap = await _db.collection('zone').get();
-      return snap.docs
-          .map(
-            (doc) => {
-              'id': doc.id,
-              'name': (doc.data()['zoneName'] as String? ?? ''),
-            },
-          )
-          .toList();
+      return snap.docs.map((doc) {
+        final data = doc.data();
+        return {'id': doc.id, 'name': (data['zoneName'] as String?) ?? ''};
+      }).toList();
     } catch (e) {
       debugPrint('[AnimalAdminService] getZones error: $e');
       rethrow;
@@ -59,6 +66,7 @@ class AnimalAdminService {
   }
 
   Future<void> addAnimal({
+    String? id,
     required String animalName,
     required String animalDetail,
     required String animalPicture,
@@ -67,12 +75,19 @@ class AnimalAdminService {
     int locationY = 0,
   }) async {
     try {
-      await _db.collection('animal').add({
+      final data = {
         'animalName': animalName,
         'animalDetail': animalDetail,
         'animalPicture': animalPicture,
-        'zoneId': _db.doc('/zone/$zoneId'),
-      });
+        'zoneId': _db.doc('zone/$zoneId'),
+        'location_x': locationX,
+        'location_y': locationY,
+      };
+      if (id != null) {
+        await _db.collection('animal').doc(id).set(data);
+      } else {
+        await _db.collection('animal').add(data);
+      }
     } catch (e) {
       debugPrint('[AnimalAdminService] addAnimal error: $e');
       rethrow;
@@ -89,12 +104,15 @@ class AnimalAdminService {
     int? locationY,
   }) async {
     try {
-      await _db.collection('animal').doc(id).update({
+      final updateData = <String, dynamic>{
         'animalName': animalName,
         'animalDetail': animalDetail,
         'animalPicture': animalPicture,
-        'zoneId': _db.doc('/zone/$zoneId'),
-      });
+        'zoneId': _db.doc('zone/$zoneId'),
+      };
+      if (locationX != null) updateData['location_x'] = locationX;
+      if (locationY != null) updateData['location_y'] = locationY;
+      await _db.collection('animal').doc(id).update(updateData);
     } catch (e) {
       debugPrint('[AnimalAdminService] updateAnimal error: $e');
       rethrow;
@@ -112,13 +130,13 @@ class AnimalAdminService {
 
   Future<String> uploadImage(List<int> bytes, String extension) async {
     try {
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$extension';
-      final ref = _storage.ref().child('animals/$fileName');
-      final uploadTask = await ref.putData(
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final ref = _storage.ref('animals/$timestamp.$extension');
+      await ref.putData(
         Uint8List.fromList(bytes),
         SettableMetadata(contentType: 'image/$extension'),
       );
-      return await uploadTask.ref.getDownloadURL();
+      return await ref.getDownloadURL();
     } catch (e) {
       debugPrint('[AnimalAdminService] uploadImage error: $e');
       rethrow;

@@ -1,5 +1,8 @@
+import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
@@ -10,24 +13,33 @@ import 'package:zoopernova_zoo_system/core/widgets/adminTopHeader.dart';
 // Service
 
 class MapAdminService {
-  // TODO: Inject FirebaseFirestore and FirebaseStorage — replace all methods with real calls
-  String? _mapUrl;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Future<String?> getMapUrl() async {
-    // TODO: _db.collection('config').doc('map').get() → return data['mapUrl']
-    return _mapUrl;
+    final snap = await _db.collection('map').limit(1).get();
+    if (snap.docs.isEmpty) return null;
+    return snap.docs.first.data()['mapPicture'] as String?;
   }
 
   Future<void> saveMapUrl(String url) async {
-    // TODO: _db.collection('config').doc('map').set({'mapUrl': url}, SetOptions(merge: true))
-    _mapUrl = url;
+    final snap = await _db.collection('map').limit(1).get();
+    if (snap.docs.isNotEmpty) {
+      await snap.docs.first.reference.update({'mapPicture': url});
+    } else {
+      await _db.collection('map').add({'mapPicture': url});
+    }
   }
 
   Future<String> uploadMap(List<int> bytes, String extension) async {
-    // TODO: Upload to Firebase Storage at 'maps/zoo_map.<ext>', then call saveMapUrl(downloadUrl)
-    const mockUrl = '';
-    await saveMapUrl(mockUrl);
-    return mockUrl;
+    final ref = _storage.ref().child('maps/zoo_map.$extension');
+    final metadata = SettableMetadata(
+      contentType: extension == 'pdf' ? 'application/pdf' : 'image/png',
+    );
+    await ref.putData(Uint8List.fromList(bytes), metadata);
+    final downloadUrl = await ref.getDownloadURL();
+    await saveMapUrl(downloadUrl);
+    return downloadUrl;
   }
 }
 
