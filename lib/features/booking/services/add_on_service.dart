@@ -5,7 +5,8 @@ import '../models/add_on_model.dart';
 class AddOnService {
   final FirebaseFirestore _db;
 
-  AddOnService({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
+  AddOnService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
 
   Stream<List<AddOnModel>> getActiveAddOns() {
     return _db

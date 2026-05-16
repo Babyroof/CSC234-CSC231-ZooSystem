@@ -4,7 +4,8 @@ import '../constants/booking_pricing.dart';
 class PricingService {
   final FirebaseFirestore _db;
 
-  PricingService({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
+  PricingService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
 
   Future<Map<String, int>> getPricing() async {
     try {

@@ -4,7 +4,8 @@ import 'package:zoopernova_zoo_system/features/booking/models/add_on_model.dart'
 
 class AddOnAdminService {
   final FirebaseFirestore _db;
-  AddOnAdminService({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
+  AddOnAdminService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
 
   Stream<List<AddOnModel>> getAddOns() {
     return _db
@@ -55,8 +56,7 @@ class AddOnAdminService {
     required String direction,
   }) async {
     try {
-      final snap =
-          await _db.collection('addOns').orderBy('order').get();
+      final snap = await _db.collection('addOns').orderBy('order').get();
       final docs = snap.docs;
       final index = docs.indexWhere((d) => d.id == id);
       if (index == -1) return;

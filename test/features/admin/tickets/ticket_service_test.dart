@@ -37,9 +37,16 @@ void main() {
   }) async {
     final userRef = fakeFirestore.collection('user').doc(userId);
     await fakeFirestore.collection('booking').doc(docId).set({
-      'selectedAddOns': selectedAddOns ?? [
-        {'addOnId': 'addon1', 'name': 'Golf Car', 'price': 500, 'priceType': 'per_booking'},
-      ],
+      'selectedAddOns':
+          selectedAddOns ??
+          [
+            {
+              'addOnId': 'addon1',
+              'name': 'Golf Car',
+              'price': 500,
+              'priceType': 'per_booking',
+            },
+          ],
       'adultTotal': adultTotal,
       'childTotal': childTotal,
       'elderTotal': elderTotal,
@@ -103,7 +110,12 @@ void main() {
         docId: 'tk1',
         userId: 'user123',
         selectedAddOns: [
-          {'addOnId': 'addon1', 'name': 'Golf Car', 'price': 500, 'priceType': 'per_booking'},
+          {
+            'addOnId': 'addon1',
+            'name': 'Golf Car',
+            'price': 500,
+            'priceType': 'per_booking',
+          },
         ],
         adultTotal: 2,
         childTotal: 1,

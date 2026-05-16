@@ -311,15 +311,16 @@ class _PriceField extends StatelessWidget {
               hintStyle: const TextStyle(color: AppColors.adminTextMuted),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide:
-                    const BorderSide(color: AppColors.adminBorderLight),
+                borderSide: const BorderSide(color: AppColors.adminBorderLight),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(color: AppColors.adminPrimary),
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
             ),
           ),
         ),
@@ -338,9 +339,7 @@ class _StatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = isError
-        ? AppColors.adminDangerBg
-        : const Color(0xFFE6F4EA);
+    final bg = isError ? AppColors.adminDangerBg : const Color(0xFFE6F4EA);
     final fg = isError ? AppColors.adminDanger : const Color(0xFF2E7D32);
 
     return Container(
@@ -352,11 +351,7 @@ class _StatusBanner extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: fg,
-        ),
+        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: fg),
       ),
     );
   }

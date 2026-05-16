@@ -121,24 +121,27 @@ void main() {
       expect(model.elderTotal, 0);
     });
 
-    test('selectedAddOns defaults to empty list when field is absent', () async {
-      // Arrange
-      await fakeFirestore.collection('booking').doc('bk5').set({
-        'adultTotal': 1,
-        'childTotal': 0,
-        'elderTotal': 0,
-        'date': Timestamp.fromDate(DateTime(2026, 1, 1)),
-        'status': 'pending',
-        'userId': 'uid',
-      });
-      final doc = await fakeFirestore.collection('booking').doc('bk5').get();
+    test(
+      'selectedAddOns defaults to empty list when field is absent',
+      () async {
+        // Arrange
+        await fakeFirestore.collection('booking').doc('bk5').set({
+          'adultTotal': 1,
+          'childTotal': 0,
+          'elderTotal': 0,
+          'date': Timestamp.fromDate(DateTime(2026, 1, 1)),
+          'status': 'pending',
+          'userId': 'uid',
+        });
+        final doc = await fakeFirestore.collection('booking').doc('bk5').get();
 
-      // Act
-      final model = BookingModel.fromFirestore(doc);
+        // Act
+        final model = BookingModel.fromFirestore(doc);
 
-      // Assert
-      expect(model.selectedAddOns, isEmpty);
-    });
+        // Assert
+        expect(model.selectedAddOns, isEmpty);
+      },
+    );
   });
 
   // ── toMap ────────────────────────────────────────────────────────────────
@@ -162,7 +165,11 @@ void main() {
 
     test('numeric fields are int not String', () {
       // Arrange/Act
-      final map = baseModel(adultTotal: 3, childTotal: 2, elderTotal: 1).toMap();
+      final map = baseModel(
+        adultTotal: 3,
+        childTotal: 2,
+        elderTotal: 1,
+      ).toMap();
 
       // Assert
       expect(map['adultTotal'], isA<int>());

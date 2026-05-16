@@ -42,27 +42,30 @@ void main() {
   // totalAmount
   // ===========================================================================
   group('BookingModel.totalAmount', () {
-    test('is correct with per_booking addon — addon price added once regardless of people count', () {
-      // Arrange — 2 adults + 1 per_booking addon of 200
-      final booking = makeModel(
-        adultTotal: 2,
-        selectedAddOns: const [
-          SelectedAddOnModel(
-            addOnId: 'ao1',
-            name: 'Buffet',
-            price: 200,
-            priceType: 'per_booking',
-          ),
-        ],
-      );
+    test(
+      'is correct with per_booking addon — addon price added once regardless of people count',
+      () {
+        // Arrange — 2 adults + 1 per_booking addon of 200
+        final booking = makeModel(
+          adultTotal: 2,
+          selectedAddOns: const [
+            SelectedAddOnModel(
+              addOnId: 'ao1',
+              name: 'Buffet',
+              price: 200,
+              priceType: 'per_booking',
+            ),
+          ],
+        );
 
-      // Act
-      final total = booking.totalAmount;
+        // Act
+        final total = booking.totalAmount;
 
-      // Assert — totalAmount adds a.price directly (not calculatePrice)
-      // 2*300 + 200 = 800
-      expect(total, equals(2 * 300 + 200));
-    });
+        // Assert — totalAmount adds a.price directly (not calculatePrice)
+        // 2*300 + 200 = 800
+        expect(total, equals(2 * 300 + 200));
+      },
+    );
 
     test('is correct with per_person addon — addon price * total people', () {
       // Arrange — 3 adults + 1 per_person addon of 80
@@ -147,31 +150,34 @@ void main() {
       expect(total, equals(850));
     });
 
-    test('defaults use BookingPricing constants when unit prices are omitted', () {
-      // Arrange — no explicit unit prices → defaults
-      final booking = BookingModel(
-        id: 'bk1',
-        userId: 'u1',
-        adultTotal: 1,
-        childTotal: 1,
-        elderTotal: 1,
-        date: DateTime(2026, 5, 10),
-        status: 'pending',
-      );
+    test(
+      'defaults use BookingPricing constants when unit prices are omitted',
+      () {
+        // Arrange — no explicit unit prices → defaults
+        final booking = BookingModel(
+          id: 'bk1',
+          userId: 'u1',
+          adultTotal: 1,
+          childTotal: 1,
+          elderTotal: 1,
+          date: DateTime(2026, 5, 10),
+          status: 'pending',
+        );
 
-      // Act
-      final total = booking.totalAmount;
+        // Act
+        final total = booking.totalAmount;
 
-      // Assert
-      expect(
-        total,
-        equals(
-          BookingPricing.adultPrice +
-              BookingPricing.kidPrice +
-              BookingPricing.elderPrice,
-        ),
-      );
-    });
+        // Assert
+        expect(
+          total,
+          equals(
+            BookingPricing.adultPrice +
+                BookingPricing.kidPrice +
+                BookingPricing.elderPrice,
+          ),
+        );
+      },
+    );
   });
 
   // ===========================================================================
@@ -184,44 +190,47 @@ void main() {
       fakeDb = FakeFirebaseFirestore();
     });
 
-    test('deserializes selectedAddOns array into List<SelectedAddOnModel>', () async {
-      // Arrange
-      final userRef = fakeDb.collection('user').doc('user1');
-      await fakeDb.collection('booking').doc('bk1').set({
-        'userId': userRef,
-        'adultTotal': 2,
-        'childTotal': 0,
-        'elderTotal': 0,
-        'date': Timestamp.fromDate(DateTime(2026, 5, 10)),
-        'status': 'pending',
-        'selectedAddOns': [
-          {
-            'addOnId': 'ao1',
-            'name': 'Buffet',
-            'price': 200,
-            'priceType': 'per_booking',
-          },
-          {
-            'addOnId': 'ao2',
-            'name': 'Golf Car',
-            'price': 500,
-            'priceType': 'per_booking',
-          },
-        ],
-      });
-      final doc = await fakeDb.collection('booking').doc('bk1').get();
+    test(
+      'deserializes selectedAddOns array into List<SelectedAddOnModel>',
+      () async {
+        // Arrange
+        final userRef = fakeDb.collection('user').doc('user1');
+        await fakeDb.collection('booking').doc('bk1').set({
+          'userId': userRef,
+          'adultTotal': 2,
+          'childTotal': 0,
+          'elderTotal': 0,
+          'date': Timestamp.fromDate(DateTime(2026, 5, 10)),
+          'status': 'pending',
+          'selectedAddOns': [
+            {
+              'addOnId': 'ao1',
+              'name': 'Buffet',
+              'price': 200,
+              'priceType': 'per_booking',
+            },
+            {
+              'addOnId': 'ao2',
+              'name': 'Golf Car',
+              'price': 500,
+              'priceType': 'per_booking',
+            },
+          ],
+        });
+        final doc = await fakeDb.collection('booking').doc('bk1').get();
 
-      // Act
-      final model = BookingModel.fromFirestore(doc);
+        // Act
+        final model = BookingModel.fromFirestore(doc);
 
-      // Assert
-      expect(model.selectedAddOns.length, 2);
-      expect(model.selectedAddOns[0].addOnId, 'ao1');
-      expect(model.selectedAddOns[0].name, 'Buffet');
-      expect(model.selectedAddOns[0].price, 200);
-      expect(model.selectedAddOns[1].addOnId, 'ao2');
-      expect(model.selectedAddOns[1].name, 'Golf Car');
-    });
+        // Assert
+        expect(model.selectedAddOns.length, 2);
+        expect(model.selectedAddOns[0].addOnId, 'ao1');
+        expect(model.selectedAddOns[0].name, 'Buffet');
+        expect(model.selectedAddOns[0].price, 200);
+        expect(model.selectedAddOns[1].addOnId, 'ao2');
+        expect(model.selectedAddOns[1].name, 'Golf Car');
+      },
+    );
 
     test('selectedAddOns is empty list when field is absent', () async {
       // Arrange

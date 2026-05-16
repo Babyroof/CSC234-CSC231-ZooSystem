@@ -31,31 +31,34 @@ void main() {
 
   // ── getAddOns ─────────────────────────────────────────────────────────────
   group('getAddOns', () {
-    test('returns stream of all addOns sorted by order field ascending', () async {
-      // Arrange — insert in reverse order to verify sorting
-      await fakeDb.collection('addOns').add({
-        'name': 'B',
-        'price': 200,
-        'priceType': 'per_booking',
-        'order': 2,
-        'isActive': true,
-      });
-      await fakeDb.collection('addOns').add({
-        'name': 'A',
-        'price': 100,
-        'priceType': 'per_person',
-        'order': 1,
-        'isActive': true,
-      });
+    test(
+      'returns stream of all addOns sorted by order field ascending',
+      () async {
+        // Arrange — insert in reverse order to verify sorting
+        await fakeDb.collection('addOns').add({
+          'name': 'B',
+          'price': 200,
+          'priceType': 'per_booking',
+          'order': 2,
+          'isActive': true,
+        });
+        await fakeDb.collection('addOns').add({
+          'name': 'A',
+          'price': 100,
+          'priceType': 'per_person',
+          'order': 1,
+          'isActive': true,
+        });
 
-      // Act
-      final result = await service.getAddOns().first;
+        // Act
+        final result = await service.getAddOns().first;
 
-      // Assert
-      expect(result.length, 2);
-      expect(result[0].name, 'A');
-      expect(result[1].name, 'B');
-    });
+        // Assert
+        expect(result.length, 2);
+        expect(result[0].name, 'A');
+        expect(result[1].name, 'B');
+      },
+    );
 
     test('returns empty list when collection is empty', () async {
       // Arrange — fakeDb has no documents
@@ -67,24 +70,27 @@ void main() {
       expect(result, isEmpty);
     });
 
-    test('stream emits updated list when document is added (real-time update)', () async {
-      // Arrange — subscribe before any data exists
-      final streamFuture = service.getAddOns().skip(1).first;
+    test(
+      'stream emits updated list when document is added (real-time update)',
+      () async {
+        // Arrange — subscribe before any data exists
+        final streamFuture = service.getAddOns().skip(1).first;
 
-      // Act — add a document after the stream has started
-      await fakeDb.collection('addOns').add({
-        'name': 'Golf Car',
-        'price': 500,
-        'priceType': 'per_booking',
-        'order': 1,
-        'isActive': true,
-      });
+        // Act — add a document after the stream has started
+        await fakeDb.collection('addOns').add({
+          'name': 'Golf Car',
+          'price': 500,
+          'priceType': 'per_booking',
+          'order': 1,
+          'isActive': true,
+        });
 
-      // Assert — second emission contains the newly added document
-      final result = await streamFuture;
-      expect(result.length, 1);
-      expect(result.first.name, 'Golf Car');
-    });
+        // Assert — second emission contains the newly added document
+        final result = await streamFuture;
+        expect(result.length, 1);
+        expect(result.first.name, 'Golf Car');
+      },
+    );
   });
 
   // ── createAddOn ───────────────────────────────────────────────────────────
@@ -175,24 +181,27 @@ void main() {
       expect(data['isActive'], false);
     });
 
-    test('does NOT delete document — document still exists after update', () async {
-      // Arrange
-      final id = await seedAddOn(name: 'Persistent');
+    test(
+      'does NOT delete document — document still exists after update',
+      () async {
+        // Arrange
+        final id = await seedAddOn(name: 'Persistent');
 
-      // Act
-      await service.updateAddOn(
-        id: id,
-        name: 'Persistent Updated',
-        price: 200,
-        priceType: 'per_booking',
-        order: 2,
-        isActive: true,
-      );
+        // Act
+        await service.updateAddOn(
+          id: id,
+          name: 'Persistent Updated',
+          price: 200,
+          priceType: 'per_booking',
+          order: 2,
+          isActive: true,
+        );
 
-      // Assert
-      final doc = await fakeDb.collection('addOns').doc(id).get();
-      expect(doc.exists, true);
-    });
+        // Assert
+        final doc = await fakeDb.collection('addOns').doc(id).get();
+        expect(doc.exists, true);
+      },
+    );
 
     test('updated fields are readable back from Firestore', () async {
       // Arrange
@@ -261,7 +270,8 @@ void main() {
       await service.toggleActive(ref.id, false);
 
       // Assert — isActive flipped; other fields untouched
-      final data = (await fakeDb.collection('addOns').doc(ref.id).get()).data()!;
+      final data = (await fakeDb.collection('addOns').doc(ref.id).get())
+          .data()!;
       expect(data['isActive'], false);
       expect(data['name'], 'Golf Car');
       expect(data['price'], 500);

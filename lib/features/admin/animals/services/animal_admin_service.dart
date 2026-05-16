@@ -9,42 +9,48 @@ class AnimalAdminService {
   final FirebaseStorage _storage;
 
   AnimalAdminService({FirebaseFirestore? db, FirebaseStorage? storage})
-      : _db = db ?? FirebaseFirestore.instance,
-        _storage = storage ?? FirebaseStorage.instance;
+    : _db = db ?? FirebaseFirestore.instance,
+      _storage = storage ?? FirebaseStorage.instance;
 
   /// Returns a real-time stream of all animals, with zone names resolved.
   Stream<List<AnimalAdminModel>> getAnimals() {
-    return _db.collection('zone').snapshots().asyncExpand((zoneSnap) {
-      final zoneMap = {
-        for (final doc in zoneSnap.docs)
-          doc.id: (doc.data()['zoneName'] as String? ?? ''),
-      };
-      return _db
-          .collection('animal')
-          .snapshots()
-          .map(
-            (animalSnap) => animalSnap.docs
-                .map((doc) => AnimalAdminModel.fromFirestore(doc, zoneMap))
-                .toList(),
-          )
-          .handleError((Object e) {
-            debugPrint('[AnimalAdminService] animal stream error: $e');
-            throw e;
-          });
-    }).handleError((Object e) {
-      debugPrint('[AnimalAdminService] zone stream error: $e');
-      throw e;
-    });
+    return _db
+        .collection('zone')
+        .snapshots()
+        .asyncExpand((zoneSnap) {
+          final zoneMap = {
+            for (final doc in zoneSnap.docs)
+              doc.id: (doc.data()['zoneName'] as String? ?? ''),
+          };
+          return _db
+              .collection('animal')
+              .snapshots()
+              .map(
+                (animalSnap) => animalSnap.docs
+                    .map((doc) => AnimalAdminModel.fromFirestore(doc, zoneMap))
+                    .toList(),
+              )
+              .handleError((Object e) {
+                debugPrint('[AnimalAdminService] animal stream error: $e');
+                throw e;
+              });
+        })
+        .handleError((Object e) {
+          debugPrint('[AnimalAdminService] zone stream error: $e');
+          throw e;
+        });
   }
 
   Future<List<Map<String, String>>> getZones() async {
     try {
       final snap = await _db.collection('zone').get();
       return snap.docs
-          .map((doc) => {
-                'id': doc.id,
-                'name': (doc.data()['zoneName'] as String? ?? ''),
-              })
+          .map(
+            (doc) => {
+              'id': doc.id,
+              'name': (doc.data()['zoneName'] as String? ?? ''),
+            },
+          )
           .toList();
     } catch (e) {
       debugPrint('[AnimalAdminService] getZones error: $e');

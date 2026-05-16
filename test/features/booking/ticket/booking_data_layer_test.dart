@@ -205,7 +205,10 @@ void main() {
             'chargeId': 'ch_abc123',
             'selectedAddOns': [],
           });
-          final doc = await fakeFirestore.collection('booking').doc('bk1').get();
+          final doc = await fakeFirestore
+              .collection('booking')
+              .doc('bk1')
+              .get();
 
           // Act
           final model = BookingModel.fromFirestore(doc);
@@ -687,7 +690,12 @@ void main() {
     group('watchBooking', () {
       test('emits the correct BookingModel when the document exists', () async {
         // Arrange
-        await seedRaw(docId: 'bk1', userId: 'uid', status: 'Done', adultTotal: 3);
+        await seedRaw(
+          docId: 'bk1',
+          userId: 'uid',
+          status: 'Done',
+          adultTotal: 3,
+        );
 
         // Act
         final model = await service.watchBooking('bk1').first;
@@ -726,9 +734,24 @@ void main() {
     group('getBookingsByUser', () {
       test('returns all bookings for user regardless of status', () async {
         // Arrange
-        await seedRaw(docId: 'done1', userId: 'user_1', status: 'Done', date: DateTime(2026, 5, 10));
-        await seedRaw(docId: 'done2', userId: 'user_1', status: 'Done', date: DateTime(2026, 5, 9));
-        await seedRaw(docId: 'pending1', userId: 'user_1', status: 'Pending', date: DateTime(2026, 5, 8));
+        await seedRaw(
+          docId: 'done1',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 5, 10),
+        );
+        await seedRaw(
+          docId: 'done2',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 5, 9),
+        );
+        await seedRaw(
+          docId: 'pending1',
+          userId: 'user_1',
+          status: 'Pending',
+          date: DateTime(2026, 5, 8),
+        );
 
         // Act
         final bookings = await service.getBookingsByUser('user_1').first;
@@ -739,8 +762,18 @@ void main() {
 
       test('filters out bookings belonging to other users', () async {
         // Arrange
-        await seedRaw(docId: 'bk_user1', userId: 'user_1', status: 'Done', date: DateTime(2026, 5, 10));
-        await seedRaw(docId: 'bk_user2', userId: 'user_2', status: 'Done', date: DateTime(2026, 5, 10));
+        await seedRaw(
+          docId: 'bk_user1',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 5, 10),
+        );
+        await seedRaw(
+          docId: 'bk_user2',
+          userId: 'user_2',
+          status: 'Done',
+          date: DateTime(2026, 5, 10),
+        );
 
         // Act
         final bookings = await service.getBookingsByUser('user_1').first;
@@ -760,9 +793,24 @@ void main() {
 
       test('returns results ordered by date descending', () async {
         // Arrange
-        await seedRaw(docId: 'oldest', userId: 'user_1', status: 'Done', date: DateTime(2026, 3, 1));
-        await seedRaw(docId: 'newest', userId: 'user_1', status: 'Done', date: DateTime(2026, 7, 1));
-        await seedRaw(docId: 'middle', userId: 'user_1', status: 'Done', date: DateTime(2026, 5, 1));
+        await seedRaw(
+          docId: 'oldest',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 3, 1),
+        );
+        await seedRaw(
+          docId: 'newest',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 7, 1),
+        );
+        await seedRaw(
+          docId: 'middle',
+          userId: 'user_1',
+          status: 'Done',
+          date: DateTime(2026, 5, 1),
+        );
 
         // Act
         final bookings = await service.getBookingsByUser('user_1').first;
@@ -795,7 +843,10 @@ void main() {
         await service.deleteBooking('to_delete');
 
         // Assert
-        final doc = await fakeFirestore.collection('booking').doc('to_delete').get();
+        final doc = await fakeFirestore
+            .collection('booking')
+            .doc('to_delete')
+            .get();
         expect(doc.exists, false);
       });
 

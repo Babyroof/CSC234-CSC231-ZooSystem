@@ -9,29 +9,32 @@ void main() {
   // ===========================================================================
   group('AddOnModel', () {
     group('fromFirestore', () {
-      test('maps all fields: id, name, price, isActive, order, priceType', () async {
-        // Arrange
-        final fakeDb = FakeFirebaseFirestore();
-        final docRef = await fakeDb.collection('addOns').add({
-          'name': 'Golf Car',
-          'price': 500,
-          'isActive': true,
-          'order': 3,
-          'priceType': 'per_booking',
-        });
-        final doc = await docRef.get();
+      test(
+        'maps all fields: id, name, price, isActive, order, priceType',
+        () async {
+          // Arrange
+          final fakeDb = FakeFirebaseFirestore();
+          final docRef = await fakeDb.collection('addOns').add({
+            'name': 'Golf Car',
+            'price': 500,
+            'isActive': true,
+            'order': 3,
+            'priceType': 'per_booking',
+          });
+          final doc = await docRef.get();
 
-        // Act
-        final model = AddOnModel.fromFirestore(doc);
+          // Act
+          final model = AddOnModel.fromFirestore(doc);
 
-        // Assert
-        expect(model.id, docRef.id);
-        expect(model.name, 'Golf Car');
-        expect(model.price, 500);
-        expect(model.isActive, true);
-        expect(model.order, 3);
-        expect(model.priceType, 'per_booking');
-      });
+          // Assert
+          expect(model.id, docRef.id);
+          expect(model.name, 'Golf Car');
+          expect(model.price, 500);
+          expect(model.isActive, true);
+          expect(model.order, 3);
+          expect(model.priceType, 'per_booking');
+        },
+      );
 
       test('priceType defaults to per_booking when field is absent', () async {
         // Arrange
@@ -219,11 +222,7 @@ void main() {
 
       test('priceType defaults to per_booking when absent from map', () {
         // Arrange — no priceType key
-        final map = {
-          'addOnId': 'ao2',
-          'name': 'Snack',
-          'price': 80,
-        };
+        final map = {'addOnId': 'ao2', 'name': 'Snack', 'price': 80};
 
         // Act
         final model = SelectedAddOnModel.fromMap(map);
@@ -234,22 +233,28 @@ void main() {
     });
 
     group('toMap', () {
-      test('returns map with exactly 4 keys: addOnId, name, price, priceType', () {
-        // Arrange
-        const model = SelectedAddOnModel(
-          addOnId: 'ao1',
-          name: 'Buffet',
-          price: 200,
-          priceType: 'per_booking',
-        );
+      test(
+        'returns map with exactly 4 keys: addOnId, name, price, priceType',
+        () {
+          // Arrange
+          const model = SelectedAddOnModel(
+            addOnId: 'ao1',
+            name: 'Buffet',
+            price: 200,
+            priceType: 'per_booking',
+          );
 
-        // Act
-        final map = model.toMap();
+          // Act
+          final map = model.toMap();
 
-        // Assert
-        expect(map.keys.toSet(), equals({'addOnId', 'name', 'price', 'priceType'}));
-        expect(map.length, 4);
-      });
+          // Assert
+          expect(
+            map.keys.toSet(),
+            equals({'addOnId', 'name', 'price', 'priceType'}),
+          );
+          expect(map.length, 4);
+        },
+      );
     });
 
     group('calculatePrice', () {

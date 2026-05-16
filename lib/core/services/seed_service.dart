@@ -62,9 +62,27 @@ class SeedService {
 
   Future<void> _seedAddOns() async {
     final addOns = [
-      {'name': 'Buffet Food', 'price': 200, 'priceType': 'per_person',  'isActive': true, 'order': 1},
-      {'name': 'Guid Tour',   'price': 350, 'priceType': 'per_booking', 'isActive': true, 'order': 2},
-      {'name': 'Golf Car',    'price': 500, 'priceType': 'per_booking', 'isActive': true, 'order': 3},
+      {
+        'name': 'Buffet Food',
+        'price': 200,
+        'priceType': 'per_person',
+        'isActive': true,
+        'order': 1,
+      },
+      {
+        'name': 'Guid Tour',
+        'price': 350,
+        'priceType': 'per_booking',
+        'isActive': true,
+        'order': 2,
+      },
+      {
+        'name': 'Golf Car',
+        'price': 500,
+        'priceType': 'per_booking',
+        'isActive': true,
+        'order': 3,
+      },
     ];
 
     for (var addOn in addOns) {
@@ -94,7 +112,7 @@ class SeedService {
           'name': doc.data()['name'],
           'price': doc.data()['price'],
           'priceType': doc.data()['priceType'],
-        }
+        },
     };
 
     final bookings = [
@@ -118,7 +136,8 @@ class SeedService {
         'childTotal': 2,
         'elderTotal': 0,
         'selectedAddOns': [addOnMap['Buffet Food']],
-        'totalPrice': (1 * 300) + (2 * 150) + (200 * 3), // 1200 (buffet x3 people)
+        'totalPrice':
+            (1 * 300) + (2 * 150) + (200 * 3), // 1200 (buffet x3 people)
         'chargeId': 'chrg_test_sample002',
         'status': 'Pending',
       },
@@ -146,7 +165,8 @@ class SeedService {
           addOnMap['Guid Tour'],
           addOnMap['Golf Car'],
         ],
-        'totalPrice': (2 * 40) + (200 * 2) + 350 + 500, // 1230 (buffet x2 elders)
+        'totalPrice':
+            (2 * 40) + (200 * 2) + 350 + 500, // 1230 (buffet x2 elders)
         'chargeId': 'chrg_test_sample004',
         'status': 'Cancelled',
       },
@@ -175,11 +195,11 @@ class SeedService {
   // ─────────────────────────────────────────
   Future<void> _seedZones() async {
     final zones = [
-      {'zoneName': 'Asia',         'location_x': 120.0, 'location_y': 80.0},
-      {'zoneName': 'Africa',       'location_x': 340.0, 'location_y': 200.0},
-      {'zoneName': 'Australia',    'location_x': 560.0, 'location_y': 320.0},
-      {'zoneName': 'South America','location_x': 200.0, 'location_y': 420.0},
-      {'zoneName': 'Freezing',     'location_x': 480.0, 'location_y': 80.0},
+      {'zoneName': 'Asia', 'location_x': 120.0, 'location_y': 80.0},
+      {'zoneName': 'Africa', 'location_x': 340.0, 'location_y': 200.0},
+      {'zoneName': 'Australia', 'location_x': 560.0, 'location_y': 320.0},
+      {'zoneName': 'South America', 'location_x': 200.0, 'location_y': 420.0},
+      {'zoneName': 'Freezing', 'location_x': 480.0, 'location_y': 80.0},
     ];
 
     for (var zone in zones) {

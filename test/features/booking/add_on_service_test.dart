@@ -94,26 +94,29 @@ void main() {
       expect(results, isEmpty);
     });
 
-    test('stream reflects a new active document added after stream starts', () async {
-      // Arrange
-      final fakeDb = FakeFirebaseFirestore();
-      final service = AddOnService(db: fakeDb);
+    test(
+      'stream reflects a new active document added after stream starts',
+      () async {
+        // Arrange
+        final fakeDb = FakeFirebaseFirestore();
+        final service = AddOnService(db: fakeDb);
 
-      // Act — subscribe first, then add a document
-      final streamFuture = service.getActiveAddOns().skip(1).first;
-      await fakeDb.collection('addOns').add({
-        'name': 'Late Arrival',
-        'price': 250,
-        'isActive': true,
-        'order': 1,
-        'priceType': 'per_person',
-      });
-      final results = await streamFuture;
+        // Act — subscribe first, then add a document
+        final streamFuture = service.getActiveAddOns().skip(1).first;
+        await fakeDb.collection('addOns').add({
+          'name': 'Late Arrival',
+          'price': 250,
+          'isActive': true,
+          'order': 1,
+          'priceType': 'per_person',
+        });
+        final results = await streamFuture;
 
-      // Assert
-      expect(results.length, 1);
-      expect(results.first.name, 'Late Arrival');
-      expect(results.first.priceType, 'per_person');
-    });
+        // Assert
+        expect(results.length, 1);
+        expect(results.first.name, 'Late Arrival');
+        expect(results.first.priceType, 'per_person');
+      },
+    );
   });
 }

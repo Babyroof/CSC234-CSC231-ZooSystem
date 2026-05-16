@@ -30,9 +30,7 @@ class AddOnAdminState {
   List<AddOnModel> get filteredItems {
     final query = searchText.trim().toLowerCase();
     if (query.isEmpty) return items;
-    return items
-        .where((a) => a.name.toLowerCase().contains(query))
-        .toList();
+    return items.where((a) => a.name.toLowerCase().contains(query)).toList();
   }
 
   int get totalPages {
@@ -154,7 +152,9 @@ class _AddOnsAdminScreenState extends ConsumerState<AddOnsAdminScreen> {
       builder: (_) => _AddOnFormDialog(
         title: 'Create New Add-on',
         onConfirm: (name, price, priceType, isActive) async {
-          await ref.read(addOnAdminServiceProvider).createAddOn(
+          await ref
+              .read(addOnAdminServiceProvider)
+              .createAddOn(
                 name: name,
                 price: price,
                 priceType: priceType,
@@ -172,7 +172,9 @@ class _AddOnsAdminScreenState extends ConsumerState<AddOnsAdminScreen> {
         title: 'Edit Add-on',
         initial: addOn,
         onConfirm: (name, price, priceType, isActive) async {
-          await ref.read(addOnAdminServiceProvider).updateAddOn(
+          await ref
+              .read(addOnAdminServiceProvider)
+              .updateAddOn(
                 id: addOn.id,
                 name: name,
                 price: price,
@@ -517,7 +519,9 @@ class _AddOnRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priceTypeLabel = item.priceType == 'per_person' ? 'Per Person' : 'Per Booking';
+    final priceTypeLabel = item.priceType == 'per_person'
+        ? 'Per Person'
+        : 'Per Booking';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -568,23 +572,26 @@ class _AddOnRow extends StatelessWidget {
                   icon: const Icon(Icons.arrow_upward, size: 16),
                   onPressed: isFirst ? null : onReorderUp,
                   visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                   color: AppColors.adminTextDark,
                 ),
                 IconButton(
                   icon: const Icon(Icons.arrow_downward, size: 16),
                   onPressed: isLast ? null : onReorderDown,
                   visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                   color: AppColors.adminTextDark,
                 ),
               ],
             ),
           ),
-          Expanded(
-            flex: 2,
-            child: _StatusChip(isActive: item.isActive),
-          ),
+          Expanded(flex: 2, child: _StatusChip(isActive: item.isActive)),
           Expanded(
             flex: 3,
             child: Row(
@@ -621,9 +628,7 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isActive
-            ? const Color(0xFFE6F4EA)
-            : const Color(0xFFF0F0F0),
+        color: isActive ? const Color(0xFFE6F4EA) : const Color(0xFFF0F0F0),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -631,9 +636,7 @@ class _StatusChip extends StatelessWidget {
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: isActive
-              ? const Color(0xFF2E7D32)
-              : AppColors.adminTextMuted,
+          color: isActive ? const Color(0xFF2E7D32) : AppColors.adminTextMuted,
         ),
       ),
     );
@@ -696,7 +699,8 @@ class _AddOnFormDialog extends StatefulWidget {
     int price,
     String priceType,
     bool isActive,
-  ) onConfirm;
+  )
+  onConfirm;
 
   @override
   State<_AddOnFormDialog> createState() => _AddOnFormDialogState();
@@ -714,7 +718,8 @@ class _AddOnFormDialogState extends State<_AddOnFormDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.initial?.name ?? '');
     _priceController = TextEditingController(
-        text: widget.initial != null ? '${widget.initial!.price}' : '');
+      text: widget.initial != null ? '${widget.initial!.price}' : '',
+    );
     _priceType = widget.initial?.priceType ?? 'per_booking';
     _isActive = widget.initial?.isActive ?? true;
   }
@@ -736,8 +741,9 @@ class _AddOnFormDialogState extends State<_AddOnFormDialog> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed: ${e.toString()}')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: ${e.toString()}')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -766,20 +772,21 @@ class _AddOnFormDialogState extends State<_AddOnFormDialog> {
               autofocus: true,
               decoration: InputDecoration(
                 hintText: 'Add-on name',
-                hintStyle:
-                    const TextStyle(color: AppColors.adminTextMuted),
+                hintStyle: const TextStyle(color: AppColors.adminTextMuted),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                      const BorderSide(color: AppColors.adminBorderLight),
+                  borderSide: const BorderSide(
+                    color: AppColors.adminBorderLight,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                      const BorderSide(color: AppColors.adminPrimary),
+                  borderSide: const BorderSide(color: AppColors.adminPrimary),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                  horizontal: 14,
+                  vertical: 12,
+                ),
               ),
             ),
             const SizedBox(height: 14),
@@ -791,20 +798,21 @@ class _AddOnFormDialogState extends State<_AddOnFormDialog> {
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
                 hintText: '0',
-                hintStyle:
-                    const TextStyle(color: AppColors.adminTextMuted),
+                hintStyle: const TextStyle(color: AppColors.adminTextMuted),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                      const BorderSide(color: AppColors.adminBorderLight),
+                  borderSide: const BorderSide(
+                    color: AppColors.adminBorderLight,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                      const BorderSide(color: AppColors.adminPrimary),
+                  borderSide: const BorderSide(color: AppColors.adminPrimary),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                  horizontal: 14,
+                  vertical: 12,
+                ),
               ),
             ),
             const SizedBox(height: 14),
@@ -829,9 +837,13 @@ class _AddOnFormDialogState extends State<_AddOnFormDialog> {
                   ),
                   items: const [
                     DropdownMenuItem(
-                        value: 'per_booking', child: Text('Per Booking')),
+                      value: 'per_booking',
+                      child: Text('Per Booking'),
+                    ),
                     DropdownMenuItem(
-                        value: 'per_person', child: Text('Per Person')),
+                      value: 'per_person',
+                      child: Text('Per Person'),
+                    ),
                   ],
                   onChanged: (value) {
                     if (value != null) setState(() => _priceType = value);
@@ -945,8 +957,9 @@ class _DeleteAddOnDialogState extends State<_DeleteAddOnDialog> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed: ${e.toString()}')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: ${e.toString()}')));
       }
     } finally {
       if (mounted) setState(() => _isDeleting = false);
@@ -1011,8 +1024,9 @@ class _DeleteAddOnDialogState extends State<_DeleteAddOnDialog> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed:
-                          _isDeleting ? null : () => Navigator.pop(context),
+                      onPressed: _isDeleting
+                          ? null
+                          : () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: AppColors.adminDanger),
                         foregroundColor: AppColors.adminDanger,

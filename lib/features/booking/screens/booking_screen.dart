@@ -37,9 +37,7 @@ class _BookingState {
   int get totalPeople => adultCount + kidCount + elderCount;
 
   int get ticketTotal =>
-      adultCount * adultPrice +
-      kidCount * kidPrice +
-      elderCount * elderPrice;
+      adultCount * adultPrice + kidCount * kidPrice + elderCount * elderPrice;
 
   int get addOnTotal => loadedAddOns
       .where((a) => selectedAddOnIds.contains(a.id))
@@ -219,14 +217,27 @@ class BookingScreen extends ConsumerWidget {
                         const SizedBox(height: 20),
                         _sectionTitle('Add-ons'),
                         const SizedBox(height: 8),
-                        if (snapshot.connectionState == ConnectionState.waiting && loadedAddOns.isEmpty)
+                        if (snapshot.connectionState ==
+                                ConnectionState.waiting &&
+                            loadedAddOns.isEmpty)
                           const Center(child: CircularProgressIndicator())
                         else if (snapshot.hasError)
-                          Text('Error loading add-ons: ${snapshot.error}',
-                              style: const TextStyle(color: Colors.red, fontSize: 12))
+                          Text(
+                            'Error loading add-ons: ${snapshot.error}',
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
+                          )
                         else if (loadedAddOns.isEmpty)
-                          const Text('No add-ons available',
-                              style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.grey))
+                          const Text(
+                            'No add-ons available',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: AppColors.grey,
+                            ),
+                          )
                         else
                           _card(
                             children: [
@@ -235,11 +246,15 @@ class BookingScreen extends ConsumerWidget {
                                 _AddonRow(
                                   icon: Icons.add_circle_outline,
                                   label: loadedAddOns[i].name,
-                                  priceLabel: loadedAddOns[i].priceType == 'per_person'
+                                  priceLabel:
+                                      loadedAddOns[i].priceType == 'per_person'
                                       ? '${loadedAddOns[i].price} ฿ / person'
                                       : '${loadedAddOns[i].price} ฿ / booking',
-                                  isSelected: state.selectedAddOnIds.contains(loadedAddOns[i].id),
-                                  onToggle: () => notifier.toggleAddOn(loadedAddOns[i].id),
+                                  isSelected: state.selectedAddOnIds.contains(
+                                    loadedAddOns[i].id,
+                                  ),
+                                  onToggle: () =>
+                                      notifier.toggleAddOn(loadedAddOns[i].id),
                                   isRecommended: false,
                                 ),
                               ],

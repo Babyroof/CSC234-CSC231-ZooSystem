@@ -25,14 +25,16 @@ void main() {
     final ref = fakeFirestore.collection('user').doc('user123');
     return TicketModel(
       id: id,
-      selectedAddOns: selectedAddOns ?? [
-        const SelectedAddOnModel(
-          addOnId: 'addon1',
-          name: 'Golf Car',
-          price: 500,
-          priceType: 'per_booking',
-        ),
-      ],
+      selectedAddOns:
+          selectedAddOns ??
+          [
+            const SelectedAddOnModel(
+              addOnId: 'addon1',
+              name: 'Golf Car',
+              price: 500,
+              priceType: 'per_booking',
+            ),
+          ],
       adultTotal: adultTotal,
       childTotal: childTotal,
       elderTotal: elderTotal,
@@ -49,7 +51,12 @@ void main() {
       final userRef = fakeFirestore.collection('user').doc('user123');
       await fakeFirestore.collection('booking').doc('tk1').set({
         'selectedAddOns': [
-          {'addOnId': 'addon1', 'name': 'Golf Car', 'price': 500, 'priceType': 'per_booking'},
+          {
+            'addOnId': 'addon1',
+            'name': 'Golf Car',
+            'price': 500,
+            'priceType': 'per_booking',
+          },
         ],
         'adultTotal': 2,
         'childTotal': 1,
