@@ -8,11 +8,7 @@ import '../models/booking_model.dart';
 import '../models/selected_add_on_model.dart';
 import '../services/add_on_service.dart';
 import '../services/booking_service.dart';
-
-// ── Prices sourced from canonical BookingPricing constants ────────────────
-const _kPriceAdult = BookingPricing.adultPrice;
-const _kPriceKid = BookingPricing.kidPrice;
-const _kPriceElder = BookingPricing.elderPrice;
+import '../services/pricing_service.dart';
 
 // ── Local state ───────────────────────────────────────────────────────────
 class _BookingState {
@@ -22,6 +18,9 @@ class _BookingState {
   final int elderCount;
   final Set<String> selectedAddOnIds;
   final List<AddOnModel> loadedAddOns;
+  final int adultPrice;
+  final int kidPrice;
+  final int elderPrice;
 
   const _BookingState({
     this.selectedDate,
@@ -30,14 +29,17 @@ class _BookingState {
     this.elderCount = 0,
     this.selectedAddOnIds = const {},
     this.loadedAddOns = const [],
+    this.adultPrice = BookingPricing.adultPrice,
+    this.kidPrice = BookingPricing.kidPrice,
+    this.elderPrice = BookingPricing.elderPrice,
   });
 
   int get totalPeople => adultCount + kidCount + elderCount;
 
   int get ticketTotal =>
-      adultCount * _kPriceAdult +
-      kidCount * _kPriceKid +
-      elderCount * _kPriceElder;
+      adultCount * adultPrice +
+      kidCount * kidPrice +
+      elderCount * elderPrice;
 
   int get addOnTotal => loadedAddOns
       .where((a) => selectedAddOnIds.contains(a.id))
@@ -50,6 +52,9 @@ class _BookingState {
     int? elderCount,
     Set<String>? selectedAddOnIds,
     List<AddOnModel>? loadedAddOns,
+    int? adultPrice,
+    int? kidPrice,
+    int? elderPrice,
   }) {
     return _BookingState(
       selectedDate: selectedDate ?? this.selectedDate,
@@ -58,12 +63,27 @@ class _BookingState {
       elderCount: elderCount ?? this.elderCount,
       selectedAddOnIds: selectedAddOnIds ?? this.selectedAddOnIds,
       loadedAddOns: loadedAddOns ?? this.loadedAddOns,
+      adultPrice: adultPrice ?? this.adultPrice,
+      kidPrice: kidPrice ?? this.kidPrice,
+      elderPrice: elderPrice ?? this.elderPrice,
     );
   }
 }
 
 class _BookingNotifier extends StateNotifier<_BookingState> {
-  _BookingNotifier() : super(const _BookingState());
+  _BookingNotifier() : super(const _BookingState()) {
+    loadPricing();
+  }
+
+  Future<void> loadPricing() async {
+    final pricing = await PricingService().getPricing();
+    if (!mounted) return;
+    state = state.copyWith(
+      adultPrice: pricing['adultPrice'] ?? BookingPricing.adultPrice,
+      kidPrice: pricing['childPrice'] ?? BookingPricing.kidPrice,
+      elderPrice: pricing['elderPrice'] ?? BookingPricing.elderPrice,
+    );
+  }
 
   void setDate(DateTime d) => state = state.copyWith(selectedDate: d);
 
@@ -162,7 +182,7 @@ class BookingScreen extends ConsumerWidget {
                             _TicketRow(
                               icon: Icons.person_outline,
                               label: 'Adult',
-                              price: _kPriceAdult,
+                              price: state.adultPrice,
                               ageRange: 'Age 9 - 59',
                               count: state.adultCount,
                               onIncrement: notifier.incrementAdult,
@@ -174,7 +194,7 @@ class BookingScreen extends ConsumerWidget {
                             _TicketRow(
                               icon: Icons.child_care,
                               label: 'Kid',
-                              price: _kPriceKid,
+                              price: state.kidPrice,
                               ageRange: 'Age 1 - 8',
                               count: state.kidCount,
                               onIncrement: notifier.incrementKid,
@@ -186,7 +206,7 @@ class BookingScreen extends ConsumerWidget {
                             _TicketRow(
                               icon: Icons.elderly,
                               label: 'Elder',
-                              price: _kPriceElder,
+                              price: state.elderPrice,
                               ageRange: 'Age 60+',
                               count: state.elderCount,
                               onIncrement: notifier.incrementElder,
@@ -716,9 +736,9 @@ class _BottomBar extends ConsumerWidget {
           'adultCount': state.adultCount,
           'kidCount': state.kidCount,
           'elderCount': state.elderCount,
-          'adultUnitPrice': _kPriceAdult,
-          'kidUnitPrice': _kPriceKid,
-          'elderUnitPrice': _kPriceElder,
+          'adultUnitPrice': state.adultPrice,
+          'kidUnitPrice': state.kidPrice,
+          'elderUnitPrice': state.elderPrice,
           'dateMs': state.selectedDate?.millisecondsSinceEpoch,
         },
       );

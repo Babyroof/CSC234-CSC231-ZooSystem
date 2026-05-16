@@ -25,19 +25,54 @@ class AddOnAdminService {
     required String name,
     required int price,
     required String priceType,
-    required int order,
     bool isActive = true,
   }) async {
     try {
+      final snap = await _db
+          .collection('addOns')
+          .orderBy('order', descending: true)
+          .limit(1)
+          .get();
+      final maxOrder = snap.docs.isEmpty
+          ? 0
+          : (snap.docs.first.data()['order'] as num).toInt();
       await _db.collection('addOns').add({
         'name': name,
         'price': price,
         'priceType': priceType,
-        'order': order,
+        'order': maxOrder + 1,
         'isActive': isActive,
       });
     } catch (e) {
       debugPrint('[AddOnAdminService] createAddOn error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> reorderAddOn(
+    String id,
+    int currentOrder, {
+    required String direction,
+  }) async {
+    try {
+      final snap =
+          await _db.collection('addOns').orderBy('order').get();
+      final docs = snap.docs;
+      final index = docs.indexWhere((d) => d.id == id);
+      if (index == -1) return;
+
+      final adjacentIndex = direction == 'up' ? index - 1 : index + 1;
+      if (adjacentIndex < 0 || adjacentIndex >= docs.length) return;
+
+      final orderA = (docs[index].data()['order'] as num).toInt();
+      final orderB = (docs[adjacentIndex].data()['order'] as num).toInt();
+
+      final batch = _db.batch();
+      batch.update(docs[index].reference, {'order': orderB});
+      batch.update(docs[adjacentIndex].reference, {'order': orderA});
+      await batch.commit();
+    } catch (e) {
+      debugPrint('[AddOnAdminService] reorderAddOn error: $e');
       rethrow;
     }
   }

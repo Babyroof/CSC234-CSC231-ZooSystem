@@ -153,12 +153,11 @@ class _AddOnsAdminScreenState extends ConsumerState<AddOnsAdminScreen> {
       context: context,
       builder: (_) => _AddOnFormDialog(
         title: 'Create New Add-on',
-        onConfirm: (name, price, priceType, order, isActive) async {
+        onConfirm: (name, price, priceType, isActive) async {
           await ref.read(addOnAdminServiceProvider).createAddOn(
                 name: name,
                 price: price,
                 priceType: priceType,
-                order: order,
                 isActive: isActive,
               );
         },
@@ -172,13 +171,13 @@ class _AddOnsAdminScreenState extends ConsumerState<AddOnsAdminScreen> {
       builder: (_) => _AddOnFormDialog(
         title: 'Edit Add-on',
         initial: addOn,
-        onConfirm: (name, price, priceType, order, isActive) async {
+        onConfirm: (name, price, priceType, isActive) async {
           await ref.read(addOnAdminServiceProvider).updateAddOn(
                 id: addOn.id,
                 name: name,
                 price: price,
                 priceType: priceType,
-                order: order,
+                order: addOn.order,
                 isActive: isActive,
               );
         },
@@ -243,6 +242,24 @@ class _AddOnsAdminScreenState extends ConsumerState<AddOnsAdminScreen> {
                                       rows: state.pagedItems,
                                       onEdit: _openEdit,
                                       onDelete: _openDelete,
+                                      onReorderUp: (item) {
+                                        ref
+                                            .read(addOnAdminServiceProvider)
+                                            .reorderAddOn(
+                                              item.id,
+                                              item.order,
+                                              direction: 'up',
+                                            );
+                                      },
+                                      onReorderDown: (item) {
+                                        ref
+                                            .read(addOnAdminServiceProvider)
+                                            .reorderAddOn(
+                                              item.id,
+                                              item.order,
+                                              direction: 'down',
+                                            );
+                                      },
                                     ),
                             ),
                             const SizedBox(height: 10),
@@ -395,9 +412,9 @@ class _HeaderRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 1,
+            flex: 2,
             child: Text(
-              'Order',
+              'Reorder',
               style: TextStyle(
                 color: AppColors.adminTextMuted,
                 fontWeight: FontWeight.w600,
@@ -437,11 +454,15 @@ class _AddOnList extends StatelessWidget {
     required this.rows,
     required this.onEdit,
     required this.onDelete,
+    required this.onReorderUp,
+    required this.onReorderDown,
   });
 
   final List<AddOnModel> rows;
   final ValueChanged<AddOnModel> onEdit;
   final ValueChanged<AddOnModel> onDelete;
+  final ValueChanged<AddOnModel> onReorderUp;
+  final ValueChanged<AddOnModel> onReorderDown;
 
   @override
   Widget build(BuildContext context) {
@@ -459,8 +480,12 @@ class _AddOnList extends StatelessWidget {
       itemBuilder: (context, index) => _AddOnRow(
         item: rows[index],
         isEven: index.isEven,
+        isFirst: index == 0,
+        isLast: index == rows.length - 1,
         onEdit: () => onEdit(rows[index]),
         onDelete: () => onDelete(rows[index]),
+        onReorderUp: () => onReorderUp(rows[index]),
+        onReorderDown: () => onReorderDown(rows[index]),
       ),
       separatorBuilder: (context, index) => const SizedBox(height: 4),
     );
@@ -473,14 +498,22 @@ class _AddOnRow extends StatelessWidget {
   const _AddOnRow({
     required this.item,
     required this.isEven,
+    required this.isFirst,
+    required this.isLast,
     required this.onEdit,
     required this.onDelete,
+    required this.onReorderUp,
+    required this.onReorderDown,
   });
 
   final AddOnModel item;
   final bool isEven;
+  final bool isFirst;
+  final bool isLast;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onReorderUp;
+  final VoidCallback onReorderDown;
 
   @override
   Widget build(BuildContext context) {
@@ -528,14 +561,24 @@ class _AddOnRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 1,
-            child: Text(
-              '${item.order}',
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: AppColors.adminTextDark,
-              ),
+            flex: 2,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_upward, size: 16),
+                  onPressed: isFirst ? null : onReorderUp,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  color: AppColors.adminTextDark,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_downward, size: 16),
+                  onPressed: isLast ? null : onReorderDown,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  color: AppColors.adminTextDark,
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -652,7 +695,6 @@ class _AddOnFormDialog extends StatefulWidget {
     String name,
     int price,
     String priceType,
-    int order,
     bool isActive,
   ) onConfirm;
 
@@ -663,7 +705,6 @@ class _AddOnFormDialog extends StatefulWidget {
 class _AddOnFormDialogState extends State<_AddOnFormDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _priceController;
-  late final TextEditingController _orderController;
   late String _priceType;
   late bool _isActive;
   bool _isSaving = false;
@@ -674,8 +715,6 @@ class _AddOnFormDialogState extends State<_AddOnFormDialog> {
     _nameController = TextEditingController(text: widget.initial?.name ?? '');
     _priceController = TextEditingController(
         text: widget.initial != null ? '${widget.initial!.price}' : '');
-    _orderController = TextEditingController(
-        text: widget.initial != null ? '${widget.initial!.order}' : '');
     _priceType = widget.initial?.priceType ?? 'per_booking';
     _isActive = widget.initial?.isActive ?? true;
   }
@@ -684,18 +723,16 @@ class _AddOnFormDialogState extends State<_AddOnFormDialog> {
   void dispose() {
     _nameController.dispose();
     _priceController.dispose();
-    _orderController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     final name = _nameController.text.trim();
     final price = int.tryParse(_priceController.text.trim()) ?? 0;
-    final order = int.tryParse(_orderController.text.trim()) ?? 0;
     if (name.isEmpty) return;
     setState(() => _isSaving = true);
     try {
-      await widget.onConfirm(name, price, _priceType, order, _isActive);
+      await widget.onConfirm(name, price, _priceType, _isActive);
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -800,31 +837,6 @@ class _AddOnFormDialogState extends State<_AddOnFormDialog> {
                     if (value != null) setState(() => _priceType = value);
                   },
                 ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            _FieldLabel('Order'),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _orderController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                hintText: '0',
-                hintStyle:
-                    const TextStyle(color: AppColors.adminTextMuted),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                      const BorderSide(color: AppColors.adminBorderLight),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                      const BorderSide(color: AppColors.adminPrimary),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
               ),
             ),
             const SizedBox(height: 14),
