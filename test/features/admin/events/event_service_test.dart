@@ -130,15 +130,15 @@ void main() {
   // ── createEvent() ─────────────────────────────────────────────────────────
   group('createEvent()', () {
     test(
-      'writes only eventName, eventDetail, eventPicture — not location fields',
+      'writes eventName, eventDetail, eventPicture, location_x, location_y to Firestore',
       () async {
-        // Arrange — fresh fakeFirestore (done in setUp)
-
         // Act
         await service.createEvent(
           eventName: 'Seal Show',
           eventDetail: 'Fun',
           eventPicture: 'url',
+          locationX: 50,
+          locationY: 80,
         );
 
         // Assert — read back the written document
@@ -149,26 +149,26 @@ void main() {
         expect(data['eventName'], 'Seal Show');
         expect(data['eventDetail'], 'Fun');
         expect(data['eventPicture'], 'url');
-
-        // CRITICAL: location fields must NEVER be written by createEvent()
-        expect(data.containsKey('location_x'), false);
-        expect(data.containsKey('location_y'), false);
+        expect(data['location_x'], 50);
+        expect(data['location_y'], 80);
       },
     );
 
     test('creates multiple events independently', () async {
-      // Arrange — fresh fakeFirestore (done in setUp)
-
       // Act — call createEvent twice with different names
       await service.createEvent(
         eventName: 'Seal Show',
         eventDetail: 'Aquatic fun',
         eventPicture: 'https://example.com/seal.jpg',
+        locationX: 100,
+        locationY: 200,
       );
       await service.createEvent(
         eventName: 'Elephant Bath',
         eventDetail: 'Watch elephants bathe',
         eventPicture: 'https://example.com/elephant.jpg',
+        locationX: 300,
+        locationY: 400,
       );
 
       // Assert — two separate documents exist
@@ -184,9 +184,9 @@ void main() {
   // ── updateEvent() ─────────────────────────────────────────────────────────
   group('updateEvent()', () {
     test(
-      'updates only eventName, eventDetail, eventPicture — does not overwrite location fields',
+      'updates eventName, eventDetail, eventPicture and location fields',
       () async {
-        // Arrange — seed a doc that already has location fields set by admin map
+        // Arrange — seed a doc with old location values
         final docId = await seedEvent(
           docId: 'evt_update',
           eventName: 'Old',
@@ -195,35 +195,28 @@ void main() {
           extra: {'location_x': 100, 'location_y': 200},
         );
 
-        // Act
+        // Act — update with new values including new location
         await service.updateEvent(
           eventId: docId,
           eventName: 'New',
           eventDetail: 'New detail',
           eventPicture: 'new_url',
+          locationX: 300,
+          locationY: 400,
         );
 
-        // Assert — text fields updated correctly
+        // Assert — all fields updated correctly
         final data = (await fakeFirestore.collection('event').doc(docId).get())
             .data()!;
         expect(data['eventName'], 'New');
         expect(data['eventDetail'], 'New detail');
         expect(data['eventPicture'], 'new_url');
-
-        // CRITICAL: location fields must be preserved because updateEvent uses
-        // .update() (partial merge) NOT .set() (full overwrite)
-        expect(data['location_x'], 100);
-        expect(data['location_y'], 200);
+        expect(data['location_x'], 300);
+        expect(data['location_y'], 400);
       },
     );
 
     test('throws when updating a non-existent document', () async {
-      // Arrange — empty Firestore; no document exists with this ID
-      // NOTE: fake_cloud_firestore ^3.0.0 correctly mirrors production
-      // Firestore behaviour: calling .update() on a missing document throws
-      // a [FakeFirestore/not-found] exception. EventAdminService re-throws
-      // the error after logging it, so callers can handle it appropriately.
-
       // Act + Assert — a FirebaseException is propagated
       await expectLater(
         service.updateEvent(
@@ -231,6 +224,8 @@ void main() {
           eventName: 'Ghost Event',
           eventDetail: 'Does not exist',
           eventPicture: 'nowhere',
+          locationX: 0,
+          locationY: 0,
         ),
         throwsA(isA<FirebaseException>()),
       );

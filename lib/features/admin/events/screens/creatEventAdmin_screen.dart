@@ -101,6 +101,8 @@ class _CreateEventAdminDialogState
             eventName: name,
             eventDetail: detail,
             eventPicture: _pictureUrl,
+            locationX: int.tryParse(_xController.text.trim()) ?? 0,
+            locationY: int.tryParse(_yController.text.trim()) ?? 0,
           );
       if (mounted) Navigator.pop(context);
     } catch (e) {

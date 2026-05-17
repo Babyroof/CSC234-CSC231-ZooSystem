@@ -118,31 +118,31 @@ class EventInfoScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: () {
-                                  if (event.locationX == null ||
-                                      event.locationY == null)
-                                    return;
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoute.map,
-                                    arguments: {
-                                      'focusEvent': {
-                                        'eventName': event.eventName,
-                                        'eventDetail': event.eventDetail,
-                                        'eventPicture': event.eventPicture,
-                                        'locationX': event.locationX,
-                                        'locationY': event.locationY,
+                              if (event.locationX != null &&
+                                  event.locationY != null)
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoute.map,
+                                      arguments: {
+                                        'focusEvent': {
+                                          'eventName': event.eventName,
+                                          'eventDetail': event.eventDetail,
+                                          'eventPicture': event.eventPicture,
+                                          'locationX': event.locationX,
+                                          'locationY': event.locationY,
+                                        },
                                       },
-                                    },
-                                  );
-                                },
-                                child: const Icon(
-                                  Icons.map_outlined,
-                                  color: AppColors.black,
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.map_outlined,
+                                    color: AppColors.black,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
                                 ),
-                              ),
                             ],
                           ),
                           const SizedBox(height: 16),
