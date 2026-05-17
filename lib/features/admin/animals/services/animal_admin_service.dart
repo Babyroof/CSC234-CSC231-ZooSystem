@@ -15,41 +15,44 @@ class AnimalAdminService {
   /// Pre-generates a Firestore document ID without creating the document.
   String generateAnimalId() => _db.collection('animal').doc().id;
 
-  Future<List<AnimalAdminModel>> getAnimals() async {
-    try {
-      final zoneSnap = await _db.collection('zone').get();
-      final zoneMap = {
-        for (final doc in zoneSnap.docs)
-          doc.id: (doc.data()['zoneName'] as String?) ?? '',
-      };
+  Stream<List<AnimalAdminModel>> getAnimals() {
+    return _db
+        .collection('animal')
+        .snapshots()
+        .asyncMap((animalSnap) async {
+          final zoneSnap = await _db.collection('zone').get();
+          final zoneMap = {
+            for (final doc in zoneSnap.docs)
+              doc.id: (doc.data()['zoneName'] as String?) ?? '',
+          };
 
-      final animalSnap = await _db.collection('animal').get();
-      return animalSnap.docs.map((doc) {
-        final data = doc.data();
+          return animalSnap.docs.map((doc) {
+            final data = doc.data();
 
-        String zoneId = '';
-        final rawZoneId = data['zoneId'];
-        if (rawZoneId is DocumentReference) {
-          zoneId = rawZoneId.id;
-        } else if (rawZoneId is String) {
-          zoneId = rawZoneId.split('/').last;
-        }
+            String zoneId = '';
+            final rawZoneId = data['zoneId'];
+            if (rawZoneId is DocumentReference) {
+              zoneId = rawZoneId.id;
+            } else if (rawZoneId is String) {
+              zoneId = rawZoneId.split('/').last;
+            }
 
-        return AnimalAdminModel(
-          id: doc.id,
-          animalName: (data['animalName'] as String?) ?? '',
-          animalDetail: (data['animalDetail'] as String?) ?? '',
-          animalPicture: (data['animalPicture'] as String?) ?? '',
-          zoneId: zoneId,
-          zoneName: zoneMap[zoneId] ?? 'Unknown',
-          locationX: (data['location_x'] as num?)?.toInt() ?? 0,
-          locationY: (data['location_y'] as num?)?.toInt() ?? 0,
-        );
-      }).toList();
-    } catch (e) {
-      debugPrint('[AnimalAdminService] getAnimals error: $e');
-      rethrow;
-    }
+            return AnimalAdminModel(
+              id: doc.id,
+              animalName: (data['animalName'] as String?) ?? '',
+              animalDetail: (data['animalDetail'] as String?) ?? '',
+              animalPicture: (data['animalPicture'] as String?) ?? '',
+              zoneId: zoneId,
+              zoneName: zoneMap[zoneId] ?? 'Unknown',
+              locationX: (data['location_x'] as num?)?.toInt() ?? 0,
+              locationY: (data['location_y'] as num?)?.toInt() ?? 0,
+            );
+          }).toList();
+        })
+        .handleError((Object e) {
+          debugPrint('[AnimalAdminService] getAnimals stream error: $e');
+          throw e;
+        });
   }
 
   Future<List<Map<String, String>>> getZones() async {
@@ -71,8 +74,8 @@ class AnimalAdminService {
     required String animalDetail,
     required String animalPicture,
     required String zoneId,
-    required int locationX,
-    required int locationY,
+    int locationX = 0,
+    int locationY = 0,
   }) async {
     try {
       final data = {

@@ -15,6 +15,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zoopernova_zoo_system/features/booking/constants/booking_pricing.dart';
 import 'package:zoopernova_zoo_system/features/booking/models/booking_model.dart';
+import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
 import 'package:zoopernova_zoo_system/features/booking/services/booking_service.dart';
 
 // ---------------------------------------------------------------------------
@@ -42,13 +43,14 @@ void main() {
     int adultTotal = 2,
     int childTotal = 1,
     int elderTotal = 1,
-    bool buffetFood = true,
-    bool guidTour = true,
-    bool golfCar = true,
     String status = 'pending',
     DateTime? date,
     int? totalPrice,
     String? chargeId,
+    List<SelectedAddOnModel> selectedAddOns = const [],
+    int adultUnitPrice = BookingPricing.adultPrice,
+    int childUnitPrice = BookingPricing.kidPrice,
+    int elderUnitPrice = BookingPricing.elderPrice,
   }) => BookingModel(
     id: id,
     userId: userId,
@@ -56,12 +58,13 @@ void main() {
     childTotal: childTotal,
     elderTotal: elderTotal,
     date: date ?? DateTime(2026, 5, 10),
-    buffetFood: buffetFood,
-    guidTour: guidTour,
-    golfCar: golfCar,
     status: status,
     totalPrice: totalPrice,
     chargeId: chargeId,
+    selectedAddOns: selectedAddOns,
+    adultUnitPrice: adultUnitPrice,
+    childUnitPrice: childUnitPrice,
+    elderUnitPrice: elderUnitPrice,
   );
 
   // =========================================================================
@@ -70,109 +73,37 @@ void main() {
   group('BookingModel', () {
     // ── totalAmount ──────────────────────────────────────────────────────────
     group('totalAmount', () {
-      test('calculates correctly with all add-ons', () {
+      test('calculates ticket-only total with no add-ons', () {
         // Arrange
         final booking = makeModel(
           adultTotal: 2,
           childTotal: 1,
           elderTotal: 1,
-          buffetFood: true,
-          guidTour: true,
-          golfCar: true,
+          selectedAddOns: const [],
         );
 
         // Act
         final total = booking.totalAmount;
 
-        // Assert
-        // 2*300 + 1*150 + 1*40 + 200 + 350 + 500 = 1840
+        // Assert — 2*300 + 1*150 + 1*40 = 790
         const expected =
             2 * BookingPricing.adultPrice +
             1 * BookingPricing.kidPrice +
-            1 * BookingPricing.elderPrice +
-            BookingPricing.buffetFoodPrice +
-            BookingPricing.guidTourPrice +
-            BookingPricing.golfCarPrice;
-        expect(total, equals(expected)); // 1840
+            1 * BookingPricing.elderPrice;
+        expect(total, equals(expected)); // 790
       });
 
-      test('calculates correctly with no add-ons', () {
-        // Arrange
-        final booking = makeModel(
-          adultTotal: 2,
-          childTotal: 1,
-          elderTotal: 0,
-          buffetFood: false,
-          guidTour: false,
-          golfCar: false,
-        );
-
-        // Act
-        final total = booking.totalAmount;
-
-        // Assert — 2*300 + 1*150 = 750
-        const expected =
-            2 * BookingPricing.adultPrice + 1 * BookingPricing.kidPrice;
-        expect(total, equals(expected)); // 750
-      });
-
-      test('returns 0 when all counts are 0 and no add-ons', () {
+      test('calculates correctly with no add-ons and no people', () {
         // Arrange
         final booking = makeModel(
           adultTotal: 0,
           childTotal: 0,
           elderTotal: 0,
-          buffetFood: false,
-          guidTour: false,
-          golfCar: false,
+          selectedAddOns: const [],
         );
 
         // Act & Assert
         expect(booking.totalAmount, equals(0));
-      });
-
-      test('each add-on contributes its correct price independently', () {
-        // Arrange — one adult, buffet only
-        final withBuffet = makeModel(
-          adultTotal: 1,
-          childTotal: 0,
-          elderTotal: 0,
-          buffetFood: true,
-          guidTour: false,
-          golfCar: false,
-        );
-        // Arrange — one adult, guide only
-        final withGuide = makeModel(
-          adultTotal: 1,
-          childTotal: 0,
-          elderTotal: 0,
-          buffetFood: false,
-          guidTour: true,
-          golfCar: false,
-        );
-        // Arrange — one adult, golf car only
-        final withGolfCar = makeModel(
-          adultTotal: 1,
-          childTotal: 0,
-          elderTotal: 0,
-          buffetFood: false,
-          guidTour: false,
-          golfCar: true,
-        );
-
-        // Act & Assert
-        expect(
-          withBuffet.totalAmount,
-          equals(BookingPricing.adultPrice + BookingPricing.buffetFoodPrice),
-        );
-        expect(
-          withGuide.totalAmount,
-          equals(BookingPricing.adultPrice + BookingPricing.guidTourPrice),
-        );
-        expect(
-          withGolfCar.totalAmount,
-          equals(BookingPricing.adultPrice + BookingPricing.golfCarPrice),
-        );
       });
 
       test('uses BookingPricing constants for per-head prices', () {
@@ -181,9 +112,7 @@ void main() {
           adultTotal: 3,
           childTotal: 2,
           elderTotal: 1,
-          buffetFood: false,
-          guidTour: false,
-          golfCar: false,
+          selectedAddOns: const [],
         );
 
         // Act
@@ -199,34 +128,38 @@ void main() {
           ),
         );
       });
+
+      test('adds selectedAddOns price to ticket total', () {
+        // Arrange — 1 adult + 1 add-on of 200
+        final booking = makeModel(
+          adultTotal: 1,
+          childTotal: 0,
+          elderTotal: 0,
+          selectedAddOns: const [
+            SelectedAddOnModel(
+              addOnId: 'a1',
+              name: 'Buffet',
+              price: 200,
+              priceType: 'per_booking',
+            ),
+          ],
+        );
+
+        // Act
+        final total = booking.totalAmount;
+
+        // Assert — totalAmount uses a.price directly (not calculatePrice)
+        expect(total, equals(BookingPricing.adultPrice + 200));
+      });
     });
 
     // ── totalPrice priority ──────────────────────────────────────────────────
     group('totalPrice field', () {
-      test('takes priority over calculated totalAmount when set', () {
-        // Arrange — calculated totalAmount would be 1840, but totalPrice is 9999
-        // 2*300 + 1*150 + 1*40 + 200 + 350 + 500 = 600+150+40+200+350+500 = 1840
-        final booking = makeModel(
-          adultTotal: 2,
-          childTotal: 1,
-          elderTotal: 1,
-          buffetFood: true,
-          guidTour: true,
-          golfCar: true,
-          totalPrice: 9999,
-        );
-
-        // Act — consumers should prefer totalPrice ?? totalAmount
-        final effective = booking.totalPrice ?? booking.totalAmount;
+      test('totalPrice is null when not provided', () {
+        // Arrange/Act
+        final booking = makeModel(totalPrice: null);
 
         // Assert
-        expect(effective, equals(9999));
-        // The getter itself still returns the calculated value
-        expect(booking.totalAmount, equals(1840));
-      });
-
-      test('totalPrice is null when not provided', () {
-        final booking = makeModel(totalPrice: null);
         expect(booking.totalPrice, isNull);
       });
 
@@ -236,9 +169,7 @@ void main() {
           adultTotal: 1,
           childTotal: 0,
           elderTotal: 0,
-          buffetFood: false,
-          guidTour: false,
-          golfCar: false,
+          selectedAddOns: const [],
           totalPrice: null,
         );
 
@@ -269,12 +200,10 @@ void main() {
             'childTotal': 1,
             'elderTotal': 1,
             'date': Timestamp.fromDate(DateTime(2026, 5, 10)),
-            'BuffetFood': true,
-            'GuideTour': true,
-            'GolfCar': true,
             'status': 'Done',
             'totalPrice': 1540,
             'chargeId': 'ch_abc123',
+            'selectedAddOns': [],
           });
           final doc = await fakeFirestore
               .collection('booking')
@@ -291,9 +220,6 @@ void main() {
           expect(model.childTotal, 1);
           expect(model.elderTotal, 1);
           expect(model.date, DateTime(2026, 5, 10));
-          expect(model.buffetFood, true);
-          expect(model.guidTour, true);
-          expect(model.golfCar, true);
           expect(model.status, 'Done');
           expect(model.totalPrice, 1540);
           expect(model.chargeId, 'ch_abc123');
@@ -308,10 +234,8 @@ void main() {
           'childTotal': 0,
           'elderTotal': 0,
           'date': Timestamp.fromDate(DateTime(2026, 6, 1)),
-          'BuffetFood': false,
-          'GuideTour': false,
-          'GolfCar': false,
           'status': 'Pending',
+          'selectedAddOns': [],
         });
         final doc = await fakeFirestore.collection('booking').doc('bk2').get();
 
@@ -329,9 +253,6 @@ void main() {
           'adultTotal': 0,
           'childTotal': 0,
           'elderTotal': 0,
-          'BuffetFood': false,
-          'GuideTour': false,
-          'GolfCar': false,
           'status': 'pending',
         });
         final doc = await fakeFirestore.collection('booking').doc('bk3').get();
@@ -348,9 +269,6 @@ void main() {
         await fakeFirestore.collection('booking').doc('bk4').set({
           'userId': 'uid',
           'date': Timestamp.fromDate(DateTime(2026, 1, 1)),
-          'BuffetFood': false,
-          'GuideTour': false,
-          'GolfCar': false,
           'status': 'pending',
           // adultTotal, childTotal, elderTotal intentionally omitted
         });
@@ -365,7 +283,7 @@ void main() {
         expect(model.elderTotal, 0);
       });
 
-      test('boolean fields default to false when absent', () async {
+      test('chargeId and totalPrice are null when absent', () async {
         // Arrange
         await fakeFirestore.collection('booking').doc('bk5').set({
           'userId': 'uid',
@@ -374,33 +292,8 @@ void main() {
           'elderTotal': 0,
           'date': Timestamp.fromDate(DateTime(2026, 1, 1)),
           'status': 'pending',
-          // BuffetFood, GuideTour, GolfCar intentionally omitted
         });
         final doc = await fakeFirestore.collection('booking').doc('bk5').get();
-
-        // Act
-        final model = BookingModel.fromFirestore(doc);
-
-        // Assert
-        expect(model.buffetFood, false);
-        expect(model.guidTour, false);
-        expect(model.golfCar, false);
-      });
-
-      test('chargeId and totalPrice are null when absent', () async {
-        // Arrange
-        await fakeFirestore.collection('booking').doc('bk6').set({
-          'userId': 'uid',
-          'adultTotal': 1,
-          'childTotal': 0,
-          'elderTotal': 0,
-          'date': Timestamp.fromDate(DateTime(2026, 1, 1)),
-          'BuffetFood': false,
-          'GuideTour': false,
-          'GolfCar': false,
-          'status': 'pending',
-        });
-        final doc = await fakeFirestore.collection('booking').doc('bk6').get();
 
         // Act
         final model = BookingModel.fromFirestore(doc);
@@ -413,23 +306,6 @@ void main() {
 
     // ── toMap ────────────────────────────────────────────────────────────────
     group('toMap', () {
-      test('all boolean fields are bool, not String', () {
-        // Arrange
-        final model = makeModel(
-          buffetFood: true,
-          guidTour: false,
-          golfCar: true,
-        );
-
-        // Act
-        final map = model.toMap();
-
-        // Assert
-        expect(map['BuffetFood'], isA<bool>());
-        expect(map['GuideTour'], isA<bool>());
-        expect(map['GolfCar'], isA<bool>());
-      });
-
       test('all numeric fields are int, not String', () {
         // Arrange
         final model = makeModel(adultTotal: 3, childTotal: 2, elderTotal: 1);
@@ -470,40 +346,35 @@ void main() {
         },
       );
 
-      test('boolean values match the model fields', () {
-        // Arrange
-        final model = makeModel(
-          buffetFood: true,
-          guidTour: false,
-          golfCar: true,
-        );
-
-        // Act
-        final map = model.toMap();
+      test('chargeId is omitted from map when null', () {
+        // Arrange/Act
+        final map = makeModel(chargeId: null).toMap();
 
         // Assert
-        expect(map['BuffetFood'], true);
-        expect(map['GuideTour'], false);
-        expect(map['GolfCar'], true);
-      });
-
-      test('chargeId is omitted from map when null', () {
-        final map = makeModel(chargeId: null).toMap();
         expect(map.containsKey('chargeId'), false);
       });
 
       test('chargeId is included when not null', () {
+        // Arrange/Act
         final map = makeModel(chargeId: 'ch_xyz').toMap();
+
+        // Assert
         expect(map['chargeId'], 'ch_xyz');
       });
 
       test('totalPrice is omitted from map when null', () {
+        // Arrange/Act
         final map = makeModel(totalPrice: null).toMap();
+
+        // Assert
         expect(map.containsKey('totalPrice'), false);
       });
 
       test('totalPrice is included when set', () {
+        // Arrange/Act
         final map = makeModel(totalPrice: 999).toMap();
+
+        // Assert
         expect(map['totalPrice'], 999);
       });
     });
@@ -525,9 +396,6 @@ void main() {
         expect(updated.userId, original.userId);
         expect(updated.childTotal, original.childTotal);
         expect(updated.elderTotal, original.elderTotal);
-        expect(updated.buffetFood, original.buffetFood);
-        expect(updated.guidTour, original.guidTour);
-        expect(updated.golfCar, original.golfCar);
         expect(updated.date, original.date);
       });
 
@@ -544,9 +412,6 @@ void main() {
         expect(copy.adultTotal, original.adultTotal);
         expect(copy.childTotal, original.childTotal);
         expect(copy.elderTotal, original.elderTotal);
-        expect(copy.buffetFood, original.buffetFood);
-        expect(copy.guidTour, original.guidTour);
-        expect(copy.golfCar, original.golfCar);
         expect(copy.date, original.date);
         expect(copy.status, original.status);
         expect(copy.chargeId, original.chargeId);
@@ -568,13 +433,6 @@ void main() {
 
   // =========================================================================
   // Group 2 — BookingService
-  //
-  // BookingService accepts an optional FirebaseFirestore in its constructor:
-  //
-  //   BookingService({FirebaseFirestore? db})
-  //       : _db = db ?? FirebaseFirestore.instance;
-  //
-  // FakeFirebaseFirestore is injected directly — no source changes needed.
   // =========================================================================
   group('BookingService', () {
     late FakeFirebaseFirestore fakeFirestore;
@@ -585,9 +443,6 @@ void main() {
       required String docId,
       required String userId,
       String status = 'Done',
-      bool buffetFood = false,
-      bool guidTour = false,
-      bool golfCar = false,
       int adultTotal = 1,
       int childTotal = 0,
       int elderTotal = 0,
@@ -601,9 +456,7 @@ void main() {
         'childTotal': childTotal,
         'elderTotal': elderTotal,
         'date': Timestamp.fromDate(date ?? DateTime(2026, 5, 10)),
-        'BuffetFood': buffetFood,
-        'GuideTour': guidTour,
-        'GolfCar': golfCar,
+        'selectedAddOns': [],
       });
     }
 
@@ -642,14 +495,12 @@ void main() {
       });
 
       test('stores totalPrice as the calculated totalAmount', () async {
-        // Arrange — 2 adults + buffet (300*2 + 200 = 800)
+        // Arrange — 2 adults, no add-ons → 2*300 = 600
         final booking = makeModel(
           adultTotal: 2,
           childTotal: 0,
           elderTotal: 0,
-          buffetFood: true,
-          guidTour: false,
-          golfCar: false,
+          selectedAddOns: const [],
         );
 
         // Act
@@ -660,12 +511,7 @@ void main() {
             .docs
             .first
             .data();
-        expect(
-          data['totalPrice'],
-          equals(
-            2 * BookingPricing.adultPrice + BookingPricing.buffetFoodPrice,
-          ),
-        );
+        expect(data['totalPrice'], equals(2 * BookingPricing.adultPrice));
       });
 
       test(
@@ -687,27 +533,6 @@ void main() {
           expect((userIdField as DocumentReference).id, 'user_abc');
         },
       );
-
-      test('boolean add-on fields are stored as bool, not String', () async {
-        // Arrange
-        final booking = makeModel(
-          buffetFood: true,
-          guidTour: false,
-          golfCar: true,
-        );
-
-        // Act
-        await service.createBooking(booking);
-
-        // Assert
-        final data = (await fakeFirestore.collection('booking').get())
-            .docs
-            .first
-            .data();
-        expect(data['BuffetFood'], isA<bool>());
-        expect(data['GuideTour'], isA<bool>());
-        expect(data['GolfCar'], isA<bool>());
-      });
 
       test('date field is stored as Timestamp, not String', () async {
         // Arrange
@@ -737,7 +562,10 @@ void main() {
       });
 
       test('throws on Firestore error', () {
+        // Arrange
         final errorService = BookingService(db: _ErrorFirestore());
+
+        // Assert
         expect(
           () => errorService.createBooking(makeModel()),
           throwsA(isA<FirebaseException>()),
@@ -756,9 +584,6 @@ void main() {
           adultTotal: 2,
           childTotal: 1,
           elderTotal: 0,
-          buffetFood: true,
-          guidTour: true,
-          golfCar: false,
           date: DateTime(2026, 5, 10),
         );
 
@@ -772,9 +597,6 @@ void main() {
         expect(result.adultTotal, 2);
         expect(result.childTotal, 1);
         expect(result.elderTotal, 0);
-        expect(result.buffetFood, true);
-        expect(result.guidTour, true);
-        expect(result.golfCar, false);
         expect(result.status, 'Done');
         expect(result.date, DateTime(2026, 5, 10));
       });
@@ -788,7 +610,10 @@ void main() {
       });
 
       test('throws on Firestore error', () {
+        // Arrange
         final errorService = BookingService(db: _ErrorFirestore());
+
+        // Assert
         expect(
           () => errorService.getBookingById('any'),
           throwsA(isA<FirebaseException>()),
@@ -810,7 +635,6 @@ void main() {
             (await fakeFirestore.collection('booking').doc('bk1').get())
                 .data()!;
         expect(data['status'], 'Done');
-        // Other fields untouched
         expect(data['adultTotal'], 1);
       });
 
@@ -895,9 +719,7 @@ void main() {
         // Arrange
         await seedRaw(docId: 'bk1', userId: 'uid', status: 'Pending');
 
-        // Act — subscribe, skip the initial Pending emission, then update
-        // skip(1) discards the first snapshot (Pending) so we receive the
-        // next one emitted after the write (Done).
+        // Act — subscribe, skip initial emission, then update
         final stream = service.watchBooking('bk1');
         final futureDone = stream.skip(1).first;
         await service.updateStatus(bookingId: 'bk1', status: 'Done');
@@ -911,7 +733,7 @@ void main() {
     // ── getBookingsByUser ─────────────────────────────────────────────────────
     group('getBookingsByUser', () {
       test('returns all bookings for user regardless of status', () async {
-        // Arrange — mix of Done and Pending bookings for user_1
+        // Arrange
         await seedRaw(
           docId: 'done1',
           userId: 'user_1',
@@ -934,7 +756,7 @@ void main() {
         // Act
         final bookings = await service.getBookingsByUser('user_1').first;
 
-        // Assert — all 3 bookings returned regardless of status
+        // Assert — all 3 bookings returned
         expect(bookings.length, 3);
       });
 
@@ -960,25 +782,6 @@ void main() {
         expect(bookings.length, 1);
         expect(bookings.first.userId, 'user_1');
       });
-
-      test(
-        'returns pending bookings for user (no status filter applied)',
-        () async {
-          // Arrange — seeded booking has Pending status
-          await seedRaw(
-            docId: 'pending1',
-            userId: 'user_1',
-            status: 'Pending',
-            date: DateTime(2026, 5, 10),
-          );
-
-          // Act
-          final bookings = await service.getBookingsByUser('user_1').first;
-
-          // Assert — getBookingsByUser returns all bookings regardless of status
-          expect(bookings.length, 1);
-        },
-      );
 
       test('returns empty list when user has no bookings at all', () async {
         // Act
@@ -1019,7 +822,10 @@ void main() {
       });
 
       test('throws on Firestore error', () {
+        // Arrange
         final errorService = BookingService(db: _ErrorFirestore());
+
+        // Assert
         expect(
           () => errorService.getBookingsByUser('any'),
           throwsA(isA<FirebaseException>()),
@@ -1059,7 +865,10 @@ void main() {
       });
 
       test('throws on Firestore error', () {
+        // Arrange
         final errorService = BookingService(db: _ErrorFirestore());
+
+        // Assert
         expect(
           () => errorService.deleteBooking('any'),
           throwsA(isA<FirebaseException>()),

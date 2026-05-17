@@ -42,9 +42,6 @@ class TicketService {
 
   Future<void> updateTicket({
     required String ticketId,
-    required bool buffetFood,
-    required bool golfCar,
-    required bool guidTour,
     required int adultTotal,
     required int childTotal,
     required int elderTotal,
@@ -54,9 +51,6 @@ class TicketService {
   }) async {
     try {
       await _db.collection(_collection).doc(ticketId).update({
-        'BuffetFood': buffetFood,
-        'GolfCar': golfCar,
-        'GuidTour': guidTour,
         'adultTotal': adultTotal,
         'childTotal': childTotal,
         'elderTotal': elderTotal,

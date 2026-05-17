@@ -1,3 +1,5 @@
+import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
+
 class BookingAdminModel {
   final String id;
   final String userId;
@@ -6,9 +8,7 @@ class BookingAdminModel {
   final int childTotal;
   final int elderTotal;
   final DateTime date;
-  final bool buffetFood;
-  final bool guideTour;
-  final bool golfCar;
+  final List<SelectedAddOnModel> selectedAddOns;
   final String status;
 
   const BookingAdminModel({
@@ -19,9 +19,7 @@ class BookingAdminModel {
     required this.childTotal,
     required this.elderTotal,
     required this.date,
-    required this.buffetFood,
-    required this.guideTour,
-    required this.golfCar,
+    required this.selectedAddOns,
     required this.status,
   });
 
@@ -33,6 +31,16 @@ class BookingAdminModel {
     Map<String, dynamic> map,
     String userName,
   ) {
+    final rawAddOns = map['selectedAddOns'];
+    final addOns = <SelectedAddOnModel>[];
+    if (rawAddOns is List) {
+      for (final item in rawAddOns) {
+        if (item is Map<String, dynamic>) {
+          addOns.add(SelectedAddOnModel.fromMap(item));
+        }
+      }
+    }
+
     return BookingAdminModel(
       id: id,
       userId: map['userId'] ?? '',
@@ -41,9 +49,7 @@ class BookingAdminModel {
       childTotal: (map['childTotal'] as num?)?.toInt() ?? 0,
       elderTotal: (map['elderTotal'] as num?)?.toInt() ?? 0,
       date: (map['date'] as DateTime?) ?? DateTime.now(),
-      buffetFood: map['BuffetFood'] ?? false,
-      guideTour: map['GuideTour'] ?? false,
-      golfCar: map['GolfCar'] ?? false,
+      selectedAddOns: addOns,
       status: map['status'] ?? 'pending',
     );
   }

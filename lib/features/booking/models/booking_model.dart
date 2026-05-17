@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/booking_pricing.dart';
+import 'selected_add_on_model.dart';
 
 class BookingModel {
   final String id;
@@ -8,20 +9,19 @@ class BookingModel {
   final int childTotal;
   final int elderTotal;
   final DateTime date;
-  final bool buffetFood;
-  final bool golfCar;
-  final bool guidTour;
+  final List<SelectedAddOnModel> selectedAddOns;
   final String status;
   final String? chargeId;
   final int? totalPrice;
+  final int adultUnitPrice;
+  final int childUnitPrice;
+  final int elderUnitPrice;
 
   int get totalAmount =>
-      (adultTotal * BookingPricing.adultPrice) +
-      (childTotal * BookingPricing.kidPrice) +
-      (elderTotal * BookingPricing.elderPrice) +
-      (buffetFood ? BookingPricing.buffetFoodPrice : 0) +
-      (guidTour ? BookingPricing.guidTourPrice : 0) +
-      (golfCar ? BookingPricing.golfCarPrice : 0);
+      (adultTotal * adultUnitPrice) +
+      (childTotal * childUnitPrice) +
+      (elderTotal * elderUnitPrice) +
+      selectedAddOns.fold(0, (acc, a) => acc + a.price);
 
   const BookingModel({
     required this.id,
@@ -30,12 +30,13 @@ class BookingModel {
     required this.childTotal,
     required this.elderTotal,
     required this.date,
-    required this.buffetFood,
-    required this.golfCar,
-    required this.guidTour,
     required this.status,
+    this.selectedAddOns = const [],
     this.chargeId,
     this.totalPrice,
+    this.adultUnitPrice = BookingPricing.adultPrice,
+    this.childUnitPrice = BookingPricing.kidPrice,
+    this.elderUnitPrice = BookingPricing.elderPrice,
   });
 
   factory BookingModel.fromMap(String id, Map<String, dynamic> map) {
@@ -53,6 +54,16 @@ class BookingModel {
       resolvedDate = rawDate.toDate();
     }
 
+    final rawAddOns = map['selectedAddOns'];
+    final addOns = <SelectedAddOnModel>[];
+    if (rawAddOns is List) {
+      for (final item in rawAddOns) {
+        if (item is Map<String, dynamic>) {
+          addOns.add(SelectedAddOnModel.fromMap(item));
+        }
+      }
+    }
+
     return BookingModel(
       id: id,
       userId: resolvedUserId,
@@ -60,9 +71,7 @@ class BookingModel {
       childTotal: (map['childTotal'] as num? ?? 0).toInt(),
       elderTotal: (map['elderTotal'] as num? ?? 0).toInt(),
       date: resolvedDate,
-      buffetFood: map['BuffetFood'] == true,
-      golfCar: map['GolfCar'] == true,
-      guidTour: map['GuideTour'] == true,
+      selectedAddOns: addOns,
       status: map['status'] as String? ?? 'pending',
       chargeId: map['chargeId'] as String?,
       totalPrice: (map['totalPrice'] as num?)?.toInt(),
@@ -81,9 +90,7 @@ class BookingModel {
       'childTotal': childTotal,
       'elderTotal': elderTotal,
       'date': Timestamp.fromDate(date),
-      'BuffetFood': buffetFood,
-      'GolfCar': golfCar,
-      'GuideTour': guidTour,
+      'selectedAddOns': selectedAddOns.map((a) => a.toMap()).toList(),
       'status': status,
     };
     if (chargeId != null) map['chargeId'] = chargeId;
@@ -98,9 +105,7 @@ class BookingModel {
       'childTotal': childTotal,
       'elderTotal': elderTotal,
       'date': Timestamp.fromDate(date),
-      'BuffetFood': buffetFood,
-      'GolfCar': golfCar,
-      'GuideTour': guidTour,
+      'selectedAddOns': selectedAddOns.map((a) => a.toMap()).toList(),
       'status': status,
     };
     if (chargeId != null) map['chargeId'] = chargeId;
@@ -115,12 +120,13 @@ class BookingModel {
     int? childTotal,
     int? elderTotal,
     DateTime? date,
-    bool? buffetFood,
-    bool? golfCar,
-    bool? guidTour,
+    List<SelectedAddOnModel>? selectedAddOns,
     String? status,
     String? chargeId,
     int? totalPrice,
+    int? adultUnitPrice,
+    int? childUnitPrice,
+    int? elderUnitPrice,
   }) => BookingModel(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -128,11 +134,12 @@ class BookingModel {
     childTotal: childTotal ?? this.childTotal,
     elderTotal: elderTotal ?? this.elderTotal,
     date: date ?? this.date,
-    buffetFood: buffetFood ?? this.buffetFood,
-    golfCar: golfCar ?? this.golfCar,
-    guidTour: guidTour ?? this.guidTour,
+    selectedAddOns: selectedAddOns ?? this.selectedAddOns,
     status: status ?? this.status,
     chargeId: chargeId ?? this.chargeId,
     totalPrice: totalPrice ?? this.totalPrice,
+    adultUnitPrice: adultUnitPrice ?? this.adultUnitPrice,
+    childUnitPrice: childUnitPrice ?? this.childUnitPrice,
+    elderUnitPrice: elderUnitPrice ?? this.elderUnitPrice,
   );
 }

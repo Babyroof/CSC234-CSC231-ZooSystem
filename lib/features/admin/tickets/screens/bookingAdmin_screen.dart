@@ -415,14 +415,17 @@ class _BookingRow extends StatelessWidget {
     const textColor = Color(0xFF333333);
     final bgColor = isHighlighted ? Colors.white : AppColors.adminRowAlt;
 
-    final addons = [
-      if (item.buffetFood)
-        _AddonChip(label: 'Buffet', color: const Color(0xFFF59E0B)),
-      if (item.guideTour)
-        _AddonChip(label: 'Guide', color: const Color(0xFF3B82F6)),
-      if (item.golfCar)
-        _AddonChip(label: 'Golf', color: const Color(0xFF10B981)),
+    final chipColors = [
+      const Color(0xFFF59E0B),
+      const Color(0xFF3B82F6),
+      const Color(0xFF10B981),
+      const Color(0xFF8B5CF6),
+      const Color(0xFFEF4444),
     ];
+    final addons = item.selectedAddOns.asMap().entries.map((entry) {
+      final color = chipColors[entry.key % chipColors.length];
+      return _AddonChip(label: entry.value.name, color: color);
+    }).toList();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 2),
@@ -526,13 +529,12 @@ class _BookingRow extends StatelessWidget {
   }
 
   String _formatTotal() {
-    int total =
+    final addOnTotal = item.selectedAddOns.fold(0, (acc, a) => acc + a.price);
+    final total =
         item.adultTotal * BookingPricing.adultPrice +
         item.childTotal * BookingPricing.kidPrice +
         item.elderTotal * BookingPricing.elderPrice +
-        (item.buffetFood ? BookingPricing.buffetFoodPrice : 0) +
-        (item.guideTour ? BookingPricing.guidTourPrice : 0) +
-        (item.golfCar ? BookingPricing.golfCarPrice : 0);
+        addOnTotal;
     return total.toString().replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]},',

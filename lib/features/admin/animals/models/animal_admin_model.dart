@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class AnimalAdminModel {
   final String id;
   final String animalName;
@@ -19,18 +21,43 @@ class AnimalAdminModel {
     this.locationY = 0,
   });
 
-  // TODO (backend): service layer must resolve DocumentReference → path string before calling fromMap
+  factory AnimalAdminModel.fromFirestore(
+    DocumentSnapshot doc,
+    Map<String, String> zoneMap,
+  ) {
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+    final rawZoneId = data['zoneId'];
+    final zoneId = rawZoneId is DocumentReference
+        ? rawZoneId.id
+        : (rawZoneId as String? ?? '');
+    return AnimalAdminModel(
+      id: doc.id,
+      animalName: data['animalName'] as String? ?? '',
+      animalDetail: data['animalDetail'] as String? ?? '',
+      animalPicture: data['animalPicture'] as String? ?? '',
+      zoneId: zoneId,
+      zoneName: zoneMap[zoneId] ?? 'Unknown',
+      locationX: (data['location_x'] as num?)?.toInt() ?? 0,
+      locationY: (data['location_y'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  // Legacy factory kept for compatibility — service layer must resolve
+  // DocumentReference → path string before calling fromMap.
   factory AnimalAdminModel.fromMap(
     String id,
     Map<String, dynamic> map,
     Map<String, String> zoneMap,
   ) {
-    final zoneId = (map['zoneId'] as String?) ?? '';
+    final rawZoneId = map['zoneId'];
+    final zoneId = rawZoneId is DocumentReference
+        ? rawZoneId.id
+        : (rawZoneId as String? ?? '');
     return AnimalAdminModel(
       id: id,
-      animalName: map['animalName'] ?? '',
-      animalDetail: map['animalDetail'] ?? '',
-      animalPicture: map['animalPicture'] ?? '',
+      animalName: map['animalName'] as String? ?? '',
+      animalDetail: map['animalDetail'] as String? ?? '',
+      animalPicture: map['animalPicture'] as String? ?? '',
       zoneId: zoneId,
       zoneName: zoneMap[zoneId] ?? 'Unknown',
       locationX: (map['location_x'] as num?)?.toInt() ?? 0,

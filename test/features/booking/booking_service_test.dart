@@ -24,9 +24,6 @@ void main() {
   BookingModel testBooking({String id = '', String userId = 'user123'}) =>
       BookingModel(
         id: id,
-        buffetFood: true,
-        golfCar: false,
-        guidTour: true,
         adultTotal: 2,
         childTotal: 1,
         elderTotal: 0,
@@ -55,14 +52,13 @@ void main() {
     });
 
     test('writes all fields with correct values', () async {
+      // Arrange/Act
       await service.createBooking(testBooking());
 
+      // Assert
       final data = (await fakeFirestore.collection('booking').get()).docs.first
           .data();
 
-      expect(data['BuffetFood'], true);
-      expect(data['GolfCar'], false);
-      expect(data['GuideTour'], true);
       expect(data['adultTotal'], 2);
       expect(data['childTotal'], 1);
       expect(data['elderTotal'], 0);
@@ -73,8 +69,10 @@ void main() {
     test(
       'writes userId as DocumentReference pointing to /user/{uid}',
       () async {
+        // Arrange/Act
         await service.createBooking(testBooking(userId: 'user123'));
 
+        // Assert
         final data = (await fakeFirestore.collection('booking').get())
             .docs
             .first
@@ -87,8 +85,10 @@ void main() {
     );
 
     test('throws on Firestore error', () {
+      // Arrange
       final errorService = BookingService(db: _ErrorFirestore());
 
+      // Assert
       expect(
         () => errorService.createBooking(testBooking()),
         throwsA(isA<FirebaseException>()),
@@ -101,15 +101,13 @@ void main() {
     Future<void> seedDoc(String docId) async {
       final userRef = fakeFirestore.collection('user').doc('user123');
       await fakeFirestore.collection('booking').doc(docId).set({
-        'BuffetFood': true,
-        'GolfCar': false,
-        'GuideTour': true,
         'adultTotal': 2,
         'childTotal': 1,
         'elderTotal': 0,
         'date': Timestamp.fromDate(DateTime(2026, 5, 10)),
         'status': 'pending',
         'userId': userRef,
+        'selectedAddOns': [],
       });
     }
 
@@ -125,7 +123,6 @@ void main() {
       expect(result!.id, 'bk1');
       expect(result.adultTotal, 2);
       expect(result.userId, 'user123');
-      expect(result.buffetFood, true);
       expect(result.date, DateTime(2026, 5, 10));
     });
 
@@ -138,8 +135,10 @@ void main() {
     });
 
     test('throws on Firestore error', () {
+      // Arrange
       final errorService = BookingService(db: _ErrorFirestore());
 
+      // Assert
       expect(
         () => errorService.getBookingById('any'),
         throwsA(isA<FirebaseException>()),
@@ -150,13 +149,11 @@ void main() {
   // ── getBookingsByUser ─────────────────────────────────────────────────────
   group('getBookingsByUser', () {
     final baseDoc = {
-      'BuffetFood': false,
-      'GolfCar': false,
-      'GuideTour': false,
       'adultTotal': 1,
       'childTotal': 0,
       'elderTotal': 0,
       'status': 'Done',
+      'selectedAddOns': [],
     };
 
     test('returns only bookings belonging to the specified user', () async {
@@ -189,11 +186,15 @@ void main() {
     });
 
     test('returns empty list when user has no bookings', () async {
+      // Act
       final results = await service.getBookingsByUser('unknown').first;
+
+      // Assert
       expect(results, isEmpty);
     });
 
     test('returns bookings ordered by date descending', () async {
+      // Arrange
       final userRef = fakeFirestore.collection('user').doc('user1');
 
       await fakeFirestore.collection('booking').doc('older').set({
@@ -207,15 +208,19 @@ void main() {
         'userId': userRef,
       });
 
+      // Act
       final results = await service.getBookingsByUser('user1').first;
 
+      // Assert
       expect(results.first.date, DateTime(2026, 6, 1));
       expect(results.last.date, DateTime(2026, 3, 1));
     });
 
     test('throws on Firestore error', () {
+      // Arrange
       final errorService = BookingService(db: _ErrorFirestore());
 
+      // Assert
       expect(
         () => errorService.getBookingsByUser('any'),
         throwsA(isA<FirebaseException>()),
@@ -228,15 +233,13 @@ void main() {
     test('removes the document from Firestore', () async {
       // Arrange
       await fakeFirestore.collection('booking').doc('todelete').set({
-        'BuffetFood': false,
-        'GolfCar': false,
-        'GuideTour': false,
         'adultTotal': 1,
         'childTotal': 0,
         'elderTotal': 0,
         'date': Timestamp.fromDate(DateTime(2026, 5, 1)),
         'status': 'pending',
         'userId': fakeFirestore.collection('user').doc('uid'),
+        'selectedAddOns': [],
       });
 
       // Act
@@ -251,32 +254,35 @@ void main() {
     });
 
     test('does not affect other documents', () async {
+      // Arrange
       final userRef = fakeFirestore.collection('user').doc('uid');
       final docData = {
-        'BuffetFood': false,
-        'GolfCar': false,
-        'GuideTour': false,
         'adultTotal': 1,
         'childTotal': 0,
         'elderTotal': 0,
         'date': Timestamp.fromDate(DateTime(2026, 5, 1)),
         'status': 'pending',
         'userId': userRef,
+        'selectedAddOns': [],
       };
 
       await fakeFirestore.collection('booking').doc('keep').set(docData);
       await fakeFirestore.collection('booking').doc('remove').set(docData);
 
+      // Act
       await service.deleteBooking('remove');
 
+      // Assert
       final remaining = await fakeFirestore.collection('booking').get();
       expect(remaining.docs.length, 1);
       expect(remaining.docs.first.id, 'keep');
     });
 
     test('throws on Firestore error', () {
+      // Arrange
       final errorService = BookingService(db: _ErrorFirestore());
 
+      // Assert
       expect(
         () => errorService.deleteBooking('any'),
         throwsA(isA<FirebaseException>()),

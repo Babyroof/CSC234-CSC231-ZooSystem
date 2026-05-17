@@ -7,7 +7,7 @@ import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 class AdminSidebar extends StatelessWidget {
   const AdminSidebar({super.key, required this.activeIndex});
 
-  /// 0 = Animals, 1 = Bookings, 2 = Events, 3 = Map, 4 = Zone
+  /// 0=Animals, 1=Bookings, 2=Events, 3=Map, 4=Zone, 5=Add-ons, 6=Pricing
   final int activeIndex;
 
   static const _menuItems = [
@@ -16,16 +16,18 @@ class AdminSidebar extends StatelessWidget {
     (Icons.celebration_outlined, 'Events', AppRoute.adminEvents),
     (Icons.map_outlined, 'Map', AppRoute.adminMapUploaded),
     (Icons.location_on_outlined, 'Zone', AppRoute.adminZones),
+    (Icons.card_giftcard_outlined, 'Add-ons', AppRoute.adminAddOns),
+    (Icons.attach_money_outlined, 'Pricing', AppRoute.adminPricing),
   ];
 
   static Route<dynamic> _adminFadeRoute(String routeName) {
     final builder = AppRoute.getRoutes()[routeName]!;
     return PageRouteBuilder<dynamic>(
       settings: RouteSettings(name: routeName),
-      pageBuilder: (ctx, _, __) => builder(ctx),
+      pageBuilder: (ctx, a1, a2) => builder(ctx),
       transitionDuration: const Duration(milliseconds: 220),
       reverseTransitionDuration: const Duration(milliseconds: 220),
-      transitionsBuilder: (_, animation, __, child) {
+      transitionsBuilder: (ctx2, animation, a3, child) {
         return FadeTransition(
           opacity: CurvedAnimation(parent: animation, curve: Curves.easeIn),
           child: child,
