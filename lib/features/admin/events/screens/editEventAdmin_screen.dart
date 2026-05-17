@@ -116,6 +116,12 @@ class _EditEventAdminDialogState extends ConsumerState<EditEventAdminDialog> {
             eventName: name,
             eventDetail: detail,
             eventPicture: _pictureUrl,
+            locationX:
+                int.tryParse(_xController.text.trim()) ??
+                widget.event.locationX,
+            locationY:
+                int.tryParse(_yController.text.trim()) ??
+                widget.event.locationY,
           );
       if (mounted) Navigator.pop(context);
     } catch (e) {
