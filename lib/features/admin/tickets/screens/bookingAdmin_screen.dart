@@ -165,32 +165,14 @@ class _BookingAdminScreenState extends ConsumerState<BookingAdminScreen> {
   }
 
   Future<void> _showDeleteConfirm(BookingAdminModel item) async {
-    final shortId = '#${item.id.substring(0, 6).toUpperCase()}';
-    final confirmed = await showDialog<bool>(
+    await showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Booking'),
-        content: Text(
-          'Delete booking $shortId for ${item.userName}?\nThis cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelled'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.adminTextDark,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
-          ),
-        ],
+      builder: (ctx) => _DeleteBookingDialog(
+        item: item,
+        onDeleted: () =>
+            ref.read(bookingAdminProvider.notifier).deleteBooking(item.id),
       ),
     );
-    if (confirmed == true && mounted) {
-      await ref.read(bookingAdminProvider.notifier).deleteBooking(item.id);
-    }
   }
 
   @override
@@ -846,6 +828,159 @@ class _EditBookingDialogState extends State<_EditBookingDialog> {
               : const Text('Save'),
         ),
       ],
+    );
+  }
+}
+
+// ─── Delete Booking Dialog ───────────────────────────────────────────────────
+
+class _DeleteBookingDialog extends StatefulWidget {
+  const _DeleteBookingDialog({required this.item, required this.onDeleted});
+
+  final BookingAdminModel item;
+  final Future<void> Function() onDeleted;
+
+  @override
+  State<_DeleteBookingDialog> createState() => _DeleteBookingDialogState();
+}
+
+class _DeleteBookingDialogState extends State<_DeleteBookingDialog> {
+  bool _isDeleting = false;
+
+  Future<void> _delete() async {
+    setState(() => _isDeleting = true);
+    try {
+      await widget.onDeleted();
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error deleting: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isDeleting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final shortId = '#${widget.item.id.substring(0, 6).toUpperCase()}';
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(32, 36, 32, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.adminDangerBg,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.delete_rounded,
+                  color: AppColors.adminDanger,
+                  size: 36,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Confirm Delete?',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.adminDanger,
+                ),
+              ),
+              const SizedBox(height: 10),
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.adminTextDark,
+                    height: 1.4,
+                  ),
+                  children: [
+                    const TextSpan(
+                      text: 'Are you sure you want to delete booking ',
+                    ),
+                    TextSpan(
+                      text: shortId,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const TextSpan(text: ' for '),
+                    TextSpan(
+                      text: widget.item.userName,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const TextSpan(text: '?'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isDeleting
+                          ? null
+                          : () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.adminDanger),
+                        foregroundColor: AppColors.adminDanger,
+                        minimumSize: const Size(0, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isDeleting ? null : _delete,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.adminDanger,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      child: _isDeleting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text('Delete'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
