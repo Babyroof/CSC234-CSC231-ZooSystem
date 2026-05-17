@@ -129,44 +129,49 @@ class AnimalInfoScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Text(
-                              animal['animalName'],
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.black,
+                            Expanded(
+                              child: Text(
+                                animal['animalName'],
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.black,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () {
-                                final lx = animal['location_x'];
-                                final ly = animal['location_y'];
-                                if (lx == null || ly == null) return;
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoute.map,
-                                  arguments: {
-                                    'focusAnimal': {
-                                      'animalName': animal['animalName'] ?? '',
-                                      'animalDetail':
-                                          animal['animalDetail'] ?? '',
-                                      'animalPicture':
-                                          animal['animalPicture'] ?? '',
-                                      'zoneName': animal['zoneName'] ?? '',
-                                      'locationX': (lx as num).toDouble(),
-                                      'locationY': (ly as num).toDouble(),
+                            if (animal['location_x'] != null &&
+                                animal['location_y'] != null)
+                              IconButton(
+                                onPressed: () {
+                                  final lx = animal['location_x'] as num;
+                                  final ly = animal['location_y'] as num;
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoute.map,
+                                    arguments: {
+                                      'focusAnimal': {
+                                        'animalName':
+                                            animal['animalName'] ?? '',
+                                        'animalDetail':
+                                            animal['animalDetail'] ?? '',
+                                        'animalPicture':
+                                            animal['animalPicture'] ?? '',
+                                        'zoneName': animal['zoneName'] ?? '',
+                                        'locationX': lx.toDouble(),
+                                        'locationY': ly.toDouble(),
+                                      },
                                     },
-                                  },
-                                );
-                              },
-                              child: const Icon(
-                                Icons.map_outlined,
-                                color: AppColors.black,
+                                  );
+                                },
+                                icon: const Icon(
+                                  Icons.map_outlined,
+                                  color: AppColors.black,
+                                ),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
                               ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 4),

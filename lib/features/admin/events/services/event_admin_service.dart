@@ -39,17 +39,20 @@ class EventAdminService {
     }
   }
 
-  /// Create: ONLY eventName, eventDetail, eventPicture — NO location fields.
   Future<void> createEvent({
     required String eventName,
     required String eventDetail,
     required String eventPicture,
+    required int locationX,
+    required int locationY,
   }) async {
     try {
       await _db.collection('event').add({
         'eventName': eventName,
         'eventDetail': eventDetail,
         'eventPicture': eventPicture,
+        'location_x': locationX,
+        'location_y': locationY,
       });
       debugPrint('[EventAdminService] createEvent: success');
     } catch (e) {
@@ -58,18 +61,21 @@ class EventAdminService {
     }
   }
 
-  /// Update: uses .update() NOT .set() — NEVER writes location_x or location_y.
   Future<void> updateEvent({
     required String eventId,
     required String eventName,
     required String eventDetail,
     required String eventPicture,
+    required int locationX,
+    required int locationY,
   }) async {
     try {
       await _db.collection('event').doc(eventId).update({
         'eventName': eventName,
         'eventDetail': eventDetail,
         'eventPicture': eventPicture,
+        'location_x': locationX,
+        'location_y': locationY,
       });
       debugPrint('[EventAdminService] updateEvent: $eventId updated');
     } catch (e) {
