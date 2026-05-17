@@ -11,6 +11,7 @@ import 'package:zoopernova_zoo_system/core/widgets/adminTopHeader.dart';
 import '../models/animal_admin_model.dart';
 import '../services/animal_admin_service.dart';
 import '../widgets/qr_download_helper.dart';
+import 'package:zoopernova_zoo_system/features/admin/onboarding/widgets/admin_onboarding_dialog.dart';
 import 'editAnimalAdmin_screen.dart';
 import 'deleteAnimalAdmin_screen.dart';
 
@@ -161,6 +162,9 @@ class _AnimalAdminScreenState extends ConsumerState<AnimalAdminScreen> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) AdminOnboardingDialog.showIfNeeded(context);
+    });
   }
 
   @override
