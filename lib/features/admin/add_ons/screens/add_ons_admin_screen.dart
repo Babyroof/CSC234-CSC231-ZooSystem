@@ -625,18 +625,23 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFFE6F4EA) : const Color(0xFFF0F0F0),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        isActive ? 'Active' : 'Inactive',
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: isActive ? const Color(0xFF2E7D32) : AppColors.adminTextMuted,
+    final bg = isActive ? const Color(0xFFE6F4EA) : const Color(0xFFF0F0F0);
+    final fg = isActive ? const Color(0xFF2E7D32) : AppColors.adminTextMuted;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          isActive ? 'Active' : 'Inactive',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: fg,
+          ),
         ),
       ),
     );
@@ -660,19 +665,20 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: SizedBox(
-        height: 38,
+        height: 34,
         child: OutlinedButton.icon(
           onPressed: onPressed,
-          icon: Icon(icon, size: 16),
+          icon: Icon(icon, size: 15),
           label: Text(label),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.adminTextDark,
-            side: const BorderSide(color: AppColors.adminBorderMedium),
+            foregroundColor: AppColors.black,
+            side: BorderSide(color: AppColors.black.withValues(alpha: 0.5)),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             textStyle: const TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
           ),
