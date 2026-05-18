@@ -104,7 +104,8 @@ class MapUploadedService {
   Future<String> uploadMap(List<int> bytes, String extension) async {
     const mimeTypes = {'png': 'image/png', 'pdf': 'application/pdf'};
     final contentType = mimeTypes[extension.toLowerCase()];
-    if (contentType == null) throw ArgumentError('Only PNG and PDF are supported');
+    if (contentType == null)
+      throw ArgumentError('Only PNG and PDF are supported');
     final ref = _storage.ref().child('maps/zoo_map.$extension');
     final metadata = SettableMetadata(contentType: contentType);
     await ref.putData(Uint8List.fromList(bytes), metadata);
