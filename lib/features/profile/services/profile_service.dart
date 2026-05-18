@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../auth/models/auth_model.dart';
 
 class ProfileService {
@@ -15,7 +16,8 @@ class ProfileService {
         return UserModel.fromJson(doc.data() as Map<String, dynamic>, doc.id);
       }
       return null;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[ProfileService] getUserProfile failed: $e');
       return null;
     }
   }
@@ -26,7 +28,8 @@ class ProfileService {
       if (uid == null) return "Not logged in";
       await _firestore.collection('user').doc(uid).update(updatedData);
       return "Success";
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[ProfileService] updateProfile failed: $e');
       return "Update failed. Please try again.";
     }
   }
@@ -53,7 +56,8 @@ class ProfileService {
         return "wrong-password";
       }
       return e.message ?? "Failed to update phone number";
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[ProfileService] updatePhoneWithAuth failed: $e');
       return "Update failed. Please try again.";
     }
   }
@@ -77,7 +81,8 @@ class ProfileService {
         return "wrong-password";
       }
       return e.message ?? "Failed to change password";
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[ProfileService] changePassword failed: $e');
       return "Failed to change password. Please try again.";
     }
   }

@@ -278,10 +278,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       final doc = _animalDocs.firstWhere((d) => d.id == scannedId);
       final data = doc.data() as Map<String, dynamic>;
 
-      _zoomToLocation(
-        (data['location_x'] as num).toDouble(),
-        (data['location_y'] as num).toDouble(),
-      );
+      final lx = data['location_x'];
+      final ly = data['location_y'];
+      if (lx != null && ly != null) {
+        _zoomToLocation((lx as num).toDouble(), (ly as num).toDouble());
+      }
 
       setState(() {
         _selectedEvent = null;
@@ -300,10 +301,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       final doc = _eventDocs.firstWhere((d) => d.id == scannedId);
       final data = doc.data() as Map<String, dynamic>;
 
-      _zoomToLocation(
-        (data['location_x'] as num).toDouble(),
-        (data['location_y'] as num).toDouble(),
-      );
+      final lx = data['location_x'];
+      final ly = data['location_y'];
+      if (lx != null && ly != null) {
+        _zoomToLocation((lx as num).toDouble(), (ly as num).toDouble());
+      }
 
       setState(() {
         _selectedAnimal = null;
