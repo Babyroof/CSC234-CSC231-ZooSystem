@@ -102,10 +102,11 @@ class MapUploadedService {
   }
 
   Future<String> uploadMap(List<int> bytes, String extension) async {
+    const mimeTypes = {'png': 'image/png', 'pdf': 'application/pdf'};
+    final contentType = mimeTypes[extension.toLowerCase()];
+    if (contentType == null) throw ArgumentError('Only PNG and PDF are supported');
     final ref = _storage.ref().child('maps/zoo_map.$extension');
-    final metadata = SettableMetadata(
-      contentType: extension == 'pdf' ? 'application/pdf' : 'image/png',
-    );
+    final metadata = SettableMetadata(contentType: contentType);
     await ref.putData(Uint8List.fromList(bytes), metadata);
     final downloadUrl = await ref.getDownloadURL();
     await saveMapUrl(downloadUrl);
@@ -113,6 +114,7 @@ class MapUploadedService {
   }
 
   Future<void> updateLocation(String id, bool isAnimal, int x, int y) async {
+    if (x < 0 || y < 0) throw ArgumentError('Coordinates must be non-negative');
     final col = isAnimal ? 'animal' : 'event';
     await _db.collection(col).doc(id).update({
       'location_x': x,

@@ -46,6 +46,8 @@ class _ChangePhoneNumberScreenState
 
     if (phone.isEmpty) {
       phoneErr = 'Please enter a phone number';
+    } else if (!RegExp(r'^[0-9]+$').hasMatch(phone)) {
+      phoneErr = 'Phone number must contain only digits';
     } else if (phone.length != 10) {
       phoneErr = 'Phone number must be 10 digits';
     }
