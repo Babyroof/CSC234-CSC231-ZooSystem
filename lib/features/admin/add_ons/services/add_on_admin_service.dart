@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/add_on_model.dart';
+import '../models/add_on_admin_model.dart';
 
 class AddOnAdminService {
   final FirebaseFirestore _db;

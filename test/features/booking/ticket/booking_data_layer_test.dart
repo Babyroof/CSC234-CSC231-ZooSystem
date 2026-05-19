@@ -2,25 +2,26 @@
 //
 // Unit tests for the booking/ticket data layer.
 //
-// BookingService accepts an optional FirebaseFirestore via its constructor:
+// BookingRemoteDataSourceImpl accepts an optional FirebaseFirestore via its constructor:
 //
-//   BookingService({FirebaseFirestore? db})
+//   BookingRemoteDataSourceImpl({FirebaseFirestore? db})
 //       : _db = db ?? FirebaseFirestore.instance;
 //
-// This makes full service-level testing possible without any refactoring by
+// This makes full datasource-level testing possible without any refactoring by
 // passing a FakeFirebaseFirestore instance.  All groups below use this pattern.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zoopernova_zoo_system/features/booking/constants/booking_pricing.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/booking_model.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
-import 'package:zoopernova_zoo_system/features/booking/services/booking_service.dart';
+import 'package:zoopernova_zoo_system/features/booking/data/datasources/booking_remote_datasource.dart';
+import 'package:zoopernova_zoo_system/features/booking/data/models/booking_dto.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/booking_entity.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/selected_add_on_entity.dart';
 
 // ---------------------------------------------------------------------------
 // _ErrorFirestore — simulates a Firestore that fails on every collection()
-// call.  Used to verify that BookingService re-throws Firestore exceptions.
+// call.  Used to verify that BookingRemoteDataSourceImpl re-throws exceptions.
 // ---------------------------------------------------------------------------
 class _ErrorFirestore extends Fake implements FirebaseFirestore {
   @override
@@ -36,8 +37,8 @@ class _ErrorFirestore extends Fake implements FirebaseFirestore {
 void main() {
   // ── Shared helpers ────────────────────────────────────────────────────────
 
-  /// Returns a fully populated BookingModel for use in model-level tests.
-  BookingModel makeModel({
+  /// Returns a fully populated BookingEntity for use in entity-level tests.
+  BookingEntity makeEntity({
     String id = 'bk_test',
     String userId = 'user_abc',
     int adultTotal = 2,
@@ -47,11 +48,11 @@ void main() {
     DateTime? date,
     int? totalPrice,
     String? chargeId,
-    List<SelectedAddOnModel> selectedAddOns = const [],
+    List<SelectedAddOnEntity> selectedAddOns = const [],
     int adultUnitPrice = BookingPricing.adultPrice,
     int childUnitPrice = BookingPricing.kidPrice,
     int elderUnitPrice = BookingPricing.elderPrice,
-  }) => BookingModel(
+  }) => BookingEntity(
     id: id,
     userId: userId,
     adultTotal: adultTotal,
@@ -68,14 +69,14 @@ void main() {
   );
 
   // =========================================================================
-  // Group 1 — BookingModel
+  // Group 1 — BookingEntity
   // =========================================================================
-  group('BookingModel', () {
+  group('BookingEntity', () {
     // ── totalAmount ──────────────────────────────────────────────────────────
     group('totalAmount', () {
       test('calculates ticket-only total with no add-ons', () {
         // Arrange
-        final booking = makeModel(
+        final booking = makeEntity(
           adultTotal: 2,
           childTotal: 1,
           elderTotal: 1,
@@ -95,7 +96,7 @@ void main() {
 
       test('calculates correctly with no add-ons and no people', () {
         // Arrange
-        final booking = makeModel(
+        final booking = makeEntity(
           adultTotal: 0,
           childTotal: 0,
           elderTotal: 0,
@@ -108,7 +109,7 @@ void main() {
 
       test('uses BookingPricing constants for per-head prices', () {
         // Arrange — 3 adults, 2 children, 1 elder, no add-ons
-        final booking = makeModel(
+        final booking = makeEntity(
           adultTotal: 3,
           childTotal: 2,
           elderTotal: 1,
@@ -131,12 +132,12 @@ void main() {
 
       test('adds selectedAddOns price to ticket total', () {
         // Arrange — 1 adult + 1 add-on of 200
-        final booking = makeModel(
+        final booking = makeEntity(
           adultTotal: 1,
           childTotal: 0,
           elderTotal: 0,
           selectedAddOns: const [
-            SelectedAddOnModel(
+            SelectedAddOnEntity(
               addOnId: 'a1',
               name: 'Buffet',
               price: 200,
@@ -157,7 +158,7 @@ void main() {
     group('totalPrice field', () {
       test('totalPrice is null when not provided', () {
         // Arrange/Act
-        final booking = makeModel(totalPrice: null);
+        final booking = makeEntity(totalPrice: null);
 
         // Assert
         expect(booking.totalPrice, isNull);
@@ -165,7 +166,7 @@ void main() {
 
       test('falls back to totalAmount when totalPrice is null', () {
         // Arrange — 1 adult, no add-ons → 300
-        final booking = makeModel(
+        final booking = makeEntity(
           adultTotal: 1,
           childTotal: 0,
           elderTotal: 0,
@@ -181,8 +182,8 @@ void main() {
       });
     });
 
-    // ── fromMap / fromFirestore ───────────────────────────────────────────────
-    group('fromFirestore', () {
+    // ── BookingDto.fromFirestore ──────────────────────────────────────────────
+    group('BookingDto.fromFirestore', () {
       late FakeFirebaseFirestore fakeFirestore;
 
       setUp(() {
@@ -211,18 +212,18 @@ void main() {
               .get();
 
           // Act
-          final model = BookingModel.fromFirestore(doc);
+          final dto = BookingDto.fromFirestore(doc);
 
           // Assert
-          expect(model.id, 'bk1');
-          expect(model.userId, 'user_abc');
-          expect(model.adultTotal, 2);
-          expect(model.childTotal, 1);
-          expect(model.elderTotal, 1);
-          expect(model.date, DateTime(2026, 5, 10));
-          expect(model.status, 'Done');
-          expect(model.totalPrice, 1540);
-          expect(model.chargeId, 'ch_abc123');
+          expect(dto.id, 'bk1');
+          expect(dto.userId, 'user_abc');
+          expect(dto.adultTotal, 2);
+          expect(dto.childTotal, 1);
+          expect(dto.elderTotal, 1);
+          expect(dto.date, DateTime(2026, 5, 10));
+          expect(dto.status, 'Done');
+          expect(dto.totalPrice, 1540);
+          expect(dto.chargeId, 'ch_abc123');
         },
       );
 
@@ -240,10 +241,10 @@ void main() {
         final doc = await fakeFirestore.collection('booking').doc('bk2').get();
 
         // Act
-        final model = BookingModel.fromFirestore(doc);
+        final dto = BookingDto.fromFirestore(doc);
 
         // Assert
-        expect(model.userId, 'plainStringUid');
+        expect(dto.userId, 'plainStringUid');
       });
 
       test('falls back to epoch when date field is absent', () async {
@@ -258,10 +259,10 @@ void main() {
         final doc = await fakeFirestore.collection('booking').doc('bk3').get();
 
         // Act
-        final model = BookingModel.fromFirestore(doc);
+        final dto = BookingDto.fromFirestore(doc);
 
         // Assert
-        expect(model.date, DateTime.fromMillisecondsSinceEpoch(0));
+        expect(dto.date, DateTime.fromMillisecondsSinceEpoch(0));
       });
 
       test('numeric fields default to 0 when absent', () async {
@@ -275,12 +276,12 @@ void main() {
         final doc = await fakeFirestore.collection('booking').doc('bk4').get();
 
         // Act
-        final model = BookingModel.fromFirestore(doc);
+        final dto = BookingDto.fromFirestore(doc);
 
         // Assert
-        expect(model.adultTotal, 0);
-        expect(model.childTotal, 0);
-        expect(model.elderTotal, 0);
+        expect(dto.adultTotal, 0);
+        expect(dto.childTotal, 0);
+        expect(dto.elderTotal, 0);
       });
 
       test('chargeId and totalPrice are null when absent', () async {
@@ -296,86 +297,49 @@ void main() {
         final doc = await fakeFirestore.collection('booking').doc('bk5').get();
 
         // Act
-        final model = BookingModel.fromFirestore(doc);
+        final dto = BookingDto.fromFirestore(doc);
 
         // Assert
-        expect(model.chargeId, isNull);
-        expect(model.totalPrice, isNull);
+        expect(dto.chargeId, isNull);
+        expect(dto.totalPrice, isNull);
       });
     });
 
-    // ── toMap ────────────────────────────────────────────────────────────────
-    group('toMap', () {
-      test('all numeric fields are int, not String', () {
-        // Arrange
-        final model = makeModel(adultTotal: 3, childTotal: 2, elderTotal: 1);
+    // ── entity fields ────────────────────────────────────────────────────────
+    group('entity fields', () {
+      test('all numeric fields are int', () {
+        final entity = makeEntity(adultTotal: 3, childTotal: 2, elderTotal: 1);
 
-        // Act
-        final map = model.toMap();
-
-        // Assert
-        expect(map['adultTotal'], isA<int>());
-        expect(map['childTotal'], isA<int>());
-        expect(map['elderTotal'], isA<int>());
+        expect(entity.adultTotal, isA<int>());
+        expect(entity.childTotal, isA<int>());
+        expect(entity.elderTotal, isA<int>());
       });
 
-      test('date field is Timestamp, not String', () {
-        // Arrange
-        final model = makeModel(date: DateTime(2026, 5, 10));
+      test('userId is a String', () {
+        final entity = makeEntity(userId: 'user_xyz');
 
-        // Act
-        final map = model.toMap();
-
-        // Assert
-        expect(map['date'], isA<Timestamp>());
-        expect(map['date'], Timestamp.fromDate(DateTime(2026, 5, 10)));
+        expect(entity.userId, isA<String>());
+        expect(entity.userId, 'user_xyz');
       });
 
-      test(
-        'userId in toMap is a plain String (service converts to DocumentReference before write)',
-        () {
-          // Arrange
-          final model = makeModel(userId: 'user_xyz');
-
-          // Act
-          final map = model.toMap();
-
-          // Assert — model layer stays Firestore-agnostic
-          expect(map['userId'], isA<String>());
-          expect(map['userId'], 'user_xyz');
-        },
-      );
-
-      test('chargeId is omitted from map when null', () {
-        // Arrange/Act
-        final map = makeModel(chargeId: null).toMap();
-
-        // Assert
-        expect(map.containsKey('chargeId'), false);
+      test('chargeId is null when not provided', () {
+        final entity = makeEntity(chargeId: null);
+        expect(entity.chargeId, isNull);
       });
 
-      test('chargeId is included when not null', () {
-        // Arrange/Act
-        final map = makeModel(chargeId: 'ch_xyz').toMap();
-
-        // Assert
-        expect(map['chargeId'], 'ch_xyz');
+      test('chargeId is set when provided', () {
+        final entity = makeEntity(chargeId: 'ch_xyz');
+        expect(entity.chargeId, 'ch_xyz');
       });
 
-      test('totalPrice is omitted from map when null', () {
-        // Arrange/Act
-        final map = makeModel(totalPrice: null).toMap();
-
-        // Assert
-        expect(map.containsKey('totalPrice'), false);
+      test('totalPrice is null when not provided', () {
+        final entity = makeEntity(totalPrice: null);
+        expect(entity.totalPrice, isNull);
       });
 
-      test('totalPrice is included when set', () {
-        // Arrange/Act
-        final map = makeModel(totalPrice: 999).toMap();
-
-        // Assert
-        expect(map['totalPrice'], 999);
+      test('totalPrice is set when provided', () {
+        final entity = makeEntity(totalPrice: 999);
+        expect(entity.totalPrice, 999);
       });
     });
 
@@ -383,7 +347,7 @@ void main() {
     group('copyWith', () {
       test('updates only specified fields, leaves others unchanged', () {
         // Arrange
-        final original = makeModel();
+        final original = makeEntity();
 
         // Act
         final updated = original.copyWith(adultTotal: 5, status: 'Done');
@@ -399,9 +363,9 @@ void main() {
         expect(updated.date, original.date);
       });
 
-      test('returns equivalent model when no fields are overridden', () {
+      test('returns equivalent entity when no fields are overridden', () {
         // Arrange
-        final original = makeModel();
+        final original = makeEntity();
 
         // Act
         final copy = original.copyWith();
@@ -418,9 +382,9 @@ void main() {
         expect(copy.totalPrice, original.totalPrice);
       });
 
-      test('copyWith does not mutate the original model', () {
+      test('copyWith does not mutate the original entity', () {
         // Arrange
-        final original = makeModel(adultTotal: 2);
+        final original = makeEntity(adultTotal: 2);
 
         // Act
         original.copyWith(adultTotal: 99);
@@ -432,11 +396,11 @@ void main() {
   });
 
   // =========================================================================
-  // Group 2 — BookingService
+  // Group 2 — BookingRemoteDataSourceImpl
   // =========================================================================
-  group('BookingService', () {
+  group('BookingRemoteDataSourceImpl', () {
     late FakeFirebaseFirestore fakeFirestore;
-    late BookingService service;
+    late BookingRemoteDataSourceImpl service;
 
     // Shared seed helper — writes a raw booking document into the fake store
     Future<void> seedRaw({
@@ -462,14 +426,14 @@ void main() {
 
     setUp(() {
       fakeFirestore = FakeFirebaseFirestore();
-      service = BookingService(db: fakeFirestore);
+      service = BookingRemoteDataSourceImpl(db: fakeFirestore);
     });
 
     // ── createBooking ─────────────────────────────────────────────────────────
     group('createBooking', () {
       test('writes a new document to the booking collection', () async {
         // Arrange
-        final booking = makeModel(userId: 'user_abc');
+        final booking = makeEntity(userId: 'user_abc');
 
         // Act
         await service.createBooking(booking);
@@ -479,14 +443,14 @@ void main() {
         expect(snap.docs.length, 1);
       });
 
-      test('forces status to pending regardless of model status', () async {
-        // Arrange — model has status 'Done'
-        final booking = makeModel(status: 'Done');
+      test('forces status to pending regardless of entity status', () async {
+        // Arrange — entity has status 'Done'
+        final booking = makeEntity(status: 'Done');
 
         // Act
         await service.createBooking(booking);
 
-        // Assert — service always writes lowercase 'pending' (per schema)
+        // Assert — datasource always writes 'pending'
         final data = (await fakeFirestore.collection('booking').get())
             .docs
             .first
@@ -496,7 +460,7 @@ void main() {
 
       test('stores totalPrice as the calculated totalAmount', () async {
         // Arrange — 2 adults, no add-ons → 2*300 = 600
-        final booking = makeModel(
+        final booking = makeEntity(
           adultTotal: 2,
           childTotal: 0,
           elderTotal: 0,
@@ -518,7 +482,7 @@ void main() {
         'stores userId as a DocumentReference pointing to /user/{uid}',
         () async {
           // Arrange
-          final booking = makeModel(userId: 'user_abc');
+          final booking = makeEntity(userId: 'user_abc');
 
           // Act
           await service.createBooking(booking);
@@ -536,7 +500,7 @@ void main() {
 
       test('date field is stored as Timestamp, not String', () async {
         // Arrange
-        final booking = makeModel(date: DateTime(2026, 5, 10));
+        final booking = makeEntity(date: DateTime(2026, 5, 10));
 
         // Act
         await service.createBooking(booking);
@@ -551,7 +515,7 @@ void main() {
 
       test('returns the new document id', () async {
         // Arrange
-        final booking = makeModel();
+        final booking = makeEntity();
 
         // Act
         final id = await service.createBooking(booking);
@@ -563,11 +527,11 @@ void main() {
 
       test('throws on Firestore error', () {
         // Arrange
-        final errorService = BookingService(db: _ErrorFirestore());
+        final errorService = BookingRemoteDataSourceImpl(db: _ErrorFirestore());
 
         // Assert
         expect(
-          () => errorService.createBooking(makeModel()),
+          () => errorService.createBooking(makeEntity()),
           throwsA(isA<FirebaseException>()),
         );
       });
@@ -575,7 +539,7 @@ void main() {
 
     // ── getBookingById ────────────────────────────────────────────────────────
     group('getBookingById', () {
-      test('returns correct BookingModel for an existing document', () async {
+      test('returns correct BookingDto for an existing document', () async {
         // Arrange
         await seedRaw(
           docId: 'bk1',
@@ -611,7 +575,7 @@ void main() {
 
       test('throws on Firestore error', () {
         // Arrange
-        final errorService = BookingService(db: _ErrorFirestore());
+        final errorService = BookingRemoteDataSourceImpl(db: _ErrorFirestore());
 
         // Assert
         expect(
@@ -688,7 +652,7 @@ void main() {
 
     // ── watchBooking ──────────────────────────────────────────────────────────
     group('watchBooking', () {
-      test('emits the correct BookingModel when the document exists', () async {
+      test('emits the correct BookingDto when the document exists', () async {
         // Arrange
         await seedRaw(
           docId: 'bk1',
@@ -698,24 +662,24 @@ void main() {
         );
 
         // Act
-        final model = await service.watchBooking('bk1').first;
+        final dto = await service.watchBooking('bk1').first;
 
         // Assert
-        expect(model, isNotNull);
-        expect(model!.id, 'bk1');
-        expect(model.adultTotal, 3);
-        expect(model.status, 'Done');
+        expect(dto, isNotNull);
+        expect(dto!.id, 'bk1');
+        expect(dto.adultTotal, 3);
+        expect(dto.status, 'Done');
       });
 
       test('emits null when the document does not exist', () async {
         // Act
-        final model = await service.watchBooking('ghost').first;
+        final dto = await service.watchBooking('ghost').first;
 
         // Assert
-        expect(model, isNull);
+        expect(dto, isNull);
       });
 
-      test('emits updated model after a status change', () async {
+      test('emits updated dto after a status change', () async {
         // Arrange
         await seedRaw(docId: 'bk1', userId: 'uid', status: 'Pending');
 
@@ -730,10 +694,11 @@ void main() {
       });
     });
 
-    // ── getBookingsByUser ─────────────────────────────────────────────────────
-    group('getBookingsByUser', () {
-      test('returns all bookings for user regardless of status', () async {
-        // Arrange
+    // ── getPastBookings ───────────────────────────────────────────────────────
+    // Replaces getBookingsByUser — filters Done status with date < today
+    group('getPastBookings', () {
+      test('returns Done bookings for user with past dates', () async {
+        // Arrange — seed past dates (before today May 19 2026)
         await seedRaw(
           docId: 'done1',
           userId: 'user_1',
@@ -746,18 +711,13 @@ void main() {
           status: 'Done',
           date: DateTime(2026, 5, 9),
         );
-        await seedRaw(
-          docId: 'pending1',
-          userId: 'user_1',
-          status: 'Pending',
-          date: DateTime(2026, 5, 8),
-        );
 
         // Act
-        final bookings = await service.getBookingsByUser('user_1').first;
+        final bookings = await service.getPastBookings('user_1').first;
 
-        // Assert — all 3 bookings returned
-        expect(bookings.length, 3);
+        // Assert — only Done bookings for user_1
+        expect(bookings.length, 2);
+        expect(bookings.every((b) => b.userId == 'user_1'), true);
       });
 
       test('filters out bookings belonging to other users', () async {
@@ -776,7 +736,7 @@ void main() {
         );
 
         // Act
-        final bookings = await service.getBookingsByUser('user_1').first;
+        final bookings = await service.getPastBookings('user_1').first;
 
         // Assert
         expect(bookings.length, 1);
@@ -785,25 +745,19 @@ void main() {
 
       test('returns empty list when user has no bookings at all', () async {
         // Act
-        final bookings = await service.getBookingsByUser('unknown_user').first;
+        final bookings = await service.getPastBookings('unknown_user').first;
 
         // Assert
         expect(bookings, isEmpty);
       });
 
       test('returns results ordered by date descending', () async {
-        // Arrange
+        // Arrange — use past dates
         await seedRaw(
           docId: 'oldest',
           userId: 'user_1',
           status: 'Done',
           date: DateTime(2026, 3, 1),
-        );
-        await seedRaw(
-          docId: 'newest',
-          userId: 'user_1',
-          status: 'Done',
-          date: DateTime(2026, 7, 1),
         );
         await seedRaw(
           docId: 'middle',
@@ -813,21 +767,20 @@ void main() {
         );
 
         // Act
-        final bookings = await service.getBookingsByUser('user_1').first;
+        final bookings = await service.getPastBookings('user_1').first;
 
-        // Assert — newest first
-        expect(bookings[0].date, DateTime(2026, 7, 1));
-        expect(bookings[1].date, DateTime(2026, 5, 1));
-        expect(bookings[2].date, DateTime(2026, 3, 1));
+        // Assert — most recent first
+        expect(bookings[0].date, DateTime(2026, 5, 1));
+        expect(bookings[1].date, DateTime(2026, 3, 1));
       });
 
       test('throws on Firestore error', () {
         // Arrange
-        final errorService = BookingService(db: _ErrorFirestore());
+        final errorService = BookingRemoteDataSourceImpl(db: _ErrorFirestore());
 
         // Assert
         expect(
-          () => errorService.getBookingsByUser('any'),
+          () => errorService.getPastBookings('any'),
           throwsA(isA<FirebaseException>()),
         );
       });
@@ -866,7 +819,7 @@ void main() {
 
       test('throws on Firestore error', () {
         // Arrange
-        final errorService = BookingService(db: _ErrorFirestore());
+        final errorService = BookingRemoteDataSourceImpl(db: _ErrorFirestore());
 
         // Assert
         expect(

@@ -1,16 +1,16 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zoopernova_zoo_system/features/events_show/models/event_model.dart';
-import 'package:zoopernova_zoo_system/features/events_show/services/event.service.dart';
+import 'package:zoopernova_zoo_system/features/events_show/data/datasources/event_remote_datasource.dart';
+import 'package:zoopernova_zoo_system/features/events_show/data/models/event_dto.dart';
 
 void main() {
-  group('EventService', () {
+  group('EventRemoteDataSourceImpl', () {
     late FakeFirebaseFirestore fakeFirestore;
-    late EventService service;
+    late EventRemoteDataSourceImpl service;
 
     setUp(() async {
       fakeFirestore = FakeFirebaseFirestore();
-      service = EventService(db: fakeFirestore);
+      service = EventRemoteDataSourceImpl(db: fakeFirestore);
 
       await fakeFirestore.collection('event').doc('event1').set({
         'eventName': 'Smart Seal Show',
@@ -27,10 +27,10 @@ void main() {
     // ─── getEvents ────────────────────────────────────────────────────────────
 
     group('getEvents', () {
-      test('returns a list of EventModel', () async {
+      test('returns a list of EventDto', () async {
         final result = await service.getEvents();
 
-        expect(result, isA<List<EventModel>>());
+        expect(result, isA<List<EventDto>>());
       });
 
       test('returns all seeded events', () async {
@@ -77,7 +77,9 @@ void main() {
       });
 
       test('returns empty list when collection is empty', () async {
-        final emptyService = EventService(db: FakeFirebaseFirestore());
+        final emptyService = EventRemoteDataSourceImpl(
+          db: FakeFirebaseFirestore(),
+        );
 
         final result = await emptyService.getEvents();
 
@@ -111,7 +113,9 @@ void main() {
       });
 
       test('returns empty list when collection is empty', () async {
-        final emptyService = EventService(db: FakeFirebaseFirestore());
+        final emptyService = EventRemoteDataSourceImpl(
+          db: FakeFirebaseFirestore(),
+        );
 
         final result = await emptyService.getRandomEvents(5);
 

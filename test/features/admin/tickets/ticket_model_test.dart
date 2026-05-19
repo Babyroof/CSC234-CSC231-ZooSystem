@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zoopernova_zoo_system/features/admin/tickets/models/ticket_model.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/selected_add_on_entity.dart';
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
@@ -14,7 +14,7 @@ void main() {
   // ── Helper ──────────────────────────────────────────────────────────────
   TicketModel baseModel({
     String id = 'tk1',
-    List<SelectedAddOnModel>? selectedAddOns,
+    List<SelectedAddOnEntity>? selectedAddOns,
     int adultTotal = 2,
     int childTotal = 1,
     int elderTotal = 0,
@@ -28,7 +28,7 @@ void main() {
       selectedAddOns:
           selectedAddOns ??
           [
-            const SelectedAddOnModel(
+            const SelectedAddOnEntity(
               addOnId: 'addon1',
               name: 'Golf Car',
               price: 500,
@@ -168,13 +168,13 @@ void main() {
     test('boolean fields are bool not String', () {
       final model = baseModel(
         selectedAddOns: [
-          const SelectedAddOnModel(
+          const SelectedAddOnEntity(
             addOnId: 'addon1',
             name: 'Buffet Food',
             price: 200,
             priceType: 'per_person',
           ),
-          const SelectedAddOnModel(
+          const SelectedAddOnEntity(
             addOnId: 'addon2',
             name: 'Golf Car',
             price: 500,

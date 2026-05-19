@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-import 'core/routes/app_routes.dart';
+import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 
@@ -18,11 +18,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Zoo System App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      routes: AppRoute.getRoutes(),
+      routerConfig: appRouter,
     );
   }
 }

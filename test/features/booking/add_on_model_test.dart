@@ -1,7 +1,7 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/add_on_model.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
+import 'package:zoopernova_zoo_system/features/admin/add_ons/models/add_on_admin_model.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/selected_add_on_entity.dart';
 
 void main() {
   // ===========================================================================
@@ -197,9 +197,9 @@ void main() {
   });
 
   // ===========================================================================
-  // SelectedAddOnModel
+  // SelectedAddOnEntity
   // ===========================================================================
-  group('SelectedAddOnModel', () {
+  group('SelectedAddOnEntity', () {
     group('fromMap', () {
       test('maps addOnId, name, price, priceType correctly', () {
         // Arrange
@@ -211,13 +211,13 @@ void main() {
         };
 
         // Act
-        final model = SelectedAddOnModel.fromMap(map);
+        final entity = SelectedAddOnEntity.fromMap(map);
 
         // Assert
-        expect(model.addOnId, 'ao1');
-        expect(model.name, 'Golf Car');
-        expect(model.price, 500);
-        expect(model.priceType, 'per_booking');
+        expect(entity.addOnId, 'ao1');
+        expect(entity.name, 'Golf Car');
+        expect(entity.price, 500);
+        expect(entity.priceType, 'per_booking');
       });
 
       test('priceType defaults to per_booking when absent from map', () {
@@ -225,10 +225,10 @@ void main() {
         final map = {'addOnId': 'ao2', 'name': 'Snack', 'price': 80};
 
         // Act
-        final model = SelectedAddOnModel.fromMap(map);
+        final entity = SelectedAddOnEntity.fromMap(map);
 
         // Assert
-        expect(model.priceType, 'per_booking');
+        expect(entity.priceType, 'per_booking');
       });
     });
 
@@ -237,7 +237,7 @@ void main() {
         'returns map with exactly 4 keys: addOnId, name, price, priceType',
         () {
           // Arrange
-          const model = SelectedAddOnModel(
+          const entity = SelectedAddOnEntity(
             addOnId: 'ao1',
             name: 'Buffet',
             price: 200,
@@ -245,7 +245,7 @@ void main() {
           );
 
           // Act
-          final map = model.toMap();
+          final map = entity.toMap();
 
           // Assert
           expect(
@@ -260,7 +260,7 @@ void main() {
     group('calculatePrice', () {
       test('returns price for per_booking regardless of totalPeople', () {
         // Arrange
-        const model = SelectedAddOnModel(
+        const entity = SelectedAddOnEntity(
           addOnId: 'ao1',
           name: 'Buffet',
           price: 200,
@@ -268,14 +268,14 @@ void main() {
         );
 
         // Act & Assert
-        expect(model.calculatePrice(1), 200);
-        expect(model.calculatePrice(10), 200);
-        expect(model.calculatePrice(0), 200);
+        expect(entity.calculatePrice(1), 200);
+        expect(entity.calculatePrice(10), 200);
+        expect(entity.calculatePrice(0), 200);
       });
 
       test('returns price * totalPeople for per_person', () {
         // Arrange
-        const model = SelectedAddOnModel(
+        const entity = SelectedAddOnEntity(
           addOnId: 'ao2',
           name: 'Snack',
           price: 80,
@@ -283,8 +283,8 @@ void main() {
         );
 
         // Act & Assert
-        expect(model.calculatePrice(3), 240); // 80 * 3
-        expect(model.calculatePrice(0), 0);
+        expect(entity.calculatePrice(3), 240); // 80 * 3
+        expect(entity.calculatePrice(0), 0);
       });
     });
   });

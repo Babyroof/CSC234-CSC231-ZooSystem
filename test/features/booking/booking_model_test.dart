@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/booking_model.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
+import 'package:zoopernova_zoo_system/features/booking/data/models/booking_dto.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/booking_entity.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/selected_add_on_entity.dart';
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
@@ -12,7 +13,7 @@ void main() {
   });
 
   // ── Helper ──────────────────────────────────────────────────────────────
-  BookingModel baseModel({
+  BookingEntity baseEntity({
     String id = 'bk1',
     int adultTotal = 2,
     int childTotal = 1,
@@ -20,8 +21,8 @@ void main() {
     DateTime? date,
     String status = 'pending',
     String userId = 'user123',
-    List<SelectedAddOnModel> selectedAddOns = const [],
-  }) => BookingModel(
+    List<SelectedAddOnEntity> selectedAddOns = const [],
+  }) => BookingEntity(
     id: id,
     adultTotal: adultTotal,
     childTotal: childTotal,
@@ -33,7 +34,7 @@ void main() {
   );
 
   // ── fromFirestore ────────────────────────────────────────────────────────
-  group('BookingModel.fromFirestore', () {
+  group('BookingDto.fromFirestore', () {
     test(
       'maps all fields correctly when userId is a DocumentReference',
       () async {
@@ -51,16 +52,16 @@ void main() {
         final doc = await fakeFirestore.collection('booking').doc('bk1').get();
 
         // Act
-        final model = BookingModel.fromFirestore(doc);
+        final dto = BookingDto.fromFirestore(doc);
 
         // Assert
-        expect(model.id, 'bk1');
-        expect(model.adultTotal, 2);
-        expect(model.childTotal, 1);
-        expect(model.elderTotal, 0);
-        expect(model.date, DateTime(2026, 5, 10));
-        expect(model.status, 'pending');
-        expect(model.userId, 'user123');
+        expect(dto.id, 'bk1');
+        expect(dto.adultTotal, 2);
+        expect(dto.childTotal, 1);
+        expect(dto.elderTotal, 0);
+        expect(dto.date, DateTime(2026, 5, 10));
+        expect(dto.status, 'pending');
+        expect(dto.userId, 'user123');
       },
     );
 
@@ -78,11 +79,11 @@ void main() {
       final doc = await fakeFirestore.collection('booking').doc('bk2').get();
 
       // Act
-      final model = BookingModel.fromFirestore(doc);
+      final dto = BookingDto.fromFirestore(doc);
 
       // Assert
-      expect(model.userId, 'plainStringUid');
-      expect(model.status, 'Done');
+      expect(dto.userId, 'plainStringUid');
+      expect(dto.status, 'Done');
     });
 
     test('falls back to epoch when date field is missing', () async {
@@ -97,10 +98,10 @@ void main() {
       final doc = await fakeFirestore.collection('booking').doc('bk3').get();
 
       // Act
-      final model = BookingModel.fromFirestore(doc);
+      final dto = BookingDto.fromFirestore(doc);
 
       // Assert
-      expect(model.date, DateTime.fromMillisecondsSinceEpoch(0));
+      expect(dto.date, DateTime.fromMillisecondsSinceEpoch(0));
     });
 
     test('defaults numeric fields to 0 when missing', () async {
@@ -113,12 +114,12 @@ void main() {
       final doc = await fakeFirestore.collection('booking').doc('bk4').get();
 
       // Act
-      final model = BookingModel.fromFirestore(doc);
+      final dto = BookingDto.fromFirestore(doc);
 
       // Assert
-      expect(model.adultTotal, 0);
-      expect(model.childTotal, 0);
-      expect(model.elderTotal, 0);
+      expect(dto.adultTotal, 0);
+      expect(dto.childTotal, 0);
+      expect(dto.elderTotal, 0);
     });
 
     test(
@@ -136,83 +137,51 @@ void main() {
         final doc = await fakeFirestore.collection('booking').doc('bk5').get();
 
         // Act
-        final model = BookingModel.fromFirestore(doc);
+        final dto = BookingDto.fromFirestore(doc);
 
         // Assert
-        expect(model.selectedAddOns, isEmpty);
+        expect(dto.selectedAddOns, isEmpty);
       },
     );
   });
 
-  // ── toMap ────────────────────────────────────────────────────────────────
-  group('BookingModel.toMap', () {
-    test('returns map with all expected keys and correct values', () {
+  // ── entity fields ────────────────────────────────────────────────────────
+  group('BookingEntity fields', () {
+    test('stores all field values correctly', () {
       // Arrange
       final date = DateTime(2026, 5, 10);
-      final model = baseModel(date: date);
-
-      // Act
-      final map = model.toMap();
+      final entity = baseEntity(date: date);
 
       // Assert
-      expect(map['adultTotal'], 2);
-      expect(map['childTotal'], 1);
-      expect(map['elderTotal'], 0);
-      expect(map['date'], Timestamp.fromDate(date));
-      expect(map['status'], 'pending');
-      expect(map['userId'], 'user123');
+      expect(entity.adultTotal, 2);
+      expect(entity.childTotal, 1);
+      expect(entity.elderTotal, 0);
+      expect(entity.date, date);
+      expect(entity.status, 'pending');
+      expect(entity.userId, 'user123');
     });
 
-    test('numeric fields are int not String', () {
-      // Arrange/Act
-      final map = baseModel(
-        adultTotal: 3,
-        childTotal: 2,
-        elderTotal: 1,
-      ).toMap();
+    test('numeric fields are int', () {
+      final entity = baseEntity(adultTotal: 3, childTotal: 2, elderTotal: 1);
 
-      // Assert
-      expect(map['adultTotal'], isA<int>());
-      expect(map['childTotal'], isA<int>());
-      expect(map['elderTotal'], isA<int>());
+      expect(entity.adultTotal, isA<int>());
+      expect(entity.childTotal, isA<int>());
+      expect(entity.elderTotal, isA<int>());
     });
 
-    test('date field is Timestamp not String', () {
-      // Arrange/Act
-      final map = baseModel().toMap();
+    test('userId is a String', () {
+      final entity = baseEntity(userId: 'user123');
 
-      // Assert
-      expect(map['date'], isA<Timestamp>());
-    });
-
-    test(
-      'userId in toMap is a plain String (service converts to DocumentReference)',
-      () {
-        // Arrange/Act
-        final map = baseModel(userId: 'user123').toMap();
-
-        // Assert
-        expect(map['userId'], isA<String>());
-        expect(map['userId'], 'user123');
-      },
-    );
-
-    test('does not contain legacy boolean add-on keys', () {
-      // Arrange/Act
-      final map = baseModel().toMap();
-
-      // Assert — old fields must not exist
-      expect(map.containsKey('buffetFood'), false);
-      expect(map.containsKey('golfCar'), false);
-      expect(map.containsKey('guidTour'), false);
+      expect(entity.userId, isA<String>());
+      expect(entity.userId, 'user123');
     });
   });
 
   // ── copyWith ─────────────────────────────────────────────────────────────
-  group('BookingModel.copyWith', () {
+  group('BookingEntity.copyWith', () {
     test('updates only specified fields, leaves others unchanged', () {
       // Arrange
-      final original = baseModel();
+      final original = baseEntity();
 
       // Act
       final updated = original.copyWith(adultTotal: 5, status: 'Done');
@@ -230,7 +199,7 @@ void main() {
 
     test('returns equivalent object when no fields are changed', () {
       // Arrange
-      final original = baseModel();
+      final original = baseEntity();
 
       // Act
       final copy = original.copyWith();
@@ -247,7 +216,7 @@ void main() {
 
     test('can update status to Done', () {
       // Arrange/Act
-      final updated = baseModel().copyWith(status: 'Done');
+      final updated = baseEntity().copyWith(status: 'Done');
 
       // Assert
       expect(updated.status, 'Done');

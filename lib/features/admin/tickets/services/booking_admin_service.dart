@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/selected_add_on_entity.dart';
 import '../models/booking_admin_model.dart';
 
 class BookingAdminService {
@@ -26,11 +26,11 @@ class BookingAdminService {
       final data = doc.data() as Map<String, dynamic>;
 
       final rawAddOns = data['selectedAddOns'];
-      final addOns = <SelectedAddOnModel>[];
+      final addOns = <SelectedAddOnEntity>[];
       if (rawAddOns is List) {
         for (final item in rawAddOns) {
           if (item is Map<String, dynamic>) {
-            addOns.add(SelectedAddOnModel.fromMap(item));
+            addOns.add(SelectedAddOnEntity.fromMap(item));
           }
         }
       }

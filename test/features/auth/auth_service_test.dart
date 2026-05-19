@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:zoopernova_zoo_system/features/auth/models/auth_model.dart';
-import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
+import 'package:zoopernova_zoo_system/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:zoopernova_zoo_system/features/auth/data/models/user_dto.dart';
 
 import 'auth_service_test.mocks.dart';
 
@@ -13,12 +13,15 @@ void main() {
   group('AuthService', () {
     late MockFirebaseAuth mockAuth;
     late FakeFirebaseFirestore fakeFirestore;
-    late AuthService service;
+    late AuthRemoteDataSourceImpl service;
 
     setUp(() {
       mockAuth = MockFirebaseAuth();
       fakeFirestore = FakeFirebaseFirestore();
-      service = AuthService(auth: mockAuth, firestore: fakeFirestore);
+      service = AuthRemoteDataSourceImpl(
+        auth: mockAuth,
+        firestore: fakeFirestore,
+      );
     });
 
     // ─── login ────────────────────────────────────────────────────────────────
@@ -249,9 +252,9 @@ void main() {
             'username': 'logged_in',
           });
 
-          final result = await service.getCurrentUserData();
+          final result = await service.getCurrentUser();
 
-          expect(result, isA<UserModel>());
+          expect(result, isA<UserDto>());
           expect(result?.uid, uid);
           expect(result?.email, 'loggedin@test.com');
         },
@@ -260,7 +263,7 @@ void main() {
       test('returns null when no user is currently signed in', () async {
         when(mockAuth.currentUser).thenReturn(null);
 
-        final result = await service.getCurrentUserData();
+        final result = await service.getCurrentUser();
 
         expect(result, isNull);
       });
@@ -270,7 +273,7 @@ void main() {
         when(mockUser.uid).thenReturn('uid-no-doc');
         when(mockAuth.currentUser).thenReturn(mockUser);
 
-        final result = await service.getCurrentUserData();
+        final result = await service.getCurrentUser();
 
         expect(result, isNull);
       });

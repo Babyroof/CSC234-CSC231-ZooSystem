@@ -1,10 +1,10 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zoopernova_zoo_system/features/booking/constants/booking_pricing.dart';
-import 'package:zoopernova_zoo_system/features/booking/services/pricing_service.dart';
+import 'package:zoopernova_zoo_system/features/booking/data/datasources/pricing_remote_datasource.dart';
 
 void main() {
-  group('PricingService', () {
+  group('PricingRemoteDataSourceImpl', () {
     test(
       'returns correct adultPrice, childPrice, elderPrice from config/pricing doc',
       () async {
@@ -17,7 +17,9 @@ void main() {
         });
 
         // Act
-        final pricing = await PricingService(db: fakeDb).getPricing();
+        final pricing = await PricingRemoteDataSourceImpl(
+          db: fakeDb,
+        ).getPricing();
 
         // Assert
         expect(pricing['adultPrice'], 400);
@@ -33,7 +35,9 @@ void main() {
         final fakeDb = FakeFirebaseFirestore();
 
         // Act
-        final pricing = await PricingService(db: fakeDb).getPricing();
+        final pricing = await PricingRemoteDataSourceImpl(
+          db: fakeDb,
+        ).getPricing();
 
         // Assert
         expect(pricing['adultPrice'], BookingPricing.adultPrice);
@@ -53,7 +57,9 @@ void main() {
         });
 
         // Act
-        final pricing = await PricingService(db: fakeDb).getPricing();
+        final pricing = await PricingRemoteDataSourceImpl(
+          db: fakeDb,
+        ).getPricing();
 
         // Assert
         expect(pricing['adultPrice'], 500);

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 
 class AdminGuard extends StatefulWidget {
@@ -50,7 +51,7 @@ class _AdminGuardState extends State<AdminGuard> {
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            Navigator.pushReplacementNamed(context, AppRoute.adminLogin);
+            context.go(AppRoute.adminLogin);
           }
         });
 
