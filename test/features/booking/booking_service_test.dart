@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/booking_model.dart';
-import 'package:zoopernova_zoo_system/features/booking/services/booking_service.dart';
+import 'package:zoopernova_zoo_system/features/booking/data/datasources/booking_remote_datasource.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/booking_entity.dart';
 
 // Fake Firestore that throws on every collection() call — used for error tests
 class _ErrorFirestore extends Fake implements FirebaseFirestore {
@@ -18,11 +18,11 @@ class _ErrorFirestore extends Fake implements FirebaseFirestore {
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
-  late BookingService service;
+  late BookingRemoteDataSourceImpl service;
 
   // ── Shared test booking ─────────────────────────────────────────────────
-  BookingModel testBooking({String id = '', String userId = 'user123'}) =>
-      BookingModel(
+  BookingEntity testBooking({String id = '', String userId = 'user123'}) =>
+      BookingEntity(
         id: id,
         adultTotal: 2,
         childTotal: 1,
@@ -34,7 +34,7 @@ void main() {
 
   setUp(() {
     fakeFirestore = FakeFirebaseFirestore();
-    service = BookingService(db: fakeFirestore);
+    service = BookingRemoteDataSourceImpl(db: fakeFirestore);
   });
 
   // ── createBooking ─────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ void main() {
 
     test('throws on Firestore error', () {
       // Arrange
-      final errorService = BookingService(db: _ErrorFirestore());
+      final errorService = BookingRemoteDataSourceImpl(db: _ErrorFirestore());
 
       // Assert
       expect(
@@ -111,7 +111,7 @@ void main() {
       });
     }
 
-    test('returns correct BookingModel for existing document', () async {
+    test('returns correct BookingDto for existing document', () async {
       // Arrange
       await seedDoc('bk1');
 
@@ -136,7 +136,7 @@ void main() {
 
     test('throws on Firestore error', () {
       // Arrange
-      final errorService = BookingService(db: _ErrorFirestore());
+      final errorService = BookingRemoteDataSourceImpl(db: _ErrorFirestore());
 
       // Assert
       expect(
@@ -146,8 +146,9 @@ void main() {
     });
   });
 
-  // ── getBookingsByUser ─────────────────────────────────────────────────────
-  group('getBookingsByUser', () {
+  // ── getPastBookings ───────────────────────────────────────────────────────
+  // Replaces the old getBookingsByUser — filters by Done status and past date
+  group('getPastBookings', () {
     final baseDoc = {
       'adultTotal': 1,
       'childTotal': 0,
@@ -157,7 +158,7 @@ void main() {
     };
 
     test('returns only bookings belonging to the specified user', () async {
-      // Arrange
+      // Arrange — seed past dates (before today May 19 2026)
       final ref1 = fakeFirestore.collection('user').doc('user1');
       final ref2 = fakeFirestore.collection('user').doc('user2');
 
@@ -178,7 +179,7 @@ void main() {
       });
 
       // Act
-      final results = await service.getBookingsByUser('user1').first;
+      final results = await service.getPastBookings('user1').first;
 
       // Assert
       expect(results.length, 2);
@@ -187,14 +188,14 @@ void main() {
 
     test('returns empty list when user has no bookings', () async {
       // Act
-      final results = await service.getBookingsByUser('unknown').first;
+      final results = await service.getPastBookings('unknown').first;
 
       // Assert
       expect(results, isEmpty);
     });
 
     test('returns bookings ordered by date descending', () async {
-      // Arrange
+      // Arrange — past dates
       final userRef = fakeFirestore.collection('user').doc('user1');
 
       await fakeFirestore.collection('booking').doc('older').set({
@@ -204,25 +205,25 @@ void main() {
       });
       await fakeFirestore.collection('booking').doc('newer').set({
         ...baseDoc,
-        'date': Timestamp.fromDate(DateTime(2026, 6, 1)),
+        'date': Timestamp.fromDate(DateTime(2026, 5, 1)),
         'userId': userRef,
       });
 
       // Act
-      final results = await service.getBookingsByUser('user1').first;
+      final results = await service.getPastBookings('user1').first;
 
       // Assert
-      expect(results.first.date, DateTime(2026, 6, 1));
+      expect(results.first.date, DateTime(2026, 5, 1));
       expect(results.last.date, DateTime(2026, 3, 1));
     });
 
     test('throws on Firestore error', () {
       // Arrange
-      final errorService = BookingService(db: _ErrorFirestore());
+      final errorService = BookingRemoteDataSourceImpl(db: _ErrorFirestore());
 
       // Assert
       expect(
-        () => errorService.getBookingsByUser('any'),
+        () => errorService.getPastBookings('any'),
         throwsA(isA<FirebaseException>()),
       );
     });
@@ -280,7 +281,7 @@ void main() {
 
     test('throws on Firestore error', () {
       // Arrange
-      final errorService = BookingService(db: _ErrorFirestore());
+      final errorService = BookingRemoteDataSourceImpl(db: _ErrorFirestore());
 
       // Assert
       expect(

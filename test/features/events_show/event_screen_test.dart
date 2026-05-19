@@ -1,34 +1,55 @@
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zoopernova_zoo_system/features/events_show/screens/event_screen.dart';
-import 'package:zoopernova_zoo_system/features/events_show/services/event.service.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zoopernova_zoo_system/features/events_show/domain/entities/event_entity.dart';
+import 'package:zoopernova_zoo_system/features/events_show/presentation/providers/event_providers.dart';
+import 'package:zoopernova_zoo_system/features/events_show/presentation/screens/event_screen.dart';
 
-late FakeFirebaseFirestore _fakeDb;
-late EventService _service;
+final _testEvents = [
+  const EventEntity(
+    id: 'event1',
+    eventName: 'Smart Seal Show',
+    eventDetail: '2 shows per day at the aquatic zone.',
+    eventPicture: 'https://example.com/seal.jpg',
+  ),
+];
 
-Future<void> _seedData() async {
-  _fakeDb = FakeFirebaseFirestore();
-  await _fakeDb.collection('event').add({
-    'eventName': 'Smart Seal Show',
-    'eventDetail': '2 shows per day at the aquatic zone.',
-    'eventPicture': 'https://example.com/seal.jpg',
-  });
-  _service = EventService(db: _fakeDb);
-}
+GoRouter _makeRouter() => GoRouter(
+  initialLocation: '/',
+  routes: [
+    GoRoute(path: '/', builder: (ctx, _) => const EventScreen()),
+    GoRoute(
+      path: '/events_info',
+      builder: (ctx, _) => const Scaffold(body: Text('Event Info')),
+    ),
+    GoRoute(
+      path: '/home',
+      builder: (ctx, _) => const Scaffold(body: Text('Home')),
+    ),
+    GoRoute(
+      path: '/map',
+      builder: (ctx, _) => const Scaffold(body: Text('Map')),
+    ),
+    GoRoute(
+      path: '/booking',
+      builder: (ctx, _) => const Scaffold(body: Text('Booking')),
+    ),
+    GoRoute(
+      path: '/ticket',
+      builder: (ctx, _) => const Scaffold(body: Text('Ticket')),
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (ctx, _) => const Scaffold(body: Text('Profile')),
+    ),
+  ],
+);
 
-Widget _buildApp() {
-  return MaterialApp(
-    routes: {
-      '/events_info': (_) => const Scaffold(body: Text('Event Info')),
-      '/home': (_) => const Scaffold(body: Text('Home')),
-      '/map': (_) => const Scaffold(body: Text('Map')),
-      '/ticket': (_) => const Scaffold(body: Text('Ticket')),
-      '/profile': (_) => const Scaffold(body: Text('Profile')),
-    },
-    home: EventScreen(eventService: _service),
-  );
-}
+Widget _buildApp() => ProviderScope(
+  overrides: [eventsProvider.overrideWith((ref) async => _testEvents)],
+  child: MaterialApp.router(routerConfig: _makeRouter()),
+);
 
 /// True if any Semantics widget in the current tree has the given label.
 bool _hasSemanticLabel(WidgetTester tester, String label) {
@@ -38,8 +59,6 @@ bool _hasSemanticLabel(WidgetTester tester, String label) {
 }
 
 void main() {
-  setUp(_seedData);
-
   group('EventScreen — rendering', () {
     testWidgets('shows loading indicator while fetching data', (tester) async {
       await tester.pumpWidget(_buildApp());
@@ -54,7 +73,7 @@ void main() {
       expect(find.text('ZOO EVENTS'), findsOneWidget);
     });
 
-    testWidgets('renders event name from Firestore', (tester) async {
+    testWidgets('renders event name from provider', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
@@ -74,8 +93,6 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      // Verify the Semantics widget exists with the correct label property —
-      // no need to enable the full semantics rendering pipeline.
       expect(_hasSemanticLabel(tester, 'Smart Seal Show'), isTrue);
     });
 
@@ -83,8 +100,6 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      // Locate the GestureDetector that wraps the event card by finding the
-      // nearest GestureDetector ancestor of the event name text.
       final cardFinder = find.ancestor(
         of: find.text('Smart Seal Show'),
         matching: find.byType(GestureDetector),

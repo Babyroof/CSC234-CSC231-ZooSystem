@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 
@@ -17,7 +18,7 @@ class ZooBottomNav extends StatelessWidget {
       AppRoute.profile,
     ];
 
-    Navigator.pushReplacementNamed(context, routes[index]);
+    context.go(routes[index]);
   }
 
   @override

@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 
@@ -20,30 +20,10 @@ class AdminSidebar extends StatelessWidget {
     (Icons.attach_money_outlined, 'Pricing', AppRoute.adminPricing),
   ];
 
-  static Route<dynamic> _adminFadeRoute(String routeName) {
-    final builder = AppRoute.getRoutes()[routeName]!;
-    return PageRouteBuilder<dynamic>(
-      settings: RouteSettings(name: routeName),
-      pageBuilder: (ctx, a1, a2) => builder(ctx),
-      transitionDuration: const Duration(milliseconds: 220),
-      reverseTransitionDuration: const Duration(milliseconds: 220),
-      transitionsBuilder: (ctx2, animation, a3, child) {
-        return FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeIn),
-          child: child,
-        );
-      },
-    );
-  }
-
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     if (context.mounted) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoute.adminLogin,
-        (_) => false,
-      );
+      context.go(AppRoute.adminLogin);
     }
   }
 
@@ -78,17 +58,7 @@ class AdminSidebar extends StatelessWidget {
               icon: item.$1,
               label: item.$2,
               isActive: isActive,
-              onTap: isActive
-                  ? null
-                  : () {
-                      if (kIsWeb) {
-                        Navigator.of(
-                          context,
-                        ).pushReplacement(_adminFadeRoute(item.$3));
-                      } else {
-                        Navigator.pushReplacementNamed(context, item.$3);
-                      }
-                    },
+              onTap: isActive ? null : () => context.go(item.$3),
             );
           }),
           const Spacer(),

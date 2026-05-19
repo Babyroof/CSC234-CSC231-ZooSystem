@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
 
@@ -19,7 +20,7 @@ class AdminTopHeader extends StatelessWidget {
         MouseRegion(
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
-            onTap: () => Navigator.pushNamed(context, AppRoute.adminProfile),
+            onTap: () => context.push(AppRoute.adminProfile),
             child: Row(
               children: const [
                 Column(

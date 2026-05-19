@@ -1,41 +1,58 @@
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zoopernova_zoo_system/features/animals_info/screens/animal_screen.dart';
-import 'package:zoopernova_zoo_system/features/animals_info/services/animal_service.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zoopernova_zoo_system/features/animals_info/domain/entities/animal_with_zone_entity.dart';
+import 'package:zoopernova_zoo_system/features/animals_info/presentation/providers/animal_providers.dart';
+import 'package:zoopernova_zoo_system/features/animals_info/presentation/screens/animal_screen.dart';
 
-late FakeFirebaseFirestore _fakeDb;
-late AnimalService _service;
+final _testAnimals = [
+  const AnimalWithZoneEntity(
+    id: 'animal1',
+    animalName: 'Lion',
+    animalDetail: 'The king of the jungle',
+    animalPicture: 'https://example.com/lion.jpg',
+    zoneName: 'Savanna Zone',
+  ),
+];
 
-Future<void> _seedData() async {
-  _fakeDb = FakeFirebaseFirestore();
+GoRouter _makeRouter() => GoRouter(
+  initialLocation: '/',
+  routes: [
+    GoRoute(path: '/', builder: (ctx, _) => const AnimalScreen()),
+    GoRoute(
+      path: '/animal_info',
+      builder: (ctx, _) => const Scaffold(body: Text('Animal Info')),
+    ),
+    GoRoute(
+      path: '/booking',
+      builder: (ctx, _) => const Scaffold(body: Text('Booking')),
+    ),
+    GoRoute(
+      path: '/home',
+      builder: (ctx, _) => const Scaffold(body: Text('Home')),
+    ),
+    GoRoute(
+      path: '/map',
+      builder: (ctx, _) => const Scaffold(body: Text('Map')),
+    ),
+    GoRoute(
+      path: '/ticket',
+      builder: (ctx, _) => const Scaffold(body: Text('Ticket')),
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (ctx, _) => const Scaffold(body: Text('Profile')),
+    ),
+  ],
+);
 
-  final zoneRef = _fakeDb.collection('zone').doc('zone1');
-  await zoneRef.set({'zoneName': 'Savanna Zone'});
-
-  await _fakeDb.collection('animal').add({
-    'animalName': 'Lion',
-    'animalDetail': 'The king of the jungle',
-    'animalPicture': 'https://example.com/lion.jpg',
-    'zoneId': zoneRef.path,
-  });
-
-  _service = AnimalService(db: _fakeDb);
-}
-
-Widget _buildApp() {
-  return MaterialApp(
-    routes: {
-      '/booking': (_) => const Scaffold(body: Text('Booking')),
-      '/animal_info': (_) => const Scaffold(body: Text('Animal Info')),
-      '/home': (_) => const Scaffold(body: Text('Home')),
-      '/map': (_) => const Scaffold(body: Text('Map')),
-      '/ticket': (_) => const Scaffold(body: Text('Ticket')),
-      '/profile': (_) => const Scaffold(body: Text('Profile')),
-    },
-    home: AnimalScreen(service: _service),
-  );
-}
+Widget _buildApp() => ProviderScope(
+  overrides: [
+    animalsWithZoneProvider.overrideWith((ref) async => _testAnimals),
+  ],
+  child: MaterialApp.router(routerConfig: _makeRouter()),
+);
 
 /// True if any Semantics widget in the current tree has the given label.
 bool _hasSemanticLabel(WidgetTester tester, String label) {
@@ -45,8 +62,6 @@ bool _hasSemanticLabel(WidgetTester tester, String label) {
 }
 
 void main() {
-  setUp(_seedData);
-
   group('AnimalScreen — rendering', () {
     testWidgets('shows loading indicator while fetching data', (tester) async {
       await tester.pumpWidget(_buildApp());
@@ -62,7 +77,7 @@ void main() {
       expect(find.text('Get to Know Our Animals'), findsOneWidget);
     });
 
-    testWidgets('renders animal name from Firestore', (tester) async {
+    testWidgets('renders animal name from provider', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
@@ -95,8 +110,6 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      // Verify the Semantics widget exists with the correct label property —
-      // no need to enable the full semantics rendering pipeline.
       expect(_hasSemanticLabel(tester, 'Lion'), isTrue);
     });
 
@@ -104,8 +117,6 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      // Locate the InkWell that wraps the animal card by finding the nearest
-      // InkWell ancestor of the "Lion" text, then scroll it into view and tap.
       final cardFinder = find.ancestor(
         of: find.text('Lion'),
         matching: find.byType(InkWell),

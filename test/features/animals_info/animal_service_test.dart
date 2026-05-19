@@ -1,16 +1,18 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zoopernova_zoo_system/features/animals_info/models/animal_model.dart';
-import 'package:zoopernova_zoo_system/features/animals_info/services/animal_service.dart';
+import 'package:zoopernova_zoo_system/features/animals_info/data/datasources/animal_remote_datasource.dart';
+import 'package:zoopernova_zoo_system/features/animals_info/data/models/animal_dto.dart';
+import 'package:zoopernova_zoo_system/features/animals_info/data/models/zone_dto.dart';
+import 'package:zoopernova_zoo_system/features/animals_info/domain/entities/animal_with_zone_entity.dart';
 
 void main() {
-  group('AnimalService', () {
+  group('AnimalRemoteDataSourceImpl', () {
     late FakeFirebaseFirestore fakeFirestore;
-    late AnimalService service;
+    late AnimalRemoteDataSourceImpl service;
 
     setUp(() async {
       fakeFirestore = FakeFirebaseFirestore();
-      service = AnimalService(db: fakeFirestore);
+      service = AnimalRemoteDataSourceImpl(db: fakeFirestore);
 
       await fakeFirestore.collection('animal').doc('animal1').set({
         'animalName': 'Scarlet Macaw',
@@ -29,10 +31,10 @@ void main() {
     // ─── getAnimals ───────────────────────────────────────────────────────────
 
     group('getAnimals', () {
-      test('returns a list of AnimalModel', () async {
+      test('returns a list of AnimalDto', () async {
         final result = await service.getAnimals();
 
-        expect(result, isA<List<AnimalModel>>());
+        expect(result, isA<List<AnimalDto>>());
       });
 
       test('returns all seeded animals', () async {
@@ -74,7 +76,9 @@ void main() {
       });
 
       test('returns empty list when collection is empty', () async {
-        final emptyService = AnimalService(db: FakeFirebaseFirestore());
+        final emptyService = AnimalRemoteDataSourceImpl(
+          db: FakeFirebaseFirestore(),
+        );
 
         final result = await emptyService.getAnimals();
 
@@ -95,7 +99,7 @@ void main() {
 
         final result = await service.getAnimalsByZone('zone3');
 
-        expect(result, isA<List<AnimalModel>>());
+        expect(result, isA<List<AnimalDto>>());
         expect(result.length, 1);
         expect(result.first.animalName, 'Flamingo');
       });
@@ -120,6 +124,7 @@ void main() {
 
         final result = await service.getZones();
 
+        expect(result, isA<List<ZoneDto>>());
         expect(result.length, 2);
         expect(
           result.map((z) => z.zoneName),
@@ -128,7 +133,9 @@ void main() {
       });
 
       test('returns empty list when zone collection is empty', () async {
-        final emptyService = AnimalService(db: FakeFirebaseFirestore());
+        final emptyService = AnimalRemoteDataSourceImpl(
+          db: FakeFirebaseFirestore(),
+        );
 
         final result = await emptyService.getZones();
 
@@ -136,9 +143,9 @@ void main() {
       });
     });
 
-    // ─── getRandomPopularAnimals ──────────────────────────────────────────────
+    // ─── getRandomAnimals ─────────────────────────────────────────────────────
 
-    group('getRandomPopularAnimals', () {
+    group('getRandomAnimals', () {
       test('returns at most the requested count', () async {
         final result = await service.getRandomAnimals(1);
 
@@ -152,7 +159,9 @@ void main() {
       });
 
       test('returns empty list when collection is empty', () async {
-        final emptyService = AnimalService(db: FakeFirebaseFirestore());
+        final emptyService = AnimalRemoteDataSourceImpl(
+          db: FakeFirebaseFirestore(),
+        );
 
         final result = await emptyService.getRandomAnimals(3);
 
@@ -163,31 +172,28 @@ void main() {
     // ─── getAnimalsWithZone ───────────────────────────────────────────────────
 
     group('getAnimalsWithZone', () {
-      test('returns combined animal+zone data as map list', () async {
+      test('returns combined animal+zone data as entity list', () async {
         await fakeFirestore.collection('zone').doc('zone1').set({
           'zoneName': 'Bird Zone',
         });
 
         final result = await service.getAnimalsWithZone();
 
-        expect(result, isA<List<Map<String, dynamic>>>());
+        expect(result, isA<List<AnimalWithZoneEntity>>());
         expect(result.isNotEmpty, true);
 
-        final keys = result.first.keys;
-        expect(
-          keys,
-          containsAll([
-            'id',
-            'animalName',
-            'animalDetail',
-            'animalPicture',
-            'zoneName',
-          ]),
-        );
+        final first = result.first;
+        expect(first.id, isNotEmpty);
+        expect(first.animalName, isNotEmpty);
+        expect(first.animalDetail, isNotEmpty);
+        expect(first.animalPicture, isNotEmpty);
+        expect(first.zoneName, isA<String>());
       });
 
       test('returns empty list when animal collection is empty', () async {
-        final emptyService = AnimalService(db: FakeFirebaseFirestore());
+        final emptyService = AnimalRemoteDataSourceImpl(
+          db: FakeFirebaseFirestore(),
+        );
 
         final result = await emptyService.getAnimalsWithZone();
 

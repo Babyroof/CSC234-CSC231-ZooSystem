@@ -2,13 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zoopernova_zoo_system/features/booking/constants/booking_pricing.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/booking_model.dart';
-import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
+import 'package:zoopernova_zoo_system/features/booking/data/models/booking_dto.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/booking_entity.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/selected_add_on_entity.dart';
 
 void main() {
-  // Helper — builds a BookingModel with explicit unit prices so tests are
+  // Helper — builds a BookingEntity with explicit unit prices so tests are
   // independent of the BookingPricing defaults.
-  BookingModel makeModel({
+  BookingEntity makeEntity({
     String id = 'bk1',
     String userId = 'user1',
     int adultTotal = 0,
@@ -17,12 +18,12 @@ void main() {
     int adultUnitPrice = 300,
     int childUnitPrice = 150,
     int elderUnitPrice = 40,
-    List<SelectedAddOnModel> selectedAddOns = const [],
+    List<SelectedAddOnEntity> selectedAddOns = const [],
     String status = 'pending',
     DateTime? date,
     int? totalPrice,
     String? chargeId,
-  }) => BookingModel(
+  }) => BookingEntity(
     id: id,
     userId: userId,
     adultTotal: adultTotal,
@@ -41,15 +42,15 @@ void main() {
   // ===========================================================================
   // totalAmount
   // ===========================================================================
-  group('BookingModel.totalAmount', () {
+  group('BookingEntity.totalAmount', () {
     test(
       'is correct with per_booking addon — addon price added once regardless of people count',
       () {
         // Arrange — 2 adults + 1 per_booking addon of 200
-        final booking = makeModel(
+        final booking = makeEntity(
           adultTotal: 2,
           selectedAddOns: const [
-            SelectedAddOnModel(
+            SelectedAddOnEntity(
               addOnId: 'ao1',
               name: 'Buffet',
               price: 200,
@@ -61,24 +62,22 @@ void main() {
         // Act
         final total = booking.totalAmount;
 
-        // Assert — totalAmount adds a.price directly (not calculatePrice)
-        // 2*300 + 200 = 800
+        // Assert — 2*300 + 200 = 800
         expect(total, equals(2 * 300 + 200));
       },
     );
 
     test('is correct with per_person addon — addon price * total people', () {
       // Arrange — 3 adults + 1 per_person addon of 80
-      // NOTE: BookingModel.totalAmount uses a.price directly via fold, NOT
+      // NOTE: BookingEntity.totalAmount uses a.price directly via fold, NOT
       // calculatePrice(). So for per_person addons the price stored in
-      // SelectedAddOnModel must already be the per-head price, and the
+      // SelectedAddOnEntity must already be the per-head price, and the
       // screen/service pre-multiplies it before saving. The fold just sums
       // all a.price values regardless of priceType.
-      // This test verifies the actual getter behaviour.
-      final booking = makeModel(
+      final booking = makeEntity(
         adultTotal: 3,
         selectedAddOns: const [
-          SelectedAddOnModel(
+          SelectedAddOnEntity(
             addOnId: 'ao2',
             name: 'Snack',
             price: 240, // 80 * 3 already multiplied before saving
@@ -96,16 +95,16 @@ void main() {
 
     test('is correct with mixed addons — one per_booking and one per_person', () {
       // Arrange — 2 adults, addon1=200 (per_booking), addon2=160 (per_person, already multiplied)
-      final booking = makeModel(
+      final booking = makeEntity(
         adultTotal: 2,
         selectedAddOns: const [
-          SelectedAddOnModel(
+          SelectedAddOnEntity(
             addOnId: 'ao1',
             name: 'Buffet',
             price: 200,
             priceType: 'per_booking',
           ),
-          SelectedAddOnModel(
+          SelectedAddOnEntity(
             addOnId: 'ao2',
             name: 'Snack',
             price: 160, // 80 * 2
@@ -123,7 +122,7 @@ void main() {
 
     test('ticket-only total with no selectedAddOns', () {
       // Arrange
-      final booking = makeModel(adultTotal: 1, childTotal: 1, elderTotal: 1);
+      final booking = makeEntity(adultTotal: 1, childTotal: 1, elderTotal: 1);
 
       // Act
       final total = booking.totalAmount;
@@ -134,7 +133,7 @@ void main() {
 
     test('uses adultUnitPrice, childUnitPrice, elderUnitPrice fields', () {
       // Arrange — custom unit prices
-      final booking = makeModel(
+      final booking = makeEntity(
         adultTotal: 1,
         childTotal: 1,
         elderTotal: 1,
@@ -154,7 +153,7 @@ void main() {
       'defaults use BookingPricing constants when unit prices are omitted',
       () {
         // Arrange — no explicit unit prices → defaults
-        final booking = BookingModel(
+        final booking = BookingEntity(
           id: 'bk1',
           userId: 'u1',
           adultTotal: 1,
@@ -183,7 +182,7 @@ void main() {
   // ===========================================================================
   // fromFirestore — selectedAddOns deserialization
   // ===========================================================================
-  group('BookingModel.fromFirestore with selectedAddOns', () {
+  group('BookingDto.fromFirestore with selectedAddOns', () {
     late FakeFirebaseFirestore fakeDb;
 
     setUp(() {
@@ -191,7 +190,7 @@ void main() {
     });
 
     test(
-      'deserializes selectedAddOns array into List<SelectedAddOnModel>',
+      'deserializes selectedAddOns array into List<SelectedAddOnDto>',
       () async {
         // Arrange
         final userRef = fakeDb.collection('user').doc('user1');
@@ -220,15 +219,16 @@ void main() {
         final doc = await fakeDb.collection('booking').doc('bk1').get();
 
         // Act
-        final model = BookingModel.fromFirestore(doc);
+        final dto = BookingDto.fromFirestore(doc);
+        final entity = dto.toEntity();
 
         // Assert
-        expect(model.selectedAddOns.length, 2);
-        expect(model.selectedAddOns[0].addOnId, 'ao1');
-        expect(model.selectedAddOns[0].name, 'Buffet');
-        expect(model.selectedAddOns[0].price, 200);
-        expect(model.selectedAddOns[1].addOnId, 'ao2');
-        expect(model.selectedAddOns[1].name, 'Golf Car');
+        expect(entity.selectedAddOns.length, 2);
+        expect(entity.selectedAddOns[0].addOnId, 'ao1');
+        expect(entity.selectedAddOns[0].name, 'Buffet');
+        expect(entity.selectedAddOns[0].price, 200);
+        expect(entity.selectedAddOns[1].addOnId, 'ao2');
+        expect(entity.selectedAddOns[1].name, 'Golf Car');
       },
     );
 
@@ -246,66 +246,63 @@ void main() {
       final doc = await fakeDb.collection('booking').doc('bk2').get();
 
       // Act
-      final model = BookingModel.fromFirestore(doc);
+      final dto = BookingDto.fromFirestore(doc);
 
       // Assert
-      expect(model.selectedAddOns, isEmpty);
+      expect(dto.selectedAddOns, isEmpty);
     });
   });
 
   // ===========================================================================
-  // toMap — selectedAddOns serialization
+  // SelectedAddOnEntity.toMap — serialization
   // ===========================================================================
-  group('BookingModel.toMap with selectedAddOns', () {
-    test('serializes selectedAddOns as list of maps', () {
+  group('SelectedAddOnEntity.toMap with selectedAddOns', () {
+    test('serializes fields as map with correct keys', () {
       // Arrange
-      final booking = makeModel(
-        selectedAddOns: const [
-          SelectedAddOnModel(
-            addOnId: 'ao1',
-            name: 'Buffet',
-            price: 200,
-            priceType: 'per_booking',
-          ),
-        ],
+      const addon = SelectedAddOnEntity(
+        addOnId: 'ao1',
+        name: 'Buffet',
+        price: 200,
+        priceType: 'per_booking',
       );
 
       // Act
-      final map = booking.toMap();
+      final map = addon.toMap();
 
       // Assert
-      final addOns = map['selectedAddOns'] as List;
-      expect(addOns.length, 1);
-      final addOnMap = addOns.first as Map<String, dynamic>;
-      expect(addOnMap['addOnId'], 'ao1');
-      expect(addOnMap['name'], 'Buffet');
-      expect(addOnMap['price'], 200);
-      expect(addOnMap['priceType'], 'per_booking');
+      expect(map['addOnId'], 'ao1');
+      expect(map['name'], 'Buffet');
+      expect(map['price'], 200);
+      expect(map['priceType'], 'per_booking');
     });
 
-    test('does NOT contain keys buffetFood, golfCar, or guidTour', () {
+    test(
+      'does NOT contain legacy boolean keys buffetFood, golfCar, or guidTour',
+      () {
+        // Arrange
+        const addon = SelectedAddOnEntity(
+          addOnId: 'ao1',
+          name: 'Buffet',
+          price: 200,
+          priceType: 'per_booking',
+        );
+
+        // Act
+        final map = addon.toMap();
+
+        // Assert — legacy boolean fields must not exist
+        expect(map.containsKey('buffetFood'), false);
+        expect(map.containsKey('golfCar'), false);
+        expect(map.containsKey('guidTour'), false);
+      },
+    );
+
+    test('empty selectedAddOns on entity results in empty list via toMap', () {
       // Arrange
-      final booking = makeModel();
-
-      // Act
-      final map = booking.toMap();
-
-      // Assert — legacy boolean fields must not exist
-      expect(map.containsKey('buffetFood'), false);
-      expect(map.containsKey('golfCar'), false);
-      expect(map.containsKey('guidTour'), false);
-    });
-
-    test('serializes empty selectedAddOns as empty list', () {
-      // Arrange
-      final booking = makeModel(selectedAddOns: const []);
-
-      // Act
-      final map = booking.toMap();
+      final entity = makeEntity(selectedAddOns: const []);
 
       // Assert
-      final addOns = map['selectedAddOns'] as List;
-      expect(addOns, isEmpty);
+      expect(entity.selectedAddOns, isEmpty);
     });
   });
 }

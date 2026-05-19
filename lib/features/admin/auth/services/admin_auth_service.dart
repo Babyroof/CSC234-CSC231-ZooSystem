@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:zoopernova_zoo_system/features/auth/models/auth_model.dart';
+import 'package:zoopernova_zoo_system/features/auth/presentation/models/auth_model.dart';
 
 class AdminAuthService {
   final FirebaseAuth _auth;

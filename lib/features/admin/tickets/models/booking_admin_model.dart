@@ -1,4 +1,4 @@
-import 'package:zoopernova_zoo_system/features/booking/models/selected_add_on_model.dart';
+import 'package:zoopernova_zoo_system/features/booking/domain/entities/selected_add_on_entity.dart';
 
 class BookingAdminModel {
   final String id;
@@ -8,7 +8,7 @@ class BookingAdminModel {
   final int childTotal;
   final int elderTotal;
   final DateTime date;
-  final List<SelectedAddOnModel> selectedAddOns;
+  final List<SelectedAddOnEntity> selectedAddOns;
   final String status;
 
   const BookingAdminModel({
@@ -32,11 +32,11 @@ class BookingAdminModel {
     String userName,
   ) {
     final rawAddOns = map['selectedAddOns'];
-    final addOns = <SelectedAddOnModel>[];
+    final addOns = <SelectedAddOnEntity>[];
     if (rawAddOns is List) {
       for (final item in rawAddOns) {
         if (item is Map<String, dynamic>) {
-          addOns.add(SelectedAddOnModel.fromMap(item));
+          addOns.add(SelectedAddOnEntity.fromMap(item));
         }
       }
     }

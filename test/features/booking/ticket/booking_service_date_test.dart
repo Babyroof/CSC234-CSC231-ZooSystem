@@ -15,7 +15,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zoopernova_zoo_system/features/booking/services/booking_service.dart';
+import 'package:zoopernova_zoo_system/features/booking/data/datasources/booking_remote_datasource.dart';
 
 // ---------------------------------------------------------------------------
 // Top-level date helpers (getters cannot live inside void main())
@@ -29,13 +29,13 @@ DateTime todayMidnight() {
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
-  late BookingService service;
+  late BookingRemoteDataSourceImpl service;
   late DocumentReference userRef;
   late DocumentReference otherUserRef;
 
   setUp(() {
     fakeFirestore = FakeFirebaseFirestore();
-    service = BookingService(db: fakeFirestore);
+    service = BookingRemoteDataSourceImpl(db: fakeFirestore);
     userRef = fakeFirestore.collection('user').doc('user_123');
     otherUserRef = fakeFirestore.collection('user').doc('other_user');
   });

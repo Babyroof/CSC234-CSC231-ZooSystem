@@ -1,9 +1,9 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zoopernova_zoo_system/features/booking/services/add_on_service.dart';
+import 'package:zoopernova_zoo_system/features/booking/data/datasources/add_on_remote_datasource.dart';
 
 void main() {
-  group('AddOnService', () {
+  group('AddOnRemoteDataSourceImpl', () {
     test('returns only addOns where isActive is true', () async {
       // Arrange
       final fakeDb = FakeFirebaseFirestore();
@@ -23,7 +23,9 @@ void main() {
       });
 
       // Act
-      final results = await AddOnService(db: fakeDb).getActiveAddOns().first;
+      final results = await AddOnRemoteDataSourceImpl(
+        db: fakeDb,
+      ).getActiveAddOns().first;
 
       // Assert
       expect(results.length, 1);
@@ -42,7 +44,9 @@ void main() {
       });
 
       // Act
-      final results = await AddOnService(db: fakeDb).getActiveAddOns().first;
+      final results = await AddOnRemoteDataSourceImpl(
+        db: fakeDb,
+      ).getActiveAddOns().first;
 
       // Assert
       expect(results, isEmpty);
@@ -74,7 +78,9 @@ void main() {
       });
 
       // Act
-      final results = await AddOnService(db: fakeDb).getActiveAddOns().first;
+      final results = await AddOnRemoteDataSourceImpl(
+        db: fakeDb,
+      ).getActiveAddOns().first;
 
       // Assert
       expect(results.length, 3);
@@ -88,7 +94,9 @@ void main() {
       final fakeDb = FakeFirebaseFirestore();
 
       // Act
-      final results = await AddOnService(db: fakeDb).getActiveAddOns().first;
+      final results = await AddOnRemoteDataSourceImpl(
+        db: fakeDb,
+      ).getActiveAddOns().first;
 
       // Assert
       expect(results, isEmpty);
@@ -99,7 +107,7 @@ void main() {
       () async {
         // Arrange
         final fakeDb = FakeFirebaseFirestore();
-        final service = AddOnService(db: fakeDb);
+        final service = AddOnRemoteDataSourceImpl(db: fakeDb);
 
         // Act — subscribe first, then add a document
         final streamFuture = service.getActiveAddOns().skip(1).first;

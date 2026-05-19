@@ -1,26 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zoopernova_zoo_system/features/auth/screens/login_screen.dart';
-import 'package:zoopernova_zoo_system/features/auth/services/auth_service.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zoopernova_zoo_system/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:zoopernova_zoo_system/features/auth/data/models/user_dto.dart';
+import 'package:zoopernova_zoo_system/features/auth/presentation/providers/auth_providers.dart';
+import 'package:zoopernova_zoo_system/features/auth/presentation/screens/login_screen.dart';
 
-// Fake that intercepts login without touching Firebase.
-class _FakeAuthService extends Fake implements AuthService {
+// Fake datasource — intercepts login without touching Firebase.
+class _FakeAuthDataSource extends Fake implements AuthRemoteDataSource {
   final String? loginResult;
-  _FakeAuthService({this.loginResult});
+  _FakeAuthDataSource({this.loginResult});
 
   @override
   Future<String?> login(String email, String password) async => loginResult;
+
+  @override
+  Future<UserDto?> getCurrentUser() async => null;
+
+  @override
+  Future<void> logout() async {}
+
+  @override
+  Future<String?> register({
+    required String email,
+    required String password,
+    required String firstname,
+    required String lastname,
+    required String phoneNumber,
+    required String username,
+  }) async => null;
 }
 
-Widget _buildApp({AuthService? authService}) {
-  return MaterialApp(
-    routes: {
-      '/register': (_) => const Scaffold(body: Text('Register')),
-      '/home': (_) => const Scaffold(body: Text('Home')),
-    },
-    home: LoginScreen(authService: authService ?? _FakeAuthService()),
-  );
-}
+GoRouter _makeRouter() => GoRouter(
+  initialLocation: '/',
+  routes: [
+    GoRoute(path: '/', builder: (ctx, _) => const LoginScreen()),
+    GoRoute(
+      path: '/register',
+      builder: (ctx, _) => const Scaffold(body: Text('Register')),
+    ),
+    GoRoute(
+      path: '/home',
+      builder: (ctx, _) => const Scaffold(body: Text('Home')),
+    ),
+  ],
+);
+
+Widget _buildApp({String? loginResult}) => ProviderScope(
+  overrides: [
+    authRemoteDataSourceProvider.overrideWith(
+      (ref) => _FakeAuthDataSource(loginResult: loginResult),
+    ),
+  ],
+  child: MaterialApp.router(routerConfig: _makeRouter()),
+);
 
 /// True if any Semantics widget in the current tree has the given label.
 bool _hasSemanticLabel(WidgetTester tester, String label) {
@@ -33,6 +67,7 @@ void main() {
   group('LoginScreen — rendering', () {
     testWidgets('email field renders', (tester) async {
       await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
 
       expect(find.text('Email'), findsOneWidget);
       expect(find.byType(TextFormField), findsAtLeastNWidgets(1));
@@ -40,6 +75,7 @@ void main() {
 
     testWidgets('password field renders', (tester) async {
       await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
 
       expect(find.text('Password'), findsOneWidget);
       expect(find.byType(TextFormField), findsNWidgets(2));
@@ -47,6 +83,7 @@ void main() {
 
     testWidgets('Sign In button renders', (tester) async {
       await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
 
       expect(find.text('Sign In'), findsOneWidget);
       expect(find.byType(ElevatedButton), findsOneWidget);
@@ -54,9 +91,8 @@ void main() {
 
     testWidgets('Sign Up link has semanticLabel', (tester) async {
       await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
 
-      // Verify the Semantics widget exists with the correct label property —
-      // no need to enable the full semantics rendering pipeline.
       expect(_hasSemanticLabel(tester, 'Sign Up'), isTrue);
     });
   });
@@ -66,6 +102,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
 
       await tester.ensureVisible(find.text('Sign In'));
       await tester.tap(find.text('Sign In'));
@@ -78,6 +115,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
 
       await tester.enterText(
         find.byType(TextFormField).first,
@@ -92,6 +130,7 @@ void main() {
 
     testWidgets('shows both errors when all fields are empty', (tester) async {
       await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
 
       await tester.ensureVisible(find.text('Sign In'));
       await tester.tap(find.text('Sign In'));
@@ -103,6 +142,7 @@ void main() {
 
     testWidgets('shows invalid email error for bad format', (tester) async {
       await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).first, 'not-an-email');
       await tester.ensureVisible(find.text('Sign In'));
@@ -118,6 +158,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
 
       await tester.ensureVisible(find.text('Sign In'));
       await tester.tap(find.text('Sign In'));
@@ -131,9 +172,8 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
 
-      // Use find.ancestor to locate the GestureDetector wrapping the "Sign Up"
-      // text — more reliable than semantic lookup in the widget test environment.
       final signUpFinder = find.ancestor(
         of: find.text('Sign Up'),
         matching: find.byType(GestureDetector),
@@ -146,9 +186,8 @@ void main() {
     });
 
     testWidgets('successful login navigates to home', (tester) async {
-      await tester.pumpWidget(
-        _buildApp(authService: _FakeAuthService(loginResult: 'Success')),
-      );
+      await tester.pumpWidget(_buildApp(loginResult: 'Success'));
+      await tester.pumpAndSettle();
 
       await tester.enterText(
         find.byType(TextFormField).first,
@@ -166,12 +205,9 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _buildApp(
-          authService: _FakeAuthService(
-            loginResult: 'Email or Password is not correct',
-          ),
-        ),
+        _buildApp(loginResult: 'Email or Password is not correct'),
       );
+      await tester.pumpAndSettle();
 
       await tester.enterText(
         find.byType(TextFormField).first,
