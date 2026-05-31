@@ -53,18 +53,19 @@ service cloud.firestore {
     match /booking/{id} {
       // date must be a Firestore Timestamp and not more than 24 h in the past
       // (allows same-day bookings where the picker sets time to midnight).
+      // userId is stored as a DocumentReference (/user/{uid}), not a plain string.
       allow create: if isLoggedIn()
         && request.resource.data.date is timestamp
         && request.resource.data.date > request.time - duration.value(24, 'h');
 
       allow read: if isAdmin() ||
-        (isLoggedIn() && resource.data.userId == request.auth.uid);
+        (isLoggedIn() && resource.data.userId == /databases/$(database)/documents/user/$(request.auth.uid));
 
       allow update: if isAdmin() ||
-        (isLoggedIn() && resource.data.userId == request.auth.uid);
+        (isLoggedIn() && resource.data.userId == /databases/$(database)/documents/user/$(request.auth.uid));
 
       allow delete: if isAdmin() ||
-        (isLoggedIn() && resource.data.userId == request.auth.uid);
+        (isLoggedIn() && resource.data.userId == /databases/$(database)/documents/user/$(request.auth.uid));
     }
 
     match /user/{uid} {
