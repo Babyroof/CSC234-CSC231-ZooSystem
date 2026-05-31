@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isLoggedIn() &&
+        exists(/databases/$(database)/documents/admin/$(request.auth.uid));
+    }
+
+    function isOwner(uid) {
+      return isLoggedIn() && request.auth.uid == uid;
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /animal/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /zone/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /event/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /map/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /addOns/{id} {
+      allow read: if isLoggedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /config/{id} {
+      allow read: if isLoggedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /booking/{id} {
+      // date must be a Firestore Timestamp and not more than 24 h in the past
+      // (allows same-day bookings where the picker sets time to midnight).
+      // userId is stored as a DocumentReference (/user/{uid}), not a plain string.
+      allow create: if isLoggedIn()
+        && request.resource.data.date is timestamp
+        && request.resource.data.date > request.time - duration.value(24, 'h');
+
+      allow read: if isAdmin() ||
+        (isLoggedIn() && resource.data.userId == /databases/$(database)/documents/user/$(request.auth.uid));
+
+      allow update: if isAdmin() ||
+        (isLoggedIn() && resource.data.userId == /databases/$(database)/documents/user/$(request.auth.uid));
+
+      allow delete: if isAdmin() ||
+        (isLoggedIn() && resource.data.userId == /databases/$(database)/documents/user/$(request.auth.uid));
+    }
+
+    match /user/{uid} {
+      allow read: if isAdmin() || isOwner(uid);
+
+      allow create: if isOwner(uid);
+
+      // Only allow updating safe profile fields — prevents changing email via client
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['username', 'firstname', 'lastname', 'phoneNumber']);
+
+      allow delete: if isOwner(uid);
+    }
+
+    match /admin/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid);
+      allow update, delete: if false;
+    }
+  }
+}

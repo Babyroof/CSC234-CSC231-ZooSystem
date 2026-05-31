@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zoopernova_zoo_system/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:zoopernova_zoo_system/features/auth/data/models/user_dto.dart';
 import 'package:zoopernova_zoo_system/features/auth/presentation/providers/auth_providers.dart';
 import 'package:zoopernova_zoo_system/features/auth/presentation/screens/login_screen.dart';
+
+// Pre-set biometric_enabled = true so _promptEnableBiometric() exits early
+// (alreadyEnabled == true) and never shows the dialog — regardless of whether
+// the host machine has real biometric hardware (e.g. macOS Touch ID).
+void _suppressBiometricDialog() {
+  SharedPreferences.setMockInitialValues({'biometric_enabled': true});
+}
 
 // Fake datasource — intercepts login without touching Firebase.
 class _FakeAuthDataSource extends Fake implements AuthRemoteDataSource {
@@ -64,6 +72,8 @@ bool _hasSemanticLabel(WidgetTester tester, String label) {
 }
 
 void main() {
+  setUp(_suppressBiometricDialog);
+
   group('LoginScreen — rendering', () {
     testWidgets('email field renders', (tester) async {
       await tester.pumpWidget(_buildApp());

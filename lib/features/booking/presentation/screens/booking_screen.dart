@@ -325,55 +325,59 @@ class _TicketRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          _iconBox(icon),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.black,
+    return Semantics(
+      label: '$label ticket — $price baht ($ageRange) — count: $count',
+      container: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            _iconBox(icon),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.black,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$price ฿',
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.black,
+                  const SizedBox(height: 2),
+                  Text(
+                    '$price ฿',
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.black,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  ageRange,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
-                    color: AppColors.grey,
+                  const SizedBox(height: 2),
+                  Text(
+                    ageRange,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: AppColors.grey,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          _CounterControl(
-            count: count,
-            onIncrement: onIncrement,
-            onDecrement: onDecrement,
-          ),
-        ],
+            _CounterControl(
+              count: count,
+              onIncrement: onIncrement,
+              onDecrement: onDecrement,
+            ),
+          ],
+        ),
       ),
-    );
+    ); // end Semantics
   }
 }
 
@@ -397,53 +401,59 @@ class _AddonRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          _iconBox(icon),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black,
+    return Semantics(
+      label:
+          '$label add-on — $priceLabel — ${isSelected ? 'selected' : 'not selected'}',
+      button: true,
+      container: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            _iconBox(icon),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.black,
+                        ),
                       ),
-                    ),
-                    if (isRecommended) ...[
-                      const SizedBox(width: 6),
-                      _RecommendBadge(),
+                      if (isRecommended) ...[
+                        const SizedBox(width: 6),
+                        _RecommendBadge(),
+                      ],
                     ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  priceLabel,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
-                    color: AppColors.grey,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    priceLabel,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: AppColors.grey,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          _CounterControl(
-            count: isSelected ? 1 : 0,
-            onIncrement: isSelected ? null : onToggle,
-            onDecrement: isSelected ? onToggle : null,
-          ),
-        ],
+            _CounterControl(
+              count: isSelected ? 1 : 0,
+              onIncrement: isSelected ? null : onToggle,
+              onDecrement: isSelected ? onToggle : null,
+            ),
+          ],
+        ),
       ),
-    );
+    ); // end Semantics
   }
 }
 
@@ -494,19 +504,26 @@ class _CounterControl extends StatelessWidget {
   }
 
   Widget _btn(IconData icon, VoidCallback? onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          color: onTap != null ? AppColors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Icon(
-          icon,
-          size: 14,
-          color: onTap != null ? AppColors.black : AppColors.grey,
+    final isAdd = icon == Icons.add;
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: isAdd ? 'Increase count' : 'Decrease count',
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: onTap != null ? AppColors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Icon(
+            icon,
+            size: 14,
+            color: onTap != null ? AppColors.black : AppColors.grey,
+          ),
         ),
       ),
     );

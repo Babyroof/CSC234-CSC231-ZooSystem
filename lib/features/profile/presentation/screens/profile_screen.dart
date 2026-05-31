@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_strings.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
+import 'package:zoopernova_zoo_system/core/services/biometric_service.dart';
 import 'package:zoopernova_zoo_system/core/widgets/zoo_bottom_nav.dart';
 import 'package:zoopernova_zoo_system/features/auth/presentation/providers/auth_providers.dart';
 import '../providers/profile_providers.dart';
@@ -222,40 +224,95 @@ class ProfileScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  if (!kIsWeb) ...[
+                    const SizedBox(height: 16),
+                    const _BiometricToggle(),
+                  ],
                   const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: () async {
-                      await ref.read(logoutUseCaseProvider).call();
-                      ref.invalidate(profileNotifierProvider);
-                      if (context.mounted) context.go(AppRoute.login);
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.logout, size: 22, color: AppColors.black),
-                          SizedBox(width: 16),
-                          Text(
-                            'Log Out',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.black,
-                            ),
+                  // Lock App only shown on mobile — Web has no biometric unlock
+                  if (!kIsWeb)
+                    Semantics(
+                      label: 'Lock App',
+                      button: true,
+                      child: GestureDetector(
+                        onTap: () {
+                          if (context.mounted) context.go(AppRoute.login);
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
                           ),
-                        ],
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.lock_outline,
+                                size: 22,
+                                color: AppColors.black,
+                              ),
+                              SizedBox(width: 16),
+                              Text(
+                                'Lock App',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ), // end Semantics
+                  const SizedBox(height: 12),
+                  // Sign Out — clears Firebase session completely
+                  Semantics(
+                    label: 'Sign Out',
+                    button: true,
+                    child: GestureDetector(
+                      onTap: () async {
+                        await ref.read(logoutUseCaseProvider).call();
+                        ref.invalidate(profileNotifierProvider);
+                        if (context.mounted) context.go(AppRoute.login);
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.logout,
+                              size: 22,
+                              color: AppColors.change,
+                            ),
+                            SizedBox(width: 16),
+                            Text(
+                              'Sign Out',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.change,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+                  ), // end Semantics
                   const SizedBox(height: 100),
                 ],
               ),
@@ -332,6 +389,93 @@ class ProfileScreen extends ConsumerWidget {
             endIndent: 16,
           ),
       ],
+    );
+  }
+}
+
+// Encapsulates its own async state — no changes needed to ProfileScreen.
+class _BiometricToggle extends StatefulWidget {
+  const _BiometricToggle();
+
+  @override
+  State<_BiometricToggle> createState() => _BiometricToggleState();
+}
+
+class _BiometricToggleState extends State<_BiometricToggle> {
+  bool _available = false;
+  bool _enabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final available = await BiometricService.isAvailable();
+    final enabled = await BiometricService.isEnabled();
+    if (mounted)
+      setState(() {
+        _available = available;
+        _enabled = enabled;
+      });
+  }
+
+  Future<void> _toggle(bool value) async {
+    await BiometricService.setEnabled(value);
+    if (mounted) setState(() => _enabled = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.fingerprint,
+            size: 22,
+            color: _available ? AppColors.black : AppColors.grey,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Biometric Login',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: _available ? AppColors.black : AppColors.grey,
+                  ),
+                ),
+                if (!_available)
+                  const Text(
+                    'Set up fingerprint in device Settings first',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11,
+                      color: AppColors.grey,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Switch(
+            value: _enabled,
+            onChanged: _available ? _toggle : null,
+            activeThumbColor: AppColors.primary,
+            activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+          ),
+        ],
+      ),
     );
   }
 }
