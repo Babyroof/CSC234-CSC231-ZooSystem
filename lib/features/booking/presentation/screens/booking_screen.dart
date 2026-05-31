@@ -325,7 +325,10 @@ class _TicketRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Semantics(
+      label: '$label ticket — $price baht ($ageRange) — count: $count',
+      container: true,
+      child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
@@ -373,7 +376,7 @@ class _TicketRow extends StatelessWidget {
           ),
         ],
       ),
-    );
+    )); // end Semantics
   }
 }
 
@@ -397,7 +400,11 @@ class _AddonRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Semantics(
+      label: '$label add-on — $priceLabel — ${isSelected ? 'selected' : 'not selected'}',
+      button: true,
+      container: true,
+      child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
@@ -443,7 +450,7 @@ class _AddonRow extends StatelessWidget {
           ),
         ],
       ),
-    );
+    )); // end Semantics
   }
 }
 
@@ -494,19 +501,26 @@ class _CounterControl extends StatelessWidget {
   }
 
   Widget _btn(IconData icon, VoidCallback? onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          color: onTap != null ? AppColors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Icon(
-          icon,
-          size: 14,
-          color: onTap != null ? AppColors.black : AppColors.grey,
+    final isAdd = icon == Icons.add;
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: isAdd ? 'Increase count' : 'Decrease count',
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: onTap != null ? AppColors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Icon(
+            icon,
+            size: 14,
+            color: onTap != null ? AppColors.black : AppColors.grey,
+          ),
         ),
       ),
     );

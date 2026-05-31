@@ -226,7 +226,10 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   const _BiometricToggle(),
                   const SizedBox(height: 16),
-                  GestureDetector(
+                  Semantics(
+                    label: 'Log Out',
+                    button: true,
+                    child: GestureDetector(
                     onTap: () async {
                       await ref.read(logoutUseCaseProvider).call();
                       ref.invalidate(profileNotifierProvider);
@@ -258,7 +261,7 @@ class ProfileScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  ),
+                  )), // end Semantics
                   const SizedBox(height: 100),
                 ],
               ),

@@ -180,7 +180,11 @@ class HomeScreen extends ConsumerWidget {
                 itemCount: events.length,
                 itemBuilder: (context, index) {
                   final event = events[index];
-                  return InkWell(
+                  return Semantics(
+                    label: event.eventName,
+                    button: true,
+                    excludeSemantics: true,
+                    child: InkWell(
                     onTap: () =>
                         context.push(AppRoute.eventsInfo, extra: event),
                     child: Container(
@@ -264,7 +268,7 @@ class HomeScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  );
+                  )); // end Semantics
                 },
               ),
             ),
