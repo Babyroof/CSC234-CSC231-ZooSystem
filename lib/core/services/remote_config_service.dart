@@ -12,11 +12,14 @@ class RemoteConfigService {
 
   static Future<void> init() async {
     try {
-      await _rc.setConfigSettings(RemoteConfigSettings(
-        fetchTimeout: const Duration(minutes: 1),
-        minimumFetchInterval:
-            kDebugMode ? const Duration(minutes: 1) : const Duration(hours: 1),
-      ));
+      await _rc.setConfigSettings(
+        RemoteConfigSettings(
+          fetchTimeout: const Duration(minutes: 1),
+          minimumFetchInterval: kDebugMode
+              ? const Duration(minutes: 1)
+              : const Duration(hours: 1),
+        ),
+      );
       await _rc.setDefaults(_defaults);
       await _rc.fetchAndActivate();
     } catch (e) {

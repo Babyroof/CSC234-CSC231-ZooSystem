@@ -113,9 +113,7 @@ GoRouter _buildRouter({String initialLocation = '/'}) => GoRouter(
 
 Widget _buildApp({String initialLocation = '/'}) => ProviderScope(
   overrides: [
-    authRemoteDataSourceProvider.overrideWith(
-      (ref) => _FakeAuthDataSource(),
-    ),
+    authRemoteDataSourceProvider.overrideWith((ref) => _FakeAuthDataSource()),
     eventsProvider.overrideWith((ref) async => _testEvents),
     profileNotifierProvider.overrideWith(() => _FakeProfileNotifier()),
     homePopularAnimalsProvider.overrideWith((ref) async => _testAnimals),
@@ -176,14 +174,8 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.byType(TextFormField).first,
-        'test@zoo.com',
-      );
-      await tester.enterText(
-        find.byType(TextFormField).last,
-        'password123',
-      );
+      await tester.enterText(find.byType(TextFormField).first, 'test@zoo.com');
+      await tester.enterText(find.byType(TextFormField).last, 'password123');
       await tester.ensureVisible(find.text('Sign In'));
       await tester.tap(find.text('Sign In'));
       await tester.pumpAndSettle();
@@ -191,9 +183,7 @@ void main() {
       expect(find.text('Hi, Tana Poom'), findsOneWidget);
     });
 
-    testWidgets('guest button navigates to home without login', (
-      tester,
-    ) async {
+    testWidgets('guest button navigates to home without login', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 

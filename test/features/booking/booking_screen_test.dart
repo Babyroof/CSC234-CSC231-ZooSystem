@@ -9,11 +9,8 @@ import 'package:zoopernova_zoo_system/features/booking/presentation/screens/book
 
 class _StubBookingFormNotifier extends BookingFormNotifier {
   @override
-  BookingFormState build() => const BookingFormState(
-    adultPrice: 200,
-    kidPrice: 100,
-    elderPrice: 150,
-  );
+  BookingFormState build() =>
+      const BookingFormState(adultPrice: 200, kidPrice: 100, elderPrice: 150);
 }
 
 // ── Router ───────────────────────────────────────────────────────────────────

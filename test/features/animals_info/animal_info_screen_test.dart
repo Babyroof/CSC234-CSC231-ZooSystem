@@ -75,9 +75,7 @@ class _TriggerScreenState extends State<_TriggerScreen> {
 }
 
 Widget _buildApp({Map<String, dynamic>? data}) => ProviderScope(
-  child: MaterialApp.router(
-    routerConfig: _makeRouter(data ?? _testAnimalData),
-  ),
+  child: MaterialApp.router(routerConfig: _makeRouter(data ?? _testAnimalData)),
 );
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -148,9 +146,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp.router(routerConfig: router),
-        ),
+        ProviderScope(child: MaterialApp.router(routerConfig: router)),
       );
       await tester.pumpAndSettle();
 

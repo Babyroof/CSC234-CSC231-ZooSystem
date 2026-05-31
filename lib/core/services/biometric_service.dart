@@ -38,8 +38,7 @@ class BiometricService {
 
   /// True when the Firebase Auth session is still active (token not expired).
   /// Biometric is used to *resume* an existing session, not create a new one.
-  static bool hasActiveSession() =>
-      FirebaseAuth.instance.currentUser != null;
+  static bool hasActiveSession() => FirebaseAuth.instance.currentUser != null;
 
   /// Show the platform biometric prompt.
   /// Returns true on success, error message string on failure.

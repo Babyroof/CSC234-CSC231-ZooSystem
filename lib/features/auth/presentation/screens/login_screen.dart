@@ -99,8 +99,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _promptEnableBiometric() async {
     // Timeout guards against platform-channel hangs in test/CI environments.
-    final available = await BiometricService.isAvailable()
-        .timeout(const Duration(seconds: 3), onTimeout: () => false);
+    final available = await BiometricService.isAvailable().timeout(
+      const Duration(seconds: 3),
+      onTimeout: () => false,
+    );
     final alreadyEnabled = await BiometricService.isEnabled();
     if (!available || alreadyEnabled || !mounted) return;
 
@@ -132,7 +134,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context.go(AppRoute.home);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.error ?? 'Biometric authentication failed')),
+        SnackBar(
+          content: Text(result.error ?? 'Biometric authentication failed'),
+        ),
       );
     }
   }
@@ -234,10 +238,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     width: double.infinity,
                                     height: 46,
                                     child: OutlinedButton.icon(
-                                      onPressed:
-                                          _isLoading
-                                              ? null
-                                              : _handleBiometricLogin,
+                                      onPressed: _isLoading
+                                          ? null
+                                          : _handleBiometricLogin,
                                       icon: const Icon(
                                         Icons.fingerprint,
                                         color: AppColors.primary,

@@ -152,10 +152,7 @@ void main() {
       await tester.pumpWidget(_buildApp(showPopularAnimals: false));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Recommend Animals', skipOffstage: false),
-        findsNothing,
-      );
+      expect(find.text('Recommend Animals', skipOffstage: false), findsNothing);
       expect(find.text('Scarlet Macaw', skipOffstage: false), findsNothing);
     });
   });

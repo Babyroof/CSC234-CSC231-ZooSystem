@@ -329,54 +329,55 @@ class _TicketRow extends StatelessWidget {
       label: '$label ticket — $price baht ($ageRange) — count: $count',
       container: true,
       child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          _iconBox(icon),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.black,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            _iconBox(icon),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.black,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$price ฿',
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.black,
+                  const SizedBox(height: 2),
+                  Text(
+                    '$price ฿',
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.black,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  ageRange,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
-                    color: AppColors.grey,
+                  const SizedBox(height: 2),
+                  Text(
+                    ageRange,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: AppColors.grey,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          _CounterControl(
-            count: count,
-            onIncrement: onIncrement,
-            onDecrement: onDecrement,
-          ),
-        ],
+            _CounterControl(
+              count: count,
+              onIncrement: onIncrement,
+              onDecrement: onDecrement,
+            ),
+          ],
+        ),
       ),
-    )); // end Semantics
+    ); // end Semantics
   }
 }
 
@@ -401,56 +402,58 @@ class _AddonRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: '$label add-on — $priceLabel — ${isSelected ? 'selected' : 'not selected'}',
+      label:
+          '$label add-on — $priceLabel — ${isSelected ? 'selected' : 'not selected'}',
       button: true,
       container: true,
       child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          _iconBox(icon),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            _iconBox(icon),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.black,
+                        ),
                       ),
-                    ),
-                    if (isRecommended) ...[
-                      const SizedBox(width: 6),
-                      _RecommendBadge(),
+                      if (isRecommended) ...[
+                        const SizedBox(width: 6),
+                        _RecommendBadge(),
+                      ],
                     ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  priceLabel,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
-                    color: AppColors.grey,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    priceLabel,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: AppColors.grey,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          _CounterControl(
-            count: isSelected ? 1 : 0,
-            onIncrement: isSelected ? null : onToggle,
-            onDecrement: isSelected ? onToggle : null,
-          ),
-        ],
+            _CounterControl(
+              count: isSelected ? 1 : 0,
+              onIncrement: isSelected ? null : onToggle,
+              onDecrement: isSelected ? onToggle : null,
+            ),
+          ],
+        ),
       ),
-    )); // end Semantics
+    ); // end Semantics
   }
 }
 
