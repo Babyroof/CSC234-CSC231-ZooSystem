@@ -373,7 +373,6 @@ class _BiometricToggleState extends State<_BiometricToggle> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_available) return const SizedBox.shrink();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -383,22 +382,40 @@ class _BiometricToggleState extends State<_BiometricToggle> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.fingerprint, size: 22, color: AppColors.black),
+          Icon(
+            Icons.fingerprint,
+            size: 22,
+            color: _available ? AppColors.black : AppColors.grey,
+          ),
           const SizedBox(width: 16),
-          const Expanded(
-            child: Text(
-              'Biometric Login',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.black,
-              ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Biometric Login',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: _available ? AppColors.black : AppColors.grey,
+                  ),
+                ),
+                if (!_available)
+                  const Text(
+                    'Set up fingerprint in device Settings first',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11,
+                      color: AppColors.grey,
+                    ),
+                  ),
+              ],
             ),
           ),
           Switch(
             value: _enabled,
-            onChanged: _toggle,
+            onChanged: _available ? _toggle : null,
             activeThumbColor: AppColors.primary,
             activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
           ),
