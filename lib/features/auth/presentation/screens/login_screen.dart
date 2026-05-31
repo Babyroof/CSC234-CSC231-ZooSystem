@@ -78,9 +78,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       if (mounted) {
         if (result == 'Success') {
-          context.go(AppRoute.home);
-          // Offer biometric enrolment after navigation — non-blocking.
-          _promptEnableBiometric();
+          // Await dialog before navigating — avoids using unmounted context.
+          await _promptEnableBiometric();
+          if (mounted) context.go(AppRoute.home);
         } else {
           setState(
             () => _backendError = result ?? 'Email or Password is not correct',

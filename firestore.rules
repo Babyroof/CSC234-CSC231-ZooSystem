@@ -51,10 +51,11 @@ service cloud.firestore {
     }
 
     match /booking/{id} {
-      // FIX: userId is stored as Auth UID string, not a document reference path
+      // date must be a Firestore Timestamp and not more than 24 h in the past
+      // (allows same-day bookings where the picker sets time to midnight).
       allow create: if isLoggedIn()
         && request.resource.data.date is timestamp
-        && request.resource.data.date > request.time;
+        && request.resource.data.date > request.time - duration.value(24, 'h');
 
       allow read: if isAdmin() ||
         (isLoggedIn() && resource.data.userId == request.auth.uid);

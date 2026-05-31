@@ -1,25 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zoopernova_zoo_system/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:zoopernova_zoo_system/features/auth/data/models/user_dto.dart';
 import 'package:zoopernova_zoo_system/features/auth/presentation/providers/auth_providers.dart';
 import 'package:zoopernova_zoo_system/features/auth/presentation/screens/login_screen.dart';
 
-// Disable local_auth platform channel so biometric checks return false in tests.
-void _stubBiometricChannel() {
-  const channel = MethodChannel('plugins.flutter.io/local_auth');
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(channel, (call) async {
-    return switch (call.method) {
-      'canCheckBiometrics' => false,
-      'isDeviceSupported' => false,
-      'getAvailableBiometrics' => <String>[],
-      _ => null,
-    };
-  });
+// Pre-set biometric_enabled = true so _promptEnableBiometric() exits early
+// (alreadyEnabled == true) and never shows the dialog — regardless of whether
+// the host machine has real biometric hardware (e.g. macOS Touch ID).
+void _suppressBiometricDialog() {
+  SharedPreferences.setMockInitialValues({'biometric_enabled': true});
 }
 
 // Fake datasource — intercepts login without touching Firebase.
@@ -79,7 +72,7 @@ bool _hasSemanticLabel(WidgetTester tester, String label) {
 }
 
 void main() {
-  setUp(_stubBiometricChannel);
+  setUp(_suppressBiometricDialog);
 
   group('LoginScreen — rendering', () {
     testWidgets('email field renders', (tester) async {
