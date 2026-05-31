@@ -224,8 +224,10 @@ class ProfileScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const _BiometricToggle(),
+                  if (!kIsWeb) ...[
+                    const SizedBox(height: 16),
+                    const _BiometricToggle(),
+                  ],
                   const SizedBox(height: 16),
                   // Lock App only shown on mobile — Web has no biometric unlock
                   if (!kIsWeb) Semantics(
