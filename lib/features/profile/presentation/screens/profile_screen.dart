@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_strings.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
+import 'package:zoopernova_zoo_system/core/services/biometric_service.dart';
 import 'package:zoopernova_zoo_system/core/widgets/zoo_bottom_nav.dart';
 import 'package:zoopernova_zoo_system/features/auth/presentation/providers/auth_providers.dart';
 import '../providers/profile_providers.dart';
@@ -223,6 +224,8 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  const _BiometricToggle(),
+                  const SizedBox(height: 16),
                   GestureDetector(
                     onTap: () async {
                       await ref.read(logoutUseCaseProvider).call();
@@ -332,6 +335,72 @@ class ProfileScreen extends ConsumerWidget {
             endIndent: 16,
           ),
       ],
+    );
+  }
+}
+
+// Encapsulates its own async state — no changes needed to ProfileScreen.
+class _BiometricToggle extends StatefulWidget {
+  const _BiometricToggle();
+
+  @override
+  State<_BiometricToggle> createState() => _BiometricToggleState();
+}
+
+class _BiometricToggleState extends State<_BiometricToggle> {
+  bool _available = false;
+  bool _enabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final available = await BiometricService.isAvailable();
+    final enabled = await BiometricService.isEnabled();
+    if (mounted) setState(() { _available = available; _enabled = enabled; });
+  }
+
+  Future<void> _toggle(bool value) async {
+    await BiometricService.setEnabled(value);
+    if (mounted) setState(() => _enabled = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_available) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.fingerprint, size: 22, color: AppColors.black),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Text(
+              'Biometric Login',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.black,
+              ),
+            ),
+          ),
+          Switch(
+            value: _enabled,
+            onChanged: _toggle,
+            activeThumbColor: AppColors.primary,
+            activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+          ),
+        ],
+      ),
     );
   }
 }

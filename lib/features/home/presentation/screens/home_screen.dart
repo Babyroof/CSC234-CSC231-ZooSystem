@@ -19,6 +19,7 @@ class HomeScreen extends ConsumerWidget {
     final eventsAsync = ref.watch(eventsProvider);
     final profileAsync = ref.watch(profileNotifierProvider);
     final animalsAsync = ref.watch(homePopularAnimalsProvider);
+    final showPopularAnimals = ref.watch(featurePopularAnimalsProvider);
 
     if (eventsAsync.isLoading ||
         profileAsync.isLoading ||
@@ -269,6 +270,7 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
 
+          if (showPopularAnimals) ...[
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
@@ -425,6 +427,7 @@ class HomeScreen extends ConsumerWidget {
               }, childCount: animals.length),
             ),
           ),
+          ], // end feature_popular_animals
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],

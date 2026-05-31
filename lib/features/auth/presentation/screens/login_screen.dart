@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zoopernova_zoo_system/core/constants/app_colors.dart';
 import 'package:zoopernova_zoo_system/core/routes/app_routes.dart';
+import 'package:zoopernova_zoo_system/core/services/biometric_service.dart';
 import 'package:zoopernova_zoo_system/core/utils/validators.dart';
 import 'package:zoopernova_zoo_system/features/auth/presentation/providers/auth_providers.dart';
 import 'package:zoopernova_zoo_system/features/auth/presentation/widgets/custom_text_field.dart';
@@ -20,12 +21,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _backendError;
+  bool _biometricReady = false; // available + enabled + active session
 
   @override
   void initState() {
     super.initState();
     _emailController.addListener(_clearErrorOnType);
     _passwordController.addListener(_clearErrorOnType);
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final available = await BiometricService.isAvailable();
+    final enabled = await BiometricService.isEnabled();
+    final hasSession = BiometricService.hasActiveSession();
+    if (mounted) {
+      setState(() => _biometricReady = available && enabled && hasSession);
+    }
   }
 
   void _clearErrorOnType() {
@@ -67,6 +79,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         if (result == 'Success') {
           context.go(AppRoute.home);
+          // Offer biometric enrolment after navigation — non-blocking.
+          _promptEnableBiometric();
         } else {
           setState(
             () => _backendError = result ?? 'Email or Password is not correct',
@@ -82,6 +96,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _promptEnableBiometric() async {
+    // Timeout guards against platform-channel hangs in test/CI environments.
+    final available = await BiometricService.isAvailable()
+        .timeout(const Duration(seconds: 3), onTimeout: () => false);
+    final alreadyEnabled = await BiometricService.isEnabled();
+    if (!available || alreadyEnabled || !mounted) return;
+
+    final enable = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Enable Biometric Login'),
+        content: const Text(
+          'Use fingerprint or face ID to sign in faster next time?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Not now'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Enable'),
+          ),
+        ],
+      ),
+    );
+    if (enable == true) await BiometricService.setEnabled(true);
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    final success = await BiometricService.authenticate();
+    if (success && mounted) {
+      context.go(AppRoute.home);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Biometric authentication failed')),
+      );
     }
   }
 
@@ -177,6 +231,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   validator: _validatePassword,
                                 ),
                                 const SizedBox(height: 32),
+                                if (_biometricReady) ...[
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 46,
+                                    child: OutlinedButton.icon(
+                                      onPressed:
+                                          _isLoading
+                                              ? null
+                                              : _handleBiometricLogin,
+                                      icon: const Icon(
+                                        Icons.fingerprint,
+                                        color: AppColors.primary,
+                                      ),
+                                      label: const Text(
+                                        'Sign in with Biometric',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 16,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(
+                                          color: AppColors.primary,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
                                 SizedBox(
                                   width: double.infinity,
                                   height: 46,

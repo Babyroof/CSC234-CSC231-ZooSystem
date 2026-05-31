@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,20 @@ import 'package:zoopernova_zoo_system/features/auth/data/datasources/auth_remote
 import 'package:zoopernova_zoo_system/features/auth/data/models/user_dto.dart';
 import 'package:zoopernova_zoo_system/features/auth/presentation/providers/auth_providers.dart';
 import 'package:zoopernova_zoo_system/features/auth/presentation/screens/login_screen.dart';
+
+// Disable local_auth platform channel so biometric checks return false in tests.
+void _stubBiometricChannel() {
+  const channel = MethodChannel('plugins.flutter.io/local_auth');
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(channel, (call) async {
+    return switch (call.method) {
+      'canCheckBiometrics' => false,
+      'isDeviceSupported' => false,
+      'getAvailableBiometrics' => <String>[],
+      _ => null,
+    };
+  });
+}
 
 // Fake datasource — intercepts login without touching Firebase.
 class _FakeAuthDataSource extends Fake implements AuthRemoteDataSource {
@@ -64,6 +79,8 @@ bool _hasSemanticLabel(WidgetTester tester, String label) {
 }
 
 void main() {
+  setUp(_stubBiometricChannel);
+
   group('LoginScreen — rendering', () {
     testWidgets('email field renders', (tester) async {
       await tester.pumpWidget(_buildApp());
