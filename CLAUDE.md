@@ -294,3 +294,4 @@ Steps (run on every PR to `main`):
 - ❌ Do not load network images without `cached_network_image`
 - ❌ Do not leave `print()` statements in production code
 - ❌ Do not create screens without Semantics labels — accessibility gate
+
