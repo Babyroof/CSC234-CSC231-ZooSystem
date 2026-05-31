@@ -226,8 +226,45 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   const _BiometricToggle(),
                   const SizedBox(height: 16),
+                  // Lock — preserves Firebase session so biometric can unlock
                   Semantics(
-                    label: 'Log Out',
+                    label: 'Lock App',
+                    button: true,
+                    child: GestureDetector(
+                    onTap: () {
+                      if (context.mounted) context.go(AppRoute.login);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.lock_outline, size: 22, color: AppColors.black),
+                          SizedBox(width: 16),
+                          Text(
+                            'Lock App',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )), // end Semantics
+                  const SizedBox(height: 12),
+                  // Sign Out — clears Firebase session completely
+                  Semantics(
+                    label: 'Sign Out',
                     button: true,
                     child: GestureDetector(
                     onTap: () async {
@@ -247,15 +284,15 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.logout, size: 22, color: AppColors.black),
+                          Icon(Icons.logout, size: 22, color: AppColors.change),
                           SizedBox(width: 16),
                           Text(
-                            'Log Out',
+                            'Sign Out',
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.black,
+                              color: AppColors.change,
                             ),
                           ),
                         ],
