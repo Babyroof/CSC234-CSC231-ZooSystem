@@ -32,9 +32,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _checkBiometric() async {
-    final available = await BiometricService.isAvailable();
     final enabled = await BiometricService.isEnabled();
-    if (mounted) setState(() => _biometricReady = available && enabled);
+    if (mounted) setState(() => _biometricReady = enabled);
   }
 
   void _clearErrorOnType() {
