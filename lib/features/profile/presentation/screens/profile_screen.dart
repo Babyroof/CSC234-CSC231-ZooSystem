@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -226,8 +227,8 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   const _BiometricToggle(),
                   const SizedBox(height: 16),
-                  // Lock — preserves Firebase session so biometric can unlock
-                  Semantics(
+                  // Lock App only shown on mobile — Web has no biometric unlock
+                  if (!kIsWeb) Semantics(
                     label: 'Lock App',
                     button: true,
                     child: GestureDetector(
