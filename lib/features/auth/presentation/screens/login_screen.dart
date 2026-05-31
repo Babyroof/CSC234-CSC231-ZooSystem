@@ -125,12 +125,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleBiometricLogin() async {
-    final success = await BiometricService.authenticate();
-    if (success && mounted) {
+    final result = await BiometricService.authenticate();
+    if (result.success && mounted) {
       context.go(AppRoute.home);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Biometric authentication failed')),
+        SnackBar(content: Text(result.error ?? 'Biometric authentication failed')),
       );
     }
   }

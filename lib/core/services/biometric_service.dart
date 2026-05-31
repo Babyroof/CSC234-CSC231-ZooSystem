@@ -42,21 +42,21 @@ class BiometricService {
       FirebaseAuth.instance.currentUser != null;
 
   /// Show the platform biometric prompt.
-  /// Returns true on success, false on failure or cancellation.
-  static Future<bool> authenticate() async {
-    if (kIsWeb) return false;
+  /// Returns true on success, error message string on failure.
+  static Future<({bool success, String? error})> authenticate() async {
+    if (kIsWeb) return (success: false, error: 'Not supported on Web');
     try {
-      return await _auth.authenticate(
+      final result = await _auth.authenticate(
         localizedReason: 'Verify your identity to access Zoopernova',
         options: const AuthenticationOptions(
-          // Allow device PIN / pattern as fallback so users without
-          // enrolled biometrics are not locked out.
           biometricOnly: false,
           stickyAuth: true,
         ),
       );
-    } catch (_) {
-      return false;
+      return (success: result, error: result ? null : 'Cancelled');
+    } catch (e) {
+      debugPrint('[BiometricService] error: $e');
+      return (success: false, error: e.toString());
     }
   }
 }
