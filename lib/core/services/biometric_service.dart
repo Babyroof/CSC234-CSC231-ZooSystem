@@ -7,14 +7,14 @@ class BiometricService {
   static final _auth = LocalAuthentication();
   static const _enabledKey = 'biometric_enabled';
 
-  /// True if the device has biometric hardware (fingerprint / face).
-  /// Always false on Web — Web uses WebAuthn which requires a server RP.
+  /// True only when the device has biometric hardware AND at least one
+  /// fingerprint / face is enrolled. `isDeviceSupported` is intentionally
+  /// excluded — it returns true even with no enrolled biometrics, which would
+  /// show the button but always fail on authenticate().
   static Future<bool> isAvailable() async {
     if (kIsWeb) return false;
     try {
-      final canCheck = await _auth.canCheckBiometrics;
-      final isSupported = await _auth.isDeviceSupported();
-      return canCheck || isSupported;
+      return await _auth.canCheckBiometrics;
     } catch (_) {
       return false;
     }
